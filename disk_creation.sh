@@ -7,10 +7,11 @@ INSTALLER_RELEASE=v0.14.0
 if [[ ! -e oc ]]; then
     curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.18/linux/oc.tar.gz -o oc.tar.gz
     tar -xvf oc.tar.gz
+    rm -fr oc.tar.gz
 fi
 
 # Download yq for manipulating in place yaml configs
-if [[ ! -e oc ]]; then
+if [[ ! -e yq ]]; then
     curl -L https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64 -o yq
     chmod +x yq
 fi 
