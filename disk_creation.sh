@@ -39,6 +39,9 @@ export TF_VAR_libvirt_master_memory=10192
 export TF_VAR_libvirt_master_vcpu=4
 ./openshift-install --dir $INSTALL_DIR create cluster --log-level debug
 
+# export the kubeconfig
+export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
+
 # Once it is finish then disable the CVO
 ./oc scale --replicas 0 -n openshift-cluster-version deployments/cluster-version-operator
 
