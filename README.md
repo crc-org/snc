@@ -6,5 +6,5 @@
 - Clone this repo `git clone https://github.com/praveenkumar/snc.git`
 - cp <built_installer_binary> <directory_to_clonned_repo>
 - cd <directory_to_clonned_repo>
-- ./openshift create install-configs
+- ./openshift-install create install-config
 - ./disk_creation.sh
