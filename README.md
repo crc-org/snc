@@ -7,4 +7,5 @@
 - cp <built_installer_binary> <directory_to_clonned_repo>
 - cd <directory_to_clonned_repo>
 - ./openshift-install create install-config
+- Set `compute/replicas` to 0 in `install-config.yaml` file.
 - ./disk_creation.sh
