@@ -6,6 +6,8 @@ metadata:
   name: 02-master-kubelet
 spec:
   config:
+    ignition:
+      version: 2.2.0
     systemd:
       units:
       - contents: |
