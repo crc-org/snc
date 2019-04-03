@@ -5,7 +5,7 @@ INSTALLER_RELEASE=v0.14.0
 
 # Download the oc binary if not present in current directory
 if [[ ! -e oc ]]; then
-    curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.18/linux/oc.tar.gz -o oc.tar.gz
+    curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz -o oc.tar.gz
     tar -xvf oc.tar.gz
     rm -fr oc.tar.gz
 fi
@@ -58,3 +58,9 @@ export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 ./oc delete pod -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 ./oc delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
 ./oc delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager 
+
+# Disable the deployment/replicaset for openshift-machine-api and openshift-machine-config-operator
+./oc scale --replicas=0 deployment --all -n openshift-machine-api
+./oc scale --replicas=0 replicaset --all -n openshift-machine-api
+./oc scale --replicas=0 deployment --all -n openshift-machine-config-operator
+./oc scale --replicas=0 replicaset --all -n openshift-machine-config-operator
