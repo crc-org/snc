@@ -8,4 +8,10 @@
 - cd <directory_to_clonned_repo>
 - ./openshift-install create install-config
 - Set `compute/replicas` to 0 in `install-config.yaml` file.
-- ./disk_creation.sh
+- ./snc.sh
+
+## How to create disk image?
+- Once your `snc.sh` script run successfully.
+- You need to wait for around 24 hours for initial cert rotation for kubelet server/client.
+	- https://bugzilla.redhat.com/show_bug.cgi?id=1693951
+- ./createdisk.sh test
