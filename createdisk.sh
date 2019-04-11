@@ -34,6 +34,12 @@ qemu-img commit $tarballDirectory/test1-${random_string}-master-0
 
 rm -fr $tarballDirectory/test1-${random_string}-master-0 $tarballDirectory/test1-${random_string}-base
 
+# TMPDIR must point at a directory with as much free space as the size of the
+# image we want to sparsify
+TMPDIR=$(pwd)/$tarballDirectory virt-sparsify $tarballDirectory/crc $tarballDirectory/crc-sparse
+mv $tarballDirectory/crc-sparse $tarballDirectory/crc
+rm -fr $tarballDirectory/.guestfs-*
+
 # Copy the kubeconfig and kubeadm password file
 cp $1/auth/kube* $tarballDirectory/
 
