@@ -7,7 +7,7 @@ if [[ $# -ne 1 ]]; then
    exit 1
 fi
 
-tarballDirectory="crc_libvirt_$(date "+%d%m%Y")"
+tarballDirectory="crc_libvirt_$(date --iso-8601)"
 mkdir $tarballDirectory
 
 random_string=$(sudo virsh list --all | grep -oP '(?<=test1-).*(?=-master-0)')
