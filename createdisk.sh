@@ -29,7 +29,7 @@ sudo cp /var/lib/libvirt/images/test1-${random_string}-base $tarballDirectory
 
 sudo chown $USER:$USER -R $tarballDirectory
 cp $tarballDirectory/test1-${random_string}-base $tarballDirectory/crc
-qemu-img rebase -b $tarballDirectory/crc $tarballDirectory/test1-${random_string}-master-0
+qemu-img rebase -b crc $tarballDirectory/test1-${random_string}-master-0
 qemu-img commit $tarballDirectory/test1-${random_string}-master-0
 
 rm -fr $tarballDirectory/test1-${random_string}-master-0 $tarballDirectory/test1-${random_string}-base
