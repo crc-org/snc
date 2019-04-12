@@ -43,3 +43,5 @@ cp $1/auth/kube* $tarballDirectory/
 
 # Copy the master public key
 cp $USER/.ssh/id_rsa $tarballDirectory/master_privatekey
+
+tar cJSf $tarballDirectory.tar.xz $tarballDirectory
