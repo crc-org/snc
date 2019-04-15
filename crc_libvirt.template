@@ -83,7 +83,6 @@ cluster_create()
     </nat>
   </forward>
   <bridge name='tt0' stp='on' delay='0'/>
-  <mac address='52:54:00:76:98:81'/>
   <domain name='ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' localOnly='yes'/>
   <dns>
     <srv service='etcd-server-ssl' protocol='tcp' domain='ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' target='etcd-0.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' port='2380' weight='10'/>
@@ -106,10 +105,10 @@ EOF
     sudo virsh vol-upload --sparse --pool default ReplaceMeWithCorrectVmName ReplaceMeWithCorrectVmName.qcow2
 
     sudo virsh define /dev/stdin <<EOF
-<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+<domain type='kvm'>
   <name>crc</name>
   <memory unit='KiB'>10288576</memory>
-  <vcpu placement='static'>4</vcpu>
+  <vcpu>4</vcpu>
   <os>
     <type arch='x86_64'>hvm</type>
     <boot dev='hd'/>
@@ -121,56 +120,33 @@ EOF
   </features>
   <cpu mode='host-passthrough' check='none'/>
   <clock offset='utc'/>
-  <on_poweroff>destroy</on_poweroff>
-  <on_reboot>restart</on_reboot>
-  <on_crash>destroy</on_crash>
   <devices>
     <disk type='volume' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source pool='default' volume='crc'/>
       <target dev='vda' bus='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </disk>
-    <controller type='usb' index='0' model='piix3-uhci'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x2'/>
-    </controller>
-    <controller type='pci' index='0' model='pci-root'/>
-    <controller type='virtio-serial' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
-    </controller>
+    <controller type='virtio-serial'/>
     <interface type='network'>
       ReplaceMeWithCorrectMac
       <source network='ReplaceMeWithCorrectVmName'/>
       <model type='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </interface>
-    <serial type='pty'>
-      <target type='isa-serial' port='0'>
-        <model name='isa-serial'/>
-      </target>
-    </serial>
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
     <channel type='pty'>
       <target type='virtio' name='org.qemu.guest_agent.0'/>
-      <address type='virtio-serial' controller='0' bus='0' port='1'/>
     </channel>
-    <input type='mouse' bus='ps2'/>
-    <input type='keyboard' bus='ps2'/>
     <graphics type='spice' autoport='yes'>
       <listen type='address'/>
     </graphics>
     <video>
-      <model type='cirrus' vram='16384' heads='1' primary='yes'/>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+      <model type='cirrus'/>
     </video>
-    <memballoon model='virtio'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
-    </memballoon>
+    <memballoon model='virtio'/>
     <rng model='virtio'>
       <backend model='random'>/dev/random</backend>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
     </rng>
   </devices>
 </domain>
