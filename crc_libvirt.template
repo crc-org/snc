@@ -107,7 +107,7 @@ EOF
     sudo virsh define /dev/stdin <<EOF
 <domain type='kvm'>
   <name>crc</name>
-  <memory unit='KiB'>10288576</memory>
+  <memory unit='GiB'>10</memory>
   <vcpu>4</vcpu>
   <os>
     <type arch='x86_64'>hvm</type>
