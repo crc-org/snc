@@ -42,7 +42,7 @@ export TF_VAR_libvirt_master_vcpu=4
 # export the kubeconfig
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 
-# Once it is finish then disable the CVO
+# Once it is finished, disable the CVO
 ./oc scale --replicas 0 -n openshift-cluster-version deployments/cluster-version-operator
 
 # Disable the deployment/replicaset/statefulset config for openshift-monitoring namespace

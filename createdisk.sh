@@ -7,7 +7,7 @@ if [[ $# -ne 1 ]]; then
    exit 1
 fi
 
-tarballDirectory="crc_libvirt_$(date "+%d%m%Y")"
+tarballDirectory="crc_libvirt_$(date --iso-8601)"
 mkdir $tarballDirectory
 
 random_string=$(sudo virsh list --all | grep -oP '(?<=test1-).*(?=-master-0)')
@@ -28,9 +28,13 @@ sudo cp /var/lib/libvirt/images/test1-${random_string}-master-0 $tarballDirector
 sudo cp /var/lib/libvirt/images/test1-${random_string}-base $tarballDirectory
 
 sudo chown $USER:$USER -R $tarballDirectory
-cp $tarballDirectory/test1-${random_string}-base $tarballDirectory/crc
-qemu-img rebase -b $tarballDirectory/crc $tarballDirectory/test1-${random_string}-master-0
+qemu-img rebase -b test1-${random_string}-base $tarballDirectory/test1-${random_string}-master-0
 qemu-img commit $tarballDirectory/test1-${random_string}-master-0
+
+# TMPDIR must point at a directory with as much free space as the size of the
+# image we want to sparsify
+TMPDIR=$(pwd)/$tarballDirectory virt-sparsify $tarballDirectory/test1-${random_string}-base $tarballDirectory/crc
+rm -fr $tarballDirectory/.guestfs-*
 
 rm -fr $tarballDirectory/test1-${random_string}-master-0 $tarballDirectory/test1-${random_string}-base
 
@@ -39,3 +43,5 @@ cp $1/auth/kube* $tarballDirectory/
 
 # Copy the master public key
 cp $USER/.ssh/id_rsa $tarballDirectory/master_privatekey
+
+tar cJSf $tarballDirectory.tar.xz $tarballDirectory
