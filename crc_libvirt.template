@@ -73,7 +73,7 @@ EOF
 
 cluster_create()
 {
-    cat << EOF > ./network.xml
+    sudo virsh net-define /dev/stdin <<EOF
 <network>
   <name>ReplaceMeWithCorrectVmName</name>
   <uuid>b56e5d7f-296e-41ea-9bc3-5d374f8a168f</uuid>
@@ -99,15 +99,13 @@ cluster_create()
   </ip>
 </network>
 EOF
-
-    sudo virsh net-define ./network.xml
     sudo virsh net-start ReplaceMeWithCorrectVmName
 
     size=$(stat -Lc%s ReplaceMeWithCorrectVmName.qcow2)
     sudo virsh vol-create-as default ReplaceMeWithCorrectVmName $size --format qcow2
     sudo virsh vol-upload --sparse --pool default ReplaceMeWithCorrectVmName ReplaceMeWithCorrectVmName.qcow2
 
-    cat << EOF > ./crc.xml
+    sudo virsh define /dev/stdin <<EOF
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
   <name>crc</name>
   <memory unit='KiB'>10288576</memory>
@@ -177,7 +175,6 @@ EOF
   </devices>
 </domain>
 EOF
-    sudo virsh define ./crc.xml
     echo "Cluster created successfully use '$0 start' to start it"
 }
 
