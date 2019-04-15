@@ -31,7 +31,7 @@ prerequisites()
     sudo firewall-cmd --zone=$activeZone --add-port=16509/tcp
 
     # Configure default libvirt storage pool
-    sudo virsh pool-list | grep -q 'default'
+    sudo virsh pool-info 'default'
     if [ $? -ne 0 ]
     then
         sudo virsh pool-define /dev/stdin <<EOF
