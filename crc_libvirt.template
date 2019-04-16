@@ -114,7 +114,7 @@ EOF
 
     size=$(stat -Lc%s crc)
     sudo virsh vol-create-as default crc $size --format qcow2
-    sudo virsh vol-upload --pool default crc crc
+    sudo virsh vol-upload --sparse --pool default crc crc
 
     cat << EOF > ./crc.xml
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
