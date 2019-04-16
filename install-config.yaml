@@ -1,0 +1,28 @@
+# This file was generated using openshift-install create install-config
+# and then user specific information was removed as snc.sh will readd it
+apiVersion: v1beta4
+baseDomain: tt.testing
+compute:
+- name: worker
+  platform: {}
+  replicas: 1
+controlPlane:
+  name: master
+  platform: {}
+  replicas: 1
+metadata:
+  creationTimestamp: null
+  name: test1
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineCIDR: 192.168.126.0/24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  libvirt:
+    URI: qemu+tcp://192.168.122.1/system
+    network:
+      if: tt0
