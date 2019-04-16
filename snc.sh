@@ -29,10 +29,10 @@ rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
 cp 99_master-kubelet-no-taint.yaml $INSTALL_DIR/openshift/
 
 # Add worker label to master machine config
-./yq w -i $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.metadata.labels[node-role.kubernetes.io/worker] ""
+./yq write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.metadata.labels[node-role.kubernetes.io/worker] ""
 
 # Add custom domain to cluster-ingress
-./yq w -i test/manifests/cluster-ingress-02-config.yml spec[domain] apps.tt.testing
+./yq write --inplace test/manifests/cluster-ingress-02-config.yml spec[domain] apps.tt.testing
 
 # Start the cluster with 10GB memory and 4 CPU create and wait till it finish
 export TF_VAR_libvirt_master_memory=10192
