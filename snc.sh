@@ -19,8 +19,15 @@ fi
 # Destroy an existing cluster and resources
 ./openshift-install --dir $INSTALL_DIR destroy cluster --log-level debug
 
+if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
+    echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
+    exit 1
+fi
+
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
+./yq write --inplace $INSTALL_DIR/install-config.yaml compute[0].replicas 0
+./yq write --inplace $INSTALL_DIR/install-config.yaml pullSecret ${OPENSHIFT_PULL_SECRET}
 
 # Create the manifests using the INSTALL_DIR
 ./openshift-install --dir $INSTALL_DIR create manifests
