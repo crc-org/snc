@@ -28,6 +28,7 @@ fi
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
 ./yq write --inplace $INSTALL_DIR/install-config.yaml compute[0].replicas 0
 ./yq write --inplace $INSTALL_DIR/install-config.yaml pullSecret ${OPENSHIFT_PULL_SECRET}
+./yq write --inplace $INSTALL_DIR/install-config.yaml sshKey $(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
 ./openshift-install --dir $INSTALL_DIR create manifests

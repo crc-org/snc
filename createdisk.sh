@@ -42,6 +42,7 @@ rm -fr $tarballDirectory/test1-${random_string}-master-0 $tarballDirectory/test1
 cp $1/auth/kube* $tarballDirectory/
 
 # Copy the master public key
-cp $USER/.ssh/id_rsa $tarballDirectory/master_privatekey
+cp id_rsa_crc $tarballDirectory/master_privatekey
+chmod 400 $tarballDirectory/master_privatekey
 
 tar cJSf $tarballDirectory.tar.xz $tarballDirectory
