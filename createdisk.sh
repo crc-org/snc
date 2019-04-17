@@ -14,6 +14,10 @@ tarballDirectory="crc_libvirt_$(date --iso-8601)"
 mkdir $tarballDirectory
 
 random_string=$(sudo virsh list --all | grep -oP "(?<=${CRC_VM_NAME}-).*(?=-master-0)")
+if [ -z $random_string ]; then
+    echo "Could not find virtual machine created by snc.sh"
+    exit 1;
+fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
 # Shutdown the instance
