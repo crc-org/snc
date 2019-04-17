@@ -12,7 +12,7 @@ controlPlane:
   replicas: 1
 metadata:
   creationTimestamp: null
-  name: test1
+  name: crc
 networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14

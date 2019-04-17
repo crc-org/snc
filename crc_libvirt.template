@@ -84,7 +84,7 @@ cluster_create()
 {
     cat << EOF > ./network.xml
 <network>
-  <name>test1</name>
+  <name>ReplaceMeWithCorrectVmName</name>
   <uuid>b56e5d7f-296e-41ea-9bc3-5d374f8a168f</uuid>
   <forward mode='nat'>
     <nat>
@@ -93,12 +93,12 @@ cluster_create()
   </forward>
   <bridge name='tt0' stp='on' delay='0'/>
   <mac address='52:54:00:76:98:81'/>
-  <domain name='test1.tt.testing' localOnly='yes'/>
+  <domain name='ReplaceMeWithCorrectVmName.tt.testing' localOnly='yes'/>
   <dns>
-    <srv service='etcd-server-ssl' protocol='tcp' domain='test1.tt.testing' target='etcd-0.test1.tt.testing' port='2380' weight='10'/>
+    <srv service='etcd-server-ssl' protocol='tcp' domain='ReplaceMeWithCorrectVmName.tt.testing' target='etcd-0.ReplaceMeWithCorrectVmName.tt.testing' port='2380' weight='10'/>
     <host ip='192.168.126.11'>
-      <hostname>api.test1.tt.testing</hostname>
-      <hostname>etcd-0.test1.tt.testing</hostname>
+      <hostname>api.ReplaceMeWithCorrectVmName.tt.testing</hostname>
+      <hostname>etcd-0.ReplaceMeWithCorrectVmName.tt.testing</hostname>
     </host>
   </dns>
   <ip family='ipv4' address='192.168.126.1' prefix='24'>
@@ -110,11 +110,11 @@ cluster_create()
 EOF
 
     sudo virsh net-define ./network.xml
-    sudo virsh net-start test1
+    sudo virsh net-start ReplaceMeWithCorrectVmName
 
-    size=$(stat -Lc%s crc)
-    sudo virsh vol-create-as default crc $size --format qcow2
-    sudo virsh vol-upload --sparse --pool default crc crc
+    size=$(stat -Lc%s ReplaceMeWithCorrectVmName.qcow2)
+    sudo virsh vol-create-as default ReplaceMeWithCorrectVmName $size --format qcow2
+    sudo virsh vol-upload --sparse --pool default ReplaceMeWithCorrectVmName ReplaceMeWithCorrectVmName.qcow2
 
     cat << EOF > ./crc.xml
 <domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
@@ -151,7 +151,7 @@ EOF
     </controller>
     <interface type='network'>
       ReplaceMeWithCorrectMac
-      <source network='test1'/>
+      <source network='ReplaceMeWithCorrectVmName'/>
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </interface>
@@ -213,8 +213,8 @@ cluster_delete()
     
     sudo virsh vol-delete --pool default crc
 
-    sudo virsh net-destroy test1
-    sudo virsh net-undefine test1
+    sudo virsh net-destroy ReplaceMeWithCorrectVmName
+    sudo virsh net-undefine ReplaceMeWithCorrectVmName
 }
 
 

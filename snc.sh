@@ -5,6 +5,7 @@ INSTALLER_RELEASE=v0.14.0
 OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
+CRC_VM_NAME=${CRC_VM_NAME:-crc}
 
 # Download the oc binary if not present in current directory
 if ! which $OC; then
@@ -26,7 +27,7 @@ if ! which $YQ; then
 fi
 
 # Destroy an existing cluster and resources
-$(OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug
+${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug
 
 if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
     echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
@@ -35,6 +36,7 @@ fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
+${YQ} write --inplace $INSTALL_DIR/install-config.yaml metadata.name $CRC_VM_NAME
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml compute[0].replicas 0
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml pullSecret "${OPENSHIFT_PULL_SECRET}"
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
