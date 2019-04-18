@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INSTALL_DIR=test
+INSTALL_DIR=crc-tmp-install-data
 INSTALLER_RELEASE=v0.14.0
 OC=${OC:-oc}
 YQ=${YQ:-yq}
@@ -51,7 +51,7 @@ cp 99_master-kubelet-no-taint.yaml $INSTALL_DIR/openshift/
 ${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.metadata.labels[node-role.kubernetes.io/worker] ""
 
 # Add custom domain to cluster-ingress
-${YQ} write --inplace test/manifests/cluster-ingress-02-config.yml spec[domain] apps.tt.testing
+${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.tt.testing
 
 # Start the cluster with 10GB memory and 4 CPU create and wait till it finish
 export TF_VAR_libvirt_master_memory=10192
