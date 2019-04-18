@@ -57,6 +57,11 @@ ${YQ} write --inplace test/manifests/cluster-ingress-02-config.yml spec[domain] 
 export TF_VAR_libvirt_master_memory=10192
 export TF_VAR_libvirt_master_vcpu=4
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug
+if [ $? -ne 0 ]; then
+    echo "This is known to fail with:
+'pool master is not ready - timed out waiting for the condition'
+see https://github.com/openshift/machine-config-operator/issues/579"
+fi
 
 # export the kubeconfig
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
