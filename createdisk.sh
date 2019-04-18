@@ -19,7 +19,7 @@ hostInfo=$(sudo virsh net-dumpxml test1-${random_string} | grep test1-${random_s
 masterMac=$(sudo virsh dumpxml test1-${random_string}-master-0 | grep "mac address" | sed "s/^[ \t]*//")
 
 sed "s|ReplaceMeWithCorrectHost|$hostInfo|g" crc_libvirt.template > $tarballDirectory/crc_libvirt.sh
-sed "s|ReplaceMeWithCorrectMac|$masterMac|g" crc_libvirt.template > $tarballDirectory/crc_libvirt.sh
+sed -i "s|ReplaceMeWithCorrectMac|$masterMac|g" $tarballDirectory/crc_libvirt.sh
 
 chmod +x $tarballDirectory/crc_libvirt.sh
 
