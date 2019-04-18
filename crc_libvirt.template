@@ -12,7 +12,7 @@ prerequisites()
         exit 1
     fi
 
-    # Install required dependecies
+    # Install required dependencies
     sudo yum install -y libvirt libvirt-devel libvirt-daemon-kvm qemu-kvm
 
     # Enable IP forwarding
