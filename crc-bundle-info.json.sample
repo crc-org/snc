@@ -1,0 +1,41 @@
+{
+  # Type of this bundle content
+  # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
+  "type": "snc",
+  "buildInfo": {
+    # Time this bundle was built
+    "buildTime": "2019-04-23T14:55:32+00:00",
+    # Output of 'openshift-install version' from the installer used to generate the bundle
+    "openshiftInstallerVersion": "./openshift-install v0.16.1\nbuilt from commit e3fceacc975953f56cb09931e6be015a36eb6075",
+    # Output of 'git describe' or 'git rev-parse' of the 'snc' script
+    # repository used when generating the bundle
+    "sncVersion": "git9662"
+  },
+  "clusterInfo": {
+    # Name of the openshift cluster stored in the bundle
+    "clusterName": "crc",
+    # Base domain name used for the openshift cluster
+    "baseDomain": "tt.testing",
+    # Hostname of the master node
+    "masterHostname": "crc-qw8kr-master-0",
+    # Name of a file containing an SSH private key which can be used to connect to
+    # the cluster nodes
+    "sshPrivateKeyFile": "master_privatekey",
+    # Name of the kubeconfig file stored in the bundle
+    "kubeConfig": "kubeconfig",
+    # Name of the file containing the kubeadmin password for use in the
+    # openshift console
+    "kubeadminPasswordFile": "kubeadmin-password"
+  },
+  "storage": {
+    # List of virtual machine disk images in the bundle
+    "diskImages": [
+      {
+        # Name of the disk image file
+        "name": "crc.qcow2",
+        # Format of the disk image, valid formats are 'qcow2', 'vmdk', 'vhdx'
+        "format": "qcow2"
+      }
+    ]
+  }
+}
