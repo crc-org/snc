@@ -2,10 +2,24 @@
 
 INSTALL_DIR=crc-tmp-install-data
 INSTALLER_RELEASE=v0.14.0
+JQ=${JQ:-jq}
 OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
+
+
+function create_json_description {
+    openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
+    sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
+    echo {} | ${JQ} '.type = "snc"' \
+            | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
+            | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
+            | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
+            | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
+            | ${JQ} '.clusterInfo.baseDomain = "tt.testing"' >${INSTALL_DIR}/crc-bundle-info.json
+    #        |${JQ} '.buildInfo.ocGetCo = "snc"' >${INSTALL_DIR}/crc-bundle-info.json
+}
 
 # Download the oc binary if not present in current directory
 if ! which $OC; then
@@ -24,6 +38,10 @@ if ! which $YQ; then
         chmod +x yq
     fi
     YQ=./yq
+fi
+
+if ! which ${JQ}; then
+    sudo yum -y install /usr/bin/jq
 fi
 
 # Destroy an existing cluster and resources
@@ -62,6 +80,8 @@ if [ $? -ne 0 ]; then
 'pool master is not ready - timed out waiting for the condition'
 see https://github.com/openshift/machine-config-operator/issues/579"
 fi
+
+create_json_description
 
 # export the kubeconfig
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
