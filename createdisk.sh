@@ -32,7 +32,7 @@ function create_disk_image {
 function update_json_description {
     cat $1/crc-bundle-info.json \
         | ${JQ} ".clusterInfo.masterHostname = \"${VM_PREFIX}-master-0\"" \
-        | ${JQ} '.clusterInfo.sshPrivateKeyFile = "master_privatekey"' \
+        | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
@@ -86,8 +86,8 @@ create_disk_image
 cp $1/auth/kube* $tarballDirectory/
 
 # Copy the master public key
-cp id_rsa_crc $tarballDirectory/master_privatekey
-chmod 400 $tarballDirectory/master_privatekey
+cp id_rsa_crc $tarballDirectory/
+chmod 400 $tarballDirectory/id_rsa_crc
 
 update_json_description $1
 
