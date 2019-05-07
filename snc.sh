@@ -7,6 +7,7 @@ OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
+BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 
 
 function create_json_description {
@@ -17,7 +18,7 @@ function create_json_description {
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
-            | ${JQ} '.clusterInfo.baseDomain = "tt.testing"' >${INSTALL_DIR}/crc-bundle-info.json
+            | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
     #        |${JQ} '.buildInfo.ocGetCo = "snc"' >${INSTALL_DIR}/crc-bundle-info.json
 }
 
@@ -54,6 +55,7 @@ fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
+${YQ} write --inplace $INSTALL_DIR/install-config.yaml baseDomain $BASE_DOMAIN
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml metadata.name $CRC_VM_NAME
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml compute[0].replicas 0
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml pullSecret "${OPENSHIFT_PULL_SECRET}"
@@ -69,7 +71,7 @@ cp 99_master-kubelet-no-taint.yaml $INSTALL_DIR/openshift/
 ${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.metadata.labels[node-role.kubernetes.io/worker] ""
 
 # Add custom domain to cluster-ingress
-${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.tt.testing
+${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 
 # Start the cluster with 10GB memory and 4 CPU create and wait till it finish
 export TF_VAR_libvirt_master_memory=10192

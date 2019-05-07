@@ -64,8 +64,8 @@ EOF
     fi
     dnsmasqconf=/etc/NetworkManager/dnsmasq.d/openshift.conf
     if ! [ -f "${dnsmasqconf}" ]; then
-        echo server=/tt.testing/192.168.126.1 | sudo tee "${dnsmasqconf}"
-        echo address=/apps.tt.testing/192.168.126.11 | sudo tee -a "${dnsmasqconf}"
+        echo server=/ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain/192.168.126.1 | sudo tee "${dnsmasqconf}"
+        echo address=/apps-ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain/192.168.126.11 | sudo tee -a "${dnsmasqconf}"
         dnschanged=1
     fi
     if [ -n "$dnschanged" ]; then
@@ -93,12 +93,12 @@ cluster_create()
   </forward>
   <bridge name='tt0' stp='on' delay='0'/>
   <mac address='52:54:00:76:98:81'/>
-  <domain name='ReplaceMeWithCorrectVmName.tt.testing' localOnly='yes'/>
+  <domain name='ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' localOnly='yes'/>
   <dns>
-    <srv service='etcd-server-ssl' protocol='tcp' domain='ReplaceMeWithCorrectVmName.tt.testing' target='etcd-0.ReplaceMeWithCorrectVmName.tt.testing' port='2380' weight='10'/>
+    <srv service='etcd-server-ssl' protocol='tcp' domain='ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' target='etcd-0.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' port='2380' weight='10'/>
     <host ip='192.168.126.11'>
-      <hostname>api.ReplaceMeWithCorrectVmName.tt.testing</hostname>
-      <hostname>etcd-0.ReplaceMeWithCorrectVmName.tt.testing</hostname>
+      <hostname>api.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain</hostname>
+      <hostname>etcd-0.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain</hostname>
     </host>
   </dns>
   <ip family='ipv4' address='192.168.126.1' prefix='24'>

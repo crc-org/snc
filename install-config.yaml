@@ -1,7 +1,7 @@
 # This file was generated using openshift-install create install-config
 # and then user specific information was removed as snc.sh will readd it
 apiVersion: v1
-baseDomain: tt.testing
+baseDomain: testing
 compute:
 - name: worker
   platform: {}

@@ -15,7 +15,7 @@
     # Name of the openshift cluster stored in the bundle
     "clusterName": "crc",
     # Base domain name used for the openshift cluster
-    "baseDomain": "tt.testing",
+    "baseDomain": "testing",
     # Hostname of the master node
     "masterHostname": "crc-qw8kr-master-0",
     # Name of a file containing an SSH private key which can be used to connect to
