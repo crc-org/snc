@@ -48,10 +48,13 @@ function create_disk_image {
 
 function update_json_description {
     cat $1/crc-bundle-info.json \
-        | ${JQ} ".clusterInfo.masterHostname = \"${VM_PREFIX}-master-0\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
+        | ${JQ} '.nodes[0].kind[0] = "master"' \
+        | ${JQ} '.nodes[0].kind[1] = "worker"' \
+        | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
+        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         >$tarballDirectory/crc-bundle-info.json

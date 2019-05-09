@@ -18,8 +18,6 @@
     "baseDomain": "testing",
     # Subdomain where the apps will go
     "appsDomain": "apps-crc.testing",
-    # Hostname of the master node
-    "masterHostname": "crc-qw8kr-master-0",
     # Name of a file containing an SSH private key which can be used to connect to
     # the cluster nodes
     "sshPrivateKeyFile": "id_rsa_crc",
@@ -29,6 +27,20 @@
     # openshift console
     "kubeadminPasswordFile": "kubeadmin-password"
   },
+  "nodes": [
+    {
+      # Type of the node, can be 'master', 'worker' or both
+      "kind": [
+        "master",
+        "worker"
+      ],
+      # Hostname of the node
+      "hostname": "crc-88lpx-master-0",
+      # Disk image used by the node, the 'storage' object will contain more
+      # details about its format
+      "diskImage": "crc.qcow2"
+    }
+  ],
   "storage": {
     # List of virtual machine disk images in the bundle
     "diskImages": [
