@@ -38,7 +38,6 @@ function update_json_description {
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         >$tarballDirectory/crc-bundle-info.json
-    rm  $1/crc-bundle-info.json
 }
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
