@@ -22,7 +22,7 @@
     "masterHostname": "crc-qw8kr-master-0",
     # Name of a file containing an SSH private key which can be used to connect to
     # the cluster nodes
-    "sshPrivateKeyFile": "master_privatekey",
+    "sshPrivateKeyFile": "id_rsa_crc",
     # Name of the kubeconfig file stored in the bundle
     "kubeConfig": "kubeconfig",
     # Name of the file containing the kubeadmin password for use in the
