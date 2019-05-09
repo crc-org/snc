@@ -18,7 +18,8 @@ function create_json_description {
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
-            | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
+            | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
+            | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
     #        |${JQ} '.buildInfo.ocGetCo = "snc"' >${INSTALL_DIR}/crc-bundle-info.json
 }
 
