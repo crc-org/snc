@@ -2,6 +2,22 @@
 
 set -x
 
+function get_git_tag {
+    GIT_TAG=$(git describe --exact-match HEAD) || GIT_TAG=
+
+    # Based on code from git-version-gen
+    # Don't declare a version "dirty" merely because a time stamp has changed
+    git update-index --refresh > /dev/null 2>&1
+
+    dirty=`sh -c 'git diff-index --name-only HEAD' 2>/dev/null` || dirty=
+    case "$dirty" in
+        '') ;;
+        *) # Don't build an 'official' version if git tree is dirty
+            GIT_TAG=
+    esac
+    # end of git-version-gen code
+}
+
 function create_crc_libvirt_sh {
     hostInfo=$(sudo virsh net-dumpxml ${VM_PREFIX} | grep ${VM_PREFIX}-master-0 | sed "s/^[ \t]*//")
     masterMac=$(sudo virsh dumpxml ${VM_PREFIX}-master-0 | grep "mac address" | sed "s/^[ \t]*//")
@@ -67,7 +83,15 @@ if ! which ${QEMU_IMG}; then
     sudo yum -y install /usr/bin/qemu-img
 fi
 
-tarballDirectory="crc_libvirt_$(date --iso-8601)"
+get_git_tag
+
+if [ -z ${GIT_TAG} ]; then
+    tarballDirectory="crc_libvirt_$(date --iso-8601)"
+else
+    tarballDirectory="crc_libvirt_${GIT_TAG}"
+fi
+echo "${tarballDirectory}"
+
 mkdir $tarballDirectory
 
 random_string=$(sudo virsh list --all | grep -oP "(?<=${CRC_VM_NAME}-).*(?=-master-0)")
