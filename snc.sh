@@ -6,6 +6,7 @@ JQ=${JQ:-jq}
 OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
+OPENSHIFT_RELEASE_VERSION=$(git describe --abbrev=0 HEAD 2>/dev/null) || OPENSHIFT_RELEASE_VERSION=
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 
@@ -52,6 +53,13 @@ ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug
 if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
     echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
     exit 1
+fi
+
+# Use the release payload for the latest known openshift release as indicated by git tags
+if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/openshift-release-dev/ocp-release:${OPENSHIFT_RELEASE_VERSION}
+    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+    echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
