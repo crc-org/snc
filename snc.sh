@@ -27,7 +27,11 @@ function create_json_description {
 # Download the oc binary if not present in current directory
 if ! which $OC; then
     if [[ ! -e oc ]] ; then
-        curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz -o oc.tar.gz
+        if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
+            curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz -o oc.tar.gz
+        else
+            curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz -o oc.tar.gz
+        fi
         tar -xvf oc.tar.gz
         rm -fr oc.tar.gz
     fi
