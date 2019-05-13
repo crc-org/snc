@@ -28,12 +28,10 @@ function create_json_description {
 if ! which $OC; then
     if [[ ! -e oc ]] ; then
         if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
-            curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz -o oc.tar.gz
+            curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz | tar zx oc
         else
-            curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz -o oc.tar.gz
+            curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz | tar zx oc
         fi
-        tar -xvf oc.tar.gz oc
-        rm -fr oc.tar.gz
     fi
     OC=./oc
 fi
