@@ -32,7 +32,7 @@ if ! which $OC; then
         else
             curl -L https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux/oc.tar.gz -o oc.tar.gz
         fi
-        tar -xvf oc.tar.gz
+        tar -xvf oc.tar.gz oc
         rm -fr oc.tar.gz
     fi
     OC=./oc
