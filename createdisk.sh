@@ -109,17 +109,6 @@ if ! which ${QEMU_IMG}; then
     sudo yum -y install /usr/bin/qemu-img
 fi
 
-get_git_tag
-
-if [ -z ${GIT_TAG} ]; then
-    tarballDirectory="crc_libvirt_$(date --iso-8601)"
-else
-    tarballDirectory="crc_libvirt_${GIT_TAG}"
-fi
-echo "${tarballDirectory}"
-
-mkdir $tarballDirectory
-
 random_string=$(sudo virsh list --all | grep -oP "(?<=${CRC_VM_NAME}-).*(?=-master-0)")
 if [ -z $random_string ]; then
     echo "Could not find virtual machine created by snc.sh"
@@ -130,8 +119,19 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0
 
-create_qemu_image $tarballDirectory
 
-copy_additional_files $1 $tarballDirectory
+# libvirt image generation
+get_git_tag
 
-tar cJSf $tarballDirectory.tar.xz $tarballDirectory
+if [ -z ${GIT_TAG} ]; then
+    libvirtDestDir="crc_libvirt_$(date --iso-8601)"
+else
+    libvirtDestDir="crc_libvirt_${GIT_TAG}"
+fi
+mkdir $libvirtDestDir
+
+create_qemu_image $libvirtDestDir
+
+copy_additional_files $1 $libvirtDestDir
+
+tar cJSf $libvirtDestDir.tar.xz $libvirtDestDir
