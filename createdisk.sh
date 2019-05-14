@@ -19,35 +19,42 @@ function get_git_tag {
 }
 
 function create_crc_libvirt_sh {
+    destDir=$1
+
     hostInfo=$(sudo virsh net-dumpxml ${VM_PREFIX} | grep ${VM_PREFIX}-master-0 | sed "s/^[ \t]*//")
     masterMac=$(sudo virsh dumpxml ${VM_PREFIX}-master-0 | grep "mac address" | sed "s/^[ \t]*//")
 
-    sed "s|ReplaceMeWithCorrectVmName|${CRC_VM_NAME}|g" crc_libvirt.template > $tarballDirectory/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectBaseDomain|${BASE_DOMAIN}|g" $tarballDirectory/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectHost|$hostInfo|g" $tarballDirectory/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectMac|$masterMac|g" $tarballDirectory/crc_libvirt.sh
+    sed "s|ReplaceMeWithCorrectVmName|${CRC_VM_NAME}|g" crc_libvirt.template > $destDir/crc_libvirt.sh
+    sed -i "s|ReplaceMeWithCorrectBaseDomain|${BASE_DOMAIN}|g" $destDir/crc_libvirt.sh
+    sed -i "s|ReplaceMeWithCorrectHost|$hostInfo|g" $destDir/crc_libvirt.sh
+    sed -i "s|ReplaceMeWithCorrectMac|$masterMac|g" $destDir/crc_libvirt.sh
 
-    chmod +x $tarballDirectory/crc_libvirt.sh
+    chmod +x $destDir/crc_libvirt.sh
 }
 
 function create_disk_image {
-    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $tarballDirectory
-    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $tarballDirectory
+    destDir=$1
 
-    sudo chown $USER:$USER -R $tarballDirectory
-    ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $tarballDirectory/${VM_PREFIX}-master-0
-    ${QEMU_IMG} commit $tarballDirectory/${VM_PREFIX}-master-0
+    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
+    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
+
+    sudo chown $USER:$USER -R $destDir
+    ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
+    ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
     # TMPDIR must point at a directory with as much free space as the size of the
     # image we want to sparsify
-    TMPDIR=$(pwd)/$tarballDirectory ${VIRT_SPARSIFY} $tarballDirectory/${VM_PREFIX}-base $tarballDirectory/${CRC_VM_NAME}.qcow2
-    rm -fr $tarballDirectory/.guestfs-*
+    TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
+    rm -fr $destDir/.guestfs-*
 
-    rm -fr $tarballDirectory/${VM_PREFIX}-master-0 $tarballDirectory/${VM_PREFIX}-base
+    rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
 }
 
 function update_json_description {
-    cat $1/crc-bundle-info.json \
+    srcDir=$1
+    destDir=$2
+
+    cat $srcDir/crc-bundle-info.json \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
@@ -57,7 +64,7 @@ function update_json_description {
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
-        >$tarballDirectory/crc-bundle-info.json
+        >$destDir/crc-bundle-info.json
 }
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
@@ -107,9 +114,9 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0
 
-create_crc_libvirt_sh
+create_crc_libvirt_sh $tarballDirectory
 
-create_disk_image
+create_disk_image $tarballDirectory
 
 # Copy the kubeconfig and kubeadm password file
 cp $1/auth/kube* $tarballDirectory/
@@ -118,6 +125,6 @@ cp $1/auth/kube* $tarballDirectory/
 cp id_rsa_crc $tarballDirectory/
 chmod 400 $tarballDirectory/id_rsa_crc
 
-update_json_description $1
+update_json_description $1 $tarballDirectory
 
 tar cJSf $tarballDirectory.tar.xz $tarballDirectory
