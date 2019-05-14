@@ -32,7 +32,7 @@ function create_crc_libvirt_sh {
     chmod +x $destDir/crc_libvirt.sh
 }
 
-function create_disk_image {
+function create_qemu_image {
     destDir=$1
 
     sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
@@ -116,7 +116,7 @@ sudo virsh shutdown ${VM_PREFIX}-master-0
 
 create_crc_libvirt_sh $tarballDirectory
 
-create_disk_image $tarballDirectory
+create_qemu_image $tarballDirectory
 
 # Copy the kubeconfig and kubeadm password file
 cp $1/auth/kube* $tarballDirectory/
