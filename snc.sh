@@ -14,7 +14,8 @@ BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
-    echo {} | ${JQ} '.type = "snc"' \
+    echo {} | ${JQ} '.version = "1.0"' \
+            | ${JQ} '.type = "snc"' \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \

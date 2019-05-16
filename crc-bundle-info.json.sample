@@ -1,4 +1,8 @@
 {
+  # Version of the bundle, used to denote format changes
+  # Major is only increased changes incompatible with previous versions
+  # Minor is increased for backwards-compatible changes
+  "version": "1.0",
   # Type of this bundle content
   # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
   "type": "snc",
