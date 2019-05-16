@@ -99,6 +99,11 @@ if [ $? -ne 0 ]; then
 see https://github.com/openshift/machine-config-operator/issues/579"
 fi
 
+# Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
+
 create_json_description
 
 # export the kubeconfig
