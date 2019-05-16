@@ -65,6 +65,10 @@ if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
     echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
 
+# Generate a new ssh keypair for this cluster
+rm id_rsa_crc* || true
+ssh-keygen -N "" -f id_rsa_crc
+
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml baseDomain $BASE_DOMAIN
