@@ -42,10 +42,10 @@ function create_qemu_image {
     ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
-    # TMPDIR must point at a directory with as much free space as the size of the
-    # image we want to sparsify
-    TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
-    rm -fr $destDir/.guestfs-*
+    # Resize the image from the default 1+15GB to 1+20GB
+    # This should also take care of making the image sparse
+    ${QEMU_IMG} create -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 21G
+    ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
 
     rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
 }
@@ -101,7 +101,7 @@ function generate_vbox_directory {
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 JQ=${JQ:-jq}
-VIRT_SPARSIFY=${VIRT_SPARSIFY:-virt-sparsify}
+VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 
 if [[ $# -ne 1 ]]; then
@@ -113,8 +113,15 @@ if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
 fi
 
-if ! which ${VIRT_SPARSIFY}; then
-    sudo yum -y install /usr/bin/virt-sparsify
+if ! which ${VIRT_RESIZE}; then
+    sudo yum -y install /usr/bin/virt-resize libguestfs-xfs
+fi
+
+# The CoreOS image uses an XFS filesystem
+# Beware than if you are running on an el7 system, you won't be able
+# to resize the crc VM XFS filesystem as it was created on el8
+if ! rpm -q libguestfs-xfs; then
+    sudo yum install libguestfs-xfs
 fi
 
 if ! which ${QEMU_IMG}; then
