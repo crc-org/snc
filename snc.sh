@@ -28,7 +28,7 @@ function create_json_description {
 # Download the oc binary if not present in current directory
 if ! which $OC; then
     if [[ ! -e oc ]] ; then
-        if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
+        if [ "${OPENSHIFT_RELEASE_VERSION}" != "" ]; then
             curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz | tar zx oc
         else
             curl -L https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz | tar zx oc
@@ -59,7 +59,7 @@ if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
 fi
 
 # Use the release payload for the latest known openshift release as indicated by git tags
-if [ -n ${OPENSHIFT_RELEASE_VERSION} ]; then
+if [ "${OPENSHIFT_RELEASE_VERSION}" != "" ]; then
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/openshift-release-dev/ocp-release:${OPENSHIFT_RELEASE_VERSION}
     export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
     echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
