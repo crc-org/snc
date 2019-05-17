@@ -9,6 +9,7 @@ OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 OPENSHIFT_RELEASE_VERSION=$(git describe --abbrev=0 HEAD 2>/dev/null) || OPENSHIFT_RELEASE_VERSION=
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
+CRC_PV_DIR="/mnt/pv-data"
 
 
 function create_json_description {
@@ -23,6 +24,60 @@ function create_json_description {
             | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
             | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
     #        |${JQ} '.buildInfo.ocGetCo = "snc"' >${INSTALL_DIR}/crc-bundle-info.json
+}
+
+function generate_pv() {
+  local pvdir="${1}"
+  local name="${2}"
+cat <<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ${name}
+  labels:
+    volume: ${name}
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
+  hostPath:
+    path: ${pvdir}
+  persistentVolumeReclaimPolicy: Recycle
+EOF
+}
+
+function setup_pv_dirs() {
+    local dir="${1}"
+    local count="${2}"
+    ssh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+
+    ${ssh} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    for pvsubdir in \$(seq -f "pv%04g" 1 ${count}); do
+        mkdir -p "${dir}/\${pvsubdir}"
+    done
+    if ! chcon -R -t svirt_sandbox_file_t "${dir}" &> /dev/null; then
+        echo "Failed to set SELinux context on ${dir}"
+    fi
+    chmod -R 770 ${dir}
+EOF
+}
+
+function create_pvs() {
+    local pvdir="${1}"
+    local count="${2}"
+
+    setup_pv_dirs "${pvdir}" "${count}"
+
+    for pvname in $(seq -f "pv%04g" 1 ${count}); do
+        if ! ${OC} get pv "${pvname}" &> /dev/null; then
+            generate_pv "${pvdir}/${pvname}" "${pvname}" | ${OC} create -f -
+        else
+            echo "persistentvolume ${pvname} already exists"
+        fi
+    done
 }
 
 # Download the oc binary if not present in current directory
@@ -108,6 +163,9 @@ create_json_description
 
 # export the kubeconfig
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
+
+# Create persistent volumes
+create_pvs "${CRC_PV_DIR}" 30
 
 # Once it is finished, disable the CVO
 ${OC} scale --replicas 0 -n openshift-cluster-version deployments/cluster-version-operator
