@@ -88,6 +88,7 @@ cluster_create()
     <srv service='etcd-server-ssl' protocol='tcp' domain='ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' target='etcd-0.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain' port='2380' weight='10'/>
     <host ip='192.168.126.11'>
       <hostname>api.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain</hostname>
+      <hostname>api-int.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain</hostname>
       <hostname>etcd-0.ReplaceMeWithCorrectVmName.ReplaceMeWithCorrectBaseDomain</hostname>
     </host>
   </dns>
