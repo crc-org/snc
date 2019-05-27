@@ -90,9 +90,14 @@ function generate_vbox_directory {
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_rsa_crc $destDir/
-    cp $srcDir/crc-bundle-info.json $destDir/
 
     ${QEMU_IMG} convert -f qcow2 -O vmdk $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vmdk
+
+    cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vmdk\"" \
+        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.vmdk\"" \
+        | ${JQ} '.storage.diskImages[0].format = "vmdk"' \
+        >$destDir/crc-bundle-info.json
 }
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
