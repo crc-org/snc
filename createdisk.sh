@@ -140,6 +140,10 @@ if [ -z $random_string ]; then
 fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
+# Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
+ssh -o StrictHostKeyChecking=no -i id_rsa_crc core@api.crc.testing -- sudo systemctl disable kubelet
+ssh -o StrictHostKeyChecking=no -i id_rsa_crc core@api.crc.testing -- sudo podman pull quay.io/crcont/dnsmasq:latest
+
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0
 
