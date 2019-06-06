@@ -44,7 +44,7 @@ function create_qemu_image {
 
     # Resize the image from the default 1+15GB to 1+20GB
     # This should also take care of making the image sparse
-    ${QEMU_IMG} create -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 21G
+    ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 21G
     ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
 
     rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
