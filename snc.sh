@@ -1,5 +1,8 @@
 #!/bin/sh
 
+export LC_ALL=C
+export LANG=C
+
 INSTALL_DIR=crc-tmp-install-data
 INSTALLER_RELEASE=v0.14.0
 JQ=${JQ:-jq}
