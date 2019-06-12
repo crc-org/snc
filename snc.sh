@@ -127,6 +127,15 @@ fi
 rm id_rsa_crc* || true
 ssh-keygen -N "" -f id_rsa_crc
 
+# Set NetworkManager DNS overlay file
+cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
+server=/${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.1
+address=/apps-${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.11
+EOF
+
+# Reload the NetworkManager to make DNS overlay effective
+sudo systemctl reload NetworkManager
+
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
 ${YQ} write --inplace $INSTALL_DIR/install-config.yaml baseDomain $BASE_DOMAIN
