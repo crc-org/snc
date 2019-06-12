@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export LC_ALL=C
+export LANG=C
+
 set -x
 
 function get_git_tag {
@@ -146,7 +149,11 @@ ssh -o StrictHostKeyChecking=no -i id_rsa_crc core@api.crc.testing -- sudo podma
 
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0
-
+# Wait till instance shutdown gracefully
+until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
+    echo " ${VM_PREFIX}-master-0 still running"
+    sleep 10
+done
 
 # libvirt image generation
 get_git_tag
