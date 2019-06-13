@@ -180,7 +180,7 @@ export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 create_pvs "${CRC_PV_DIR}" 30
 
 # Once it is finished, disable the CVO
-${OC} scale --replicas 0 -n openshift-cluster-version deployments/cluster-version-operator
+${OC} scale --replicas=0 deployment --all -n openshift-cluster-version
 
 # Disable the deployment/replicaset/statefulset config for openshift-monitoring namespace
 ${OC} scale --replicas=0 deployment --all -n openshift-monitoring
