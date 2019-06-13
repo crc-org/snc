@@ -5,6 +5,8 @@ export LANG=C
 
 set -x
 
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+
 function get_git_tag {
     GIT_TAG=$(git describe --exact-match HEAD) || GIT_TAG=
 
@@ -144,8 +146,8 @@ fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
 # Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
-ssh -o StrictHostKeyChecking=no -i id_rsa_crc core@api.crc.testing -- sudo systemctl disable kubelet
-ssh -o StrictHostKeyChecking=no -i id_rsa_crc core@api.crc.testing -- sudo podman pull quay.io/crcont/dnsmasq:latest
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
 
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0

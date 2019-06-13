@@ -13,6 +13,7 @@ OPENSHIFT_RELEASE_VERSION=$(git describe --abbrev=0 HEAD 2>/dev/null) || OPENSHI
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 
 
 function create_json_description {
@@ -55,9 +56,8 @@ EOF
 function setup_pv_dirs() {
     local dir="${1}"
     local count="${2}"
-    ssh="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 
-    ${ssh} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
     for pvsubdir in \$(seq -f "pv%04g" 1 ${count}); do
         mkdir -p "${dir}/\${pvsubdir}"
     done
@@ -167,7 +167,6 @@ see https://github.com/openshift/machine-config-operator/issues/579"
 fi
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
 
