@@ -149,6 +149,13 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
 
+# Stop the kubelet service so it will not reprovision the pods
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
+
+# Remove all the pods from the VM
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q)'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q)'
+
 # Shutdown the instance
 sudo virsh shutdown ${VM_PREFIX}-master-0
 # Wait till instance shutdown gracefully
