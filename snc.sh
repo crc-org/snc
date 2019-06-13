@@ -183,13 +183,11 @@ create_pvs "${CRC_PV_DIR}" 30
 ${OC} scale --replicas 0 -n openshift-cluster-version deployments/cluster-version-operator
 
 # Disable the deployment/replicaset/statefulset config for openshift-monitoring namespace
-${OC} scale --replicas=0 replicaset --all -n openshift-monitoring
 ${OC} scale --replicas=0 deployment --all -n openshift-monitoring
 ${OC} scale --replicas=0 statefulset --all -n openshift-monitoring
 
 # Disable the deployment/replicaset/statefulset config for openshift-marketplace namespace
 ${OC} scale --replicas=0 deployment --all -n openshift-marketplace
-${OC} scale --replicas=0 replicaset --all -n openshift-marketplace
 
 # Delete the pods which are there in Complete state
 ${OC} delete pod -l 'app in (installer, pruner)' -n openshift-kube-apiserver
@@ -198,6 +196,4 @@ ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-m
 
 # Disable the deployment/replicaset for openshift-machine-api and openshift-machine-config-operator
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-api
-${OC} scale --replicas=0 replicaset --all -n openshift-machine-api
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-config-operator
-${OC} scale --replicas=0 replicaset --all -n openshift-machine-config-operator
