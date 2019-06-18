@@ -196,3 +196,6 @@ ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-m
 # Disable the deployment/replicaset for openshift-machine-api and openshift-machine-config-operator
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-api
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-config-operator
+
+# Scale route deployment from 2 to 1
+${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
