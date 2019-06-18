@@ -199,3 +199,6 @@ ${OC} scale --replicas=0 deployment --all -n openshift-machine-config-operator
 
 # Scale route deployment from 2 to 1
 ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
+
+# Set default route for registry CRD from false to true.
+${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
