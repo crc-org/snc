@@ -118,7 +118,12 @@ function generate_hyperkit_directory {
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
-    cp $srcDir/crc-bundle-info.json $destDir/crc-bundle-info.json
+    # Update the bundle metadata info
+    cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
+        | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
+        | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
+        >$destDir/crc-bundle-info.json
 }
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
@@ -177,6 +182,9 @@ ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdlin
 
 # Get the rhcos kernel release
 kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
+
+# Get the kernel command line arguments
+kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
 
 # SCP the vmlinuz/initramfs from VM to Host in provided folder.
 ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
