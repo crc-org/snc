@@ -185,9 +185,6 @@ ${OC} scale --replicas=0 deployment --all -n openshift-cluster-version
 ${OC} scale --replicas=0 deployment --all -n openshift-monitoring
 ${OC} scale --replicas=0 statefulset --all -n openshift-monitoring
 
-# Disable the deployment/replicaset/statefulset config for openshift-marketplace namespace
-${OC} scale --replicas=0 deployment --all -n openshift-marketplace
-
 # Delete the pods which are there in Complete state
 ${OC} delete pod -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
