@@ -202,3 +202,7 @@ ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/d
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
+# Since this CRD block namespace deletion forever.
+${OC} delete apiservice v1beta1.metrics.k8s.io
