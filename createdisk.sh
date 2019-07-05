@@ -7,6 +7,7 @@ set -x
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+OC=${OC:-oc}
 
 function get_git_tag {
     GIT_TAG=$(git describe --exact-match HEAD) || GIT_TAG=
@@ -166,6 +167,9 @@ if [ -z $random_string ]; then
 fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
+# Replace pull secret with a null json string '{}'
+${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
+
 # Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
@@ -176,6 +180,9 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 # Remove all the pods from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q)'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q)'
+
+# Remove pull secret from the VM
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -f /var/lib/kubelet/config.json
 
 # Get the rhcos ostree Hash ID
 ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline | grep -oP "(?<=rhcos-).*(?=/vmlinuz)"')
