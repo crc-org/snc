@@ -61,6 +61,9 @@ function update_json_description {
     srcDir=$1
     destDir=$2
 
+    diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
+    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
+
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
@@ -71,6 +74,8 @@ function update_json_description {
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
+	| ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
+	| ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
         >$destDir/crc-bundle-info.json
 }
 
@@ -99,11 +104,16 @@ function generate_vbox_directory {
     cp $srcDir/id_rsa_crc $destDir/
 
     ${QEMU_IMG} convert -f qcow2 -O vmdk $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vmdk
+    
+    diskSize=$(du -b $destDir/${CRC_VM_NAME}.vmdk | awk '{print $1}')
+    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vmdk | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vmdk\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.vmdk\"" \
         | ${JQ} '.storage.diskImages[0].format = "vmdk"' \
+	| ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
+	| ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
         >$destDir/crc-bundle-info.json
 }
 
