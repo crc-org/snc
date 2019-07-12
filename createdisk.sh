@@ -227,7 +227,7 @@ tar cJSf $hyperkitDestDir.tar.xz $hyperkitDestDir
 #
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
-vboxDestDir="crc_vbox_${destDirSuffix}"
+vboxDestDir="crc_virtualbox_${destDirSuffix}"
 mkdir $vboxDestDir
 generate_vbox_directory $libvirtDestDir $vboxDestDir
 
