@@ -63,5 +63,9 @@
 	"sha256sum": "49766122a0834d62c1a24fb4e0de30cd7a39b8112083aa5e01fc26f16c15aed3"
       }
     ]
+  },
+  "driverInfo": {
+    # Name of driver the bundle supports, valid drivers are 'libvirt', 'hyperkit', 'virtualbox', 'hyperv'
+    "name": "libvirt"
   }
 }
