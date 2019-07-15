@@ -210,6 +210,9 @@ until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
     sleep 10
 done
 
+# instead of .tar.xz we use .crcbundle
+crcBundleSuffix=crcbundle
+
 # libvirt image generation
 get_git_tag
 
@@ -225,7 +228,7 @@ create_qemu_image $libvirtDestDir
 
 copy_additional_files $1 $libvirtDestDir
 
-tar cJSf $libvirtDestDir.tar.xz $libvirtDestDir
+tar cJSf $libvirtDestDir.$crcBundleSuffix $libvirtDestDir
 
 # HyperKit image generation
 # This must be done after the generation of libvirt image as it reuse some of
@@ -234,7 +237,7 @@ hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
 mkdir $hyperkitDestDir
 generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1
 
-tar cJSf $hyperkitDestDir.tar.xz $hyperkitDestDir
+tar cJSf $hyperkitDestDir.$crcBundleSuffix $hyperkitDestDir
 
 # VirtualBox image generation
 #
@@ -244,4 +247,4 @@ vboxDestDir="crc_virtualbox_${destDirSuffix}"
 mkdir $vboxDestDir
 generate_vbox_directory $libvirtDestDir $vboxDestDir
 
-tar cJSf $vboxDestDir.tar.xz $vboxDestDir
+tar cJSf $vboxDestDir.$crcBundleSuffix $vboxDestDir
