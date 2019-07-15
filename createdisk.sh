@@ -76,6 +76,7 @@ function update_json_description {
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
 	| ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
 	| ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
+	| ${JQ} '.driverInfo.name = "libvirt"' \
         >$destDir/crc-bundle-info.json
 }
 
@@ -114,6 +115,7 @@ function generate_vbox_directory {
         | ${JQ} '.storage.diskImages[0].format = "vmdk"' \
 	| ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
 	| ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
+	| ${JQ} '.driverInfo.name = "virtualbox"' \
         >$destDir/crc-bundle-info.json
 }
 
@@ -134,6 +136,7 @@ function generate_hyperkit_directory {
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
+	| ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
 }
 
