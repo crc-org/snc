@@ -170,6 +170,9 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 # Replace pull secret with a null json string '{}'
 ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 
+# Remove the Cluster ID with a empty string.
+${OC} --config $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+
 # Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
