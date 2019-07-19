@@ -84,7 +84,9 @@ function copy_additional_files {
     srcDir=$1
     destDir=$2
 
-    create_crc_libvirt_sh $destDir
+    # Generate the libvirt sh file in source directory to test the disk image if required.
+    # Don't include this in the destDir so it will not be part of final disk tarball.
+    create_crc_libvirt_sh $srcDir
 
     # Copy the kubeconfig and kubeadm password file
     cp $1/auth/kube* $destDir/
