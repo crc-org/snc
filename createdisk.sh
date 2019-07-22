@@ -26,7 +26,7 @@ function get_git_tag {
 }
 
 function create_crc_libvirt_sh {
-    destDir=$1
+    local destDir=$1
 
     hostInfo=$(sudo virsh net-dumpxml ${VM_PREFIX} | grep ${VM_PREFIX}-master-0 | sed "s/^[ \t]*//")
     masterMac=$(sudo virsh dumpxml ${VM_PREFIX}-master-0 | grep "mac address" | sed "s/^[ \t]*//")
@@ -40,7 +40,7 @@ function create_crc_libvirt_sh {
 }
 
 function create_qemu_image {
-    destDir=$1
+    local destDir=$1
 
     sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
     sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
@@ -58,8 +58,8 @@ function create_qemu_image {
 }
 
 function update_json_description {
-    srcDir=$1
-    destDir=$2
+    local srcDir=$1
+    local destDir=$2
 
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
@@ -81,8 +81,8 @@ function update_json_description {
 }
 
 function copy_additional_files {
-    srcDir=$1
-    destDir=$2
+    local srcDir=$1
+    local destDir=$2
 
     # Generate the libvirt sh file in source directory to test the disk image if required.
     # Don't include this in the destDir so it will not be part of final disk tarball.
@@ -99,8 +99,8 @@ function copy_additional_files {
 }
 
 function generate_vbox_directory {
-    srcDir=$1
-    destDir=$2
+    local srcDir=$1
+    local destDir=$2
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
@@ -122,9 +122,9 @@ function generate_vbox_directory {
 }
 
 function generate_hyperkit_directory {
-    srcDir=$1
-    destDir=$2
-    tmpDir=$3
+    local srcDir=$1
+    local destDir=$2
+    local tmpDir=$3
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
@@ -143,8 +143,8 @@ function generate_hyperkit_directory {
 }
 
 function generate_hyperv_directory {
-    srcDir=$1
-    destDir=$2
+    local srcDir=$1
+    local destDir=$2
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
