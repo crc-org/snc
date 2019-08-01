@@ -54,6 +54,10 @@ function create_qemu_image {
     ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 31G
     ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
 
+    # Make sure you have enough space in /tmp to run VIRT_SPARSIFY
+    # Read limitation section of `man virt-sparsify`.
+    ${VIRT_SPARSIFY} --in-place $destDir/${CRC_VM_NAME}.qcow2
+
     rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
 }
 
@@ -173,6 +177,7 @@ BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 JQ=${JQ:-jq}
 VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
+VIRT_SPARSIFY=${VIRT_SPARSIFY:-virt-sparsify}
 
 if [[ $# -ne 1 ]]; then
    echo "You need to provide the running cluster directory to copy kubeconfig"
