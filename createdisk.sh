@@ -10,7 +10,7 @@ SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 OC=${OC:-oc}
 
 function get_git_tag {
-    GIT_TAG=$(git describe --exact-match HEAD) || GIT_TAG=
+    GIT_TAG=$(git describe --exact-match --tags HEAD) || GIT_TAG=
 
     # Based on code from git-version-gen
     # Don't declare a version "dirty" merely because a time stamp has changed
