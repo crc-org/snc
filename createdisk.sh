@@ -210,6 +210,15 @@ if [ -z $random_string ]; then
 fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
+# First check if cert rotation happened.
+# Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
+# We check if it's valid for more than 25 days rather than 30 days to give us some
+# leeway regarding when we run the check with respect to rotation time
+if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+    echo "Certs are not yet rotated to have 30 days validity"
+    exit 1;
+fi
+
 # Replace pull secret with a null json string '{}'
 ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 
