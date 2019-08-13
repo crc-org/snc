@@ -8,6 +8,7 @@ set -x
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 OC=${OC:-oc}
+DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 
 function get_git_tag {
     GIT_TAG=$(git describe --exact-match --tags HEAD) || GIT_TAG=
@@ -218,6 +219,11 @@ if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checken
     echo "Certs are not yet rotated to have 30 days validity"
     exit 1;
 fi
+
+# Add a user developer:developer with htpasswd identity provider and give it sudoer role
+${OC} --config $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
+${OC} --config $1/auth/kubeconfig apply -f htpasswd_cr.yaml
+${OC} --config $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
 # Replace pull secret with a null json string '{}'
 ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
