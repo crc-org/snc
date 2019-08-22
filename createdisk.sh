@@ -245,18 +245,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl 
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
 
-# Get the rhcos ostree Hash ID
-ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline | grep -oP "(?<=rhcos-).*(?=/vmlinuz)"')
-
-# Get the rhcos kernel release
-kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
-
-# Get the kernel command line arguments
-kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
-
-# SCP the vmlinuz/initramfs from VM to Host in provided folder.
-${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
-
 # Download the hyperV daemons dependency on host
 mkdir $1/hyperv
 sudo yum install -y --downloadonly --downloaddir $1/hyperv hyperv-daemons
@@ -270,12 +258,40 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/
 # Remove the packages from VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/hyperv
 
-# Shutdown the instance
+# Shutdown and Start the VM after installing the hyperV daemon packages.
+# This is required to get the latest ostree layer which have those installed packages.
+sudo virsh shutdown ${VM_PREFIX}-master-0
+# Wait till instance started successfully
+until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
+    echo " ${VM_PREFIX}-master-0 still running"
+    sleep 3
+done
+
+sudo virsh start ${VM_PREFIX}-master-0
+# Wait till it is started properly.
+until ping -c1 api.${CRC_VM_NAME}.${BASE_DOMAIN} >/dev/null 2>&1; do
+    echo " ${VM_PREFIX}-master-0 still booting"
+    sleep 2
+done
+
+# Get the rhcos ostree Hash ID
+ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline | grep -oP "(?<=rhcos-).*(?=/vmlinuz)"')
+
+# Get the rhcos kernel release
+kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
+
+# Get the kernel command line arguments
+kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
+
+# SCP the vmlinuz/initramfs from VM to Host in provided folder.
+${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
+
+# Shutdown the VM
 sudo virsh shutdown ${VM_PREFIX}-master-0
 # Wait till instance shutdown gracefully
 until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
     echo " ${VM_PREFIX}-master-0 still running"
-    sleep 10
+    sleep 3
 done
 
 # instead of .tar.xz we use .crcbundle
