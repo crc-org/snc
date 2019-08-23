@@ -8,7 +8,7 @@ JQ=${JQ:-jq}
 OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
-OPENSHIFT_RELEASE_VERSION=$(git describe --abbrev=0 --tags 2>/dev/null) || OPENSHIFT_RELEASE_VERSION=
+OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null) || OPENSHIFT_RELEASE_VERSION=
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
