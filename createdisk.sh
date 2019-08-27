@@ -57,7 +57,9 @@ function create_qemu_image {
 
     # Make sure you have enough space in /tmp to run VIRT_SPARSIFY
     # Read limitation section of `man virt-sparsify`.
-    ${VIRT_SPARSIFY} --in-place $destDir/${CRC_VM_NAME}.qcow2
+    TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} -o lazy_refcounts=on $destDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}_sparse.qcow2
+    rm -f $destDir/${CRC_VM_NAME}.qcow2
+    mv $destDir/${CRC_VM_NAME}_sparse.qcow2 $destDir/${CRC_VM_NAME}.qcow2
 
     rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
 }
