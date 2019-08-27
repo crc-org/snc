@@ -55,11 +55,18 @@ function create_qemu_image {
     ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 31G
     ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
 
-    # Make sure you have enough space in /tmp to run VIRT_SPARSIFY
+    # TMPDIR must point at a directory with as much free space as the size of the image we want to sparsify
     # Read limitation section of `man virt-sparsify`.
     TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} -o lazy_refcounts=on $destDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}_sparse.qcow2
     rm -f $destDir/${CRC_VM_NAME}.qcow2
     mv $destDir/${CRC_VM_NAME}_sparse.qcow2 $destDir/${CRC_VM_NAME}.qcow2
+
+    # Before using the created qcow2, check if it has lazy_refcounts set to true.
+    lazy_refcounts=$(${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep -oP "lazy refcounts: true")
+    if [ -z $lazy_refcounts ]; then
+        echo "${CRC_VM_NAME}.qcow2 doesn't have lazy_refcounts enabled. This is going to cause disk image corruption when using with hyperkit"
+        exit 1;
+    fi
 
     rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
 }
