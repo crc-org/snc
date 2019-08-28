@@ -123,7 +123,7 @@ fi
 
 # Generate a new ssh keypair for this cluster
 rm id_rsa_crc* || true
-ssh-keygen -N "" -f id_rsa_crc
+ssh-keygen -N "" -f id_rsa_crc -C "core"
 
 # Set NetworkManager DNS overlay file
 cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
