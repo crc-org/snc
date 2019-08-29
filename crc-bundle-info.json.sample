@@ -16,6 +16,8 @@
     "sncVersion": "git9662"
   },
   "clusterInfo": {
+    # Version of OpenShift installed in the virtual machine
+    "openshiftVersion": "4.1.11"
     # Name of the openshift cluster stored in the bundle
     "clusterName": "crc",
     # Base domain name used for the openshift cluster
