@@ -158,6 +158,10 @@ ${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[
 # Start the cluster with 10GB memory and 4 CPU create and wait till it finish
 export TF_VAR_libvirt_master_memory=10192
 export TF_VAR_libvirt_master_vcpu=4
+
+# Add codeReadyContainer as invoker to identify it with telemeter
+export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
+
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug
 if [ $? -ne 0 ]; then
     echo "This is known to fail with:
