@@ -189,7 +189,7 @@ ${OC} scale --replicas=0 deployment --all -n openshift-monitoring
 ${OC} scale --replicas=0 statefulset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
-${OC} delete pod -l 'app in (installer, pruner)' -n openshift-kube-apiserver
+${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
 
