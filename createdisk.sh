@@ -12,18 +12,6 @@ DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FE
 
 function get_git_tag {
     GIT_TAG=$(git describe --exact-match --tags HEAD) || GIT_TAG=
-
-    # Based on code from git-version-gen
-    # Don't declare a version "dirty" merely because a time stamp has changed
-    git update-index --refresh > /dev/null 2>&1
-
-    dirty=`sh -c 'git diff-index --name-only HEAD' 2>/dev/null` || dirty=
-    case "$dirty" in
-        '') ;;
-        *) # Don't build an 'official' version if git tree is dirty
-            GIT_TAG=
-    esac
-    # end of git-version-gen code
 }
 
 function create_crc_libvirt_sh {
