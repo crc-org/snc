@@ -10,8 +10,11 @@ SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 OC=${OC:-oc}
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 
-function get_git_tag {
-    GIT_TAG=$(git describe --exact-match --tags HEAD) || GIT_TAG=
+function get_dest_dir {
+    DEST_DIR=$(git describe --exact-match --tags HEAD)
+    if [ -z ${DEST_DIR} ]; then
+        DEST_DIR="$(date --iso-8601)"
+    fi
 }
 
 function create_crc_libvirt_sh {
@@ -298,13 +301,9 @@ done
 crcBundleSuffix=crcbundle
 
 # libvirt image generation
-get_git_tag
+get_dest_dir
+destDirSuffix="${DEST_DIR}"
 
-if [ -z ${GIT_TAG} ]; then
-    destDirSuffix="$(date --iso-8601)"
-else
-    destDirSuffix="${GIT_TAG}"
-fi
 libvirtDestDir="crc_libvirt_${destDirSuffix}"
 mkdir $libvirtDestDir
 
