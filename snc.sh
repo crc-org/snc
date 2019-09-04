@@ -8,12 +8,20 @@ JQ=${JQ:-jq}
 OC=${OC:-oc}
 YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
-OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null) || OPENSHIFT_RELEASE_VERSION=
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 
+# If user defined the OPENSHIFT_VERSION environment variable then use it.
+# Otherwise use the tagged version if available
+function get_openshift_version {
+    if [ ${OPENSHIFT_VERSION} != "" ]; then
+        OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
+    else
+        OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
+    fi
+}
 
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
@@ -81,6 +89,8 @@ function create_pvs() {
         fi
     done
 }
+
+get_openshift_version
 
 # Download the oc binary if not present in current directory
 if ! which $OC; then
