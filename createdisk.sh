@@ -11,9 +11,13 @@ OC=${OC:-oc}
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 
 function get_dest_dir {
-    DEST_DIR=$(git describe --exact-match --tags HEAD)
-    if [ -z ${DEST_DIR} ]; then
-        DEST_DIR="$(date --iso-8601)"
+    if [ ${OPENSHIFT_VERSION} != "" ]; then
+        DEST_DIR=$OPENSHIFT_VERSION
+    else
+        DEST_DIR=$(git describe --exact-match --tags HEAD)
+        if [ -z ${DEST_DIR} ]; then
+            DEST_DIR="$(date --iso-8601)"
+        fi
     fi
 }
 
