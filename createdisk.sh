@@ -38,8 +38,13 @@ function create_crc_libvirt_sh {
 function create_qemu_image {
     local destDir=$1
 
-    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
-    sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
+    if [ -f /var/lib/libvirt/images/${VM_PREFIX}-master-0 ]; then
+      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
+      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
+    else
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-master-0 $destDir
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-base $destDir
+    fi
 
     sudo chown $USER:$USER -R $destDir
     ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
