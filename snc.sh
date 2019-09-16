@@ -173,6 +173,9 @@ export TF_VAR_libvirt_master_vcpu=4
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug
+
+# Wait for install to complete, this provide another 30 mins to make resources (apis) stable
+${OPENSHIFT_INSTALL} --dir $INSTALL_DIR wait-for install-complete --log-level debug
 if [ $? -ne 0 ]; then
     echo "This is known to fail with:
 'pool master is not ready - timed out waiting for the condition'
