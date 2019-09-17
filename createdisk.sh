@@ -227,7 +227,7 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 # Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
 # We check if it's valid for more than 25 days rather than 30 days to give us some
 # leeway regarding when we run the check with respect to rotation time
-if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
     echo "Certs are not yet rotated to have 30 days validity"
     exit 1;
 fi
