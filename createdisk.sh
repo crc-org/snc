@@ -65,8 +65,8 @@ function create_qemu_image {
     mv $destDir/${CRC_VM_NAME}_sparse.qcow2 $destDir/${CRC_VM_NAME}.qcow2
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
-    lazy_refcounts=$(${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep -oP "lazy refcounts: true")
-    if [ -z $lazy_refcounts ]; then
+    ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
+    if [ $? -ne 0 ]; then
         echo "${CRC_VM_NAME}.qcow2 doesn't have lazy_refcounts enabled. This is going to cause disk image corruption when using with hyperkit"
         exit 1;
     fi
