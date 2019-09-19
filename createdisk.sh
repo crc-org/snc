@@ -51,9 +51,12 @@ function create_qemu_image {
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
     # Resize the image from the default 1+15GB to 1+30GB
-    # This should also take care of making the image sparse
     ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 31G
     ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
+    if [ $? -ne 0 ]; then
+            echo "${VIRT_RESIZE} call failed, disk image was not properly resized, aborting"
+            exit 1
+    fi
 
     # TMPDIR must point at a directory with as much free space as the size of the image we want to sparsify
     # Read limitation section of `man virt-sparsify`.
