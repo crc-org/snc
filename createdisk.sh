@@ -301,6 +301,13 @@ kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cm
 # SCP the vmlinuz/initramfs from VM to Host in provided folder.
 ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
 
+# Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1729603
+# TODO: Should be removed once latest podman available or the fix is backported.
+# Issue found in podman version 1.4.2-stable2 (podman-1.4.2-5.el8.x86_64)
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100-crio-bridge.conf'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
+
+
 # Shutdown the VM
 sudo virsh shutdown ${VM_PREFIX}-master-0
 # Wait till instance shutdown gracefully
