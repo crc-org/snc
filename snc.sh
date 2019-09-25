@@ -10,6 +10,7 @@ YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
+QUAY_REGISTRY=${QUAY_REGISTRY:-quay.io/openshift-release-dev/ocp-release}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 
@@ -127,7 +128,7 @@ fi
 
 # Use the release payload for the latest known openshift release as indicated by git tags
 if [ "${OPENSHIFT_RELEASE_VERSION}" != "" ]; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/openshift-release-dev/ocp-release:${OPENSHIFT_RELEASE_VERSION}
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${QUAY_REGISTRY}:${OPENSHIFT_RELEASE_VERSION}
     export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
     echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
