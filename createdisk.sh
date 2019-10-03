@@ -63,6 +63,7 @@ function create_qemu_image {
     TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} -o lazy_refcounts=on $destDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}_sparse.qcow2
     rm -f $destDir/${CRC_VM_NAME}.qcow2
     mv $destDir/${CRC_VM_NAME}_sparse.qcow2 $destDir/${CRC_VM_NAME}.qcow2
+    rm -fr $destDir/.guestfs-*
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
