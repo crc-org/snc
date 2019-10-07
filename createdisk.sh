@@ -308,6 +308,11 @@ ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100-crio-bridge.conf'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
 
+# Remove the journal logs.
+# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't 
+# remove all the journal logs so separate commands are used here.
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
 sudo virsh shutdown ${VM_PREFIX}-master-0
