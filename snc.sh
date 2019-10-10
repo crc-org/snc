@@ -17,7 +17,7 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
 function get_openshift_version {
-    if [ ${OPENSHIFT_VERSION} != "" ]; then
+    if [ "${OPENSHIFT_VERSION}" != "" ]; then
         OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
     else
         OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
