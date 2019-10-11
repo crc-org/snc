@@ -220,6 +220,9 @@ ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/d
 # Scale console deployment from 2 to 1
 ${OC} scale --replicas=1 deployment.apps/console -n openshift-console
 
+# Scale console download deployment from 2 to 0
+${OC} scale --replicas=0 deployment.apps/downloads -n openshift-console
+
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
