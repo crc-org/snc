@@ -211,6 +211,9 @@ ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-m
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-api
 ${OC} scale --replicas=0 deployment --all -n openshift-machine-config-operator
 
+# Set replica to 0 for openshift-insights
+${OC} scale --replicas=0 deployment --all -n openshift-insights
+
 # Scale route deployment from 2 to 1
 ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
 
