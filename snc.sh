@@ -50,7 +50,7 @@ metadata:
     volume: ${name}
 spec:
   capacity:
-    storage: 10Gi
+    storage: 100Gi
   accessModes:
     - ReadWriteOnce
     - ReadWriteMany
