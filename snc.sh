@@ -226,6 +226,9 @@ ${OC} scale --replicas=0 deployment.apps/downloads -n openshift-console
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
+# Apply registry pvc to bound with pv0001
+${OC} apply -f registry_pvc.yaml
+
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
