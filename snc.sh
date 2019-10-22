@@ -198,8 +198,13 @@ create_pvs "${CRC_PV_DIR}" 30
 # Once it is finished, disable the CVO
 ${OC} scale --replicas=0 deployment --all -n openshift-cluster-version
 
+# Get the pod name associated with cluster-monitoring-operator deployment
+cmo_pod=$(${OC} get pod -l app=cluster-monitoring-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
 # Disable the deployment/replicaset/statefulset config for openshift-monitoring namespace
 ${OC} scale --replicas=0 deployment --all -n openshift-monitoring
+# Wait till the cluster-monitoring-operator pod is deleted
+${OC} wait --for=delete pod/$cmo_pod --timeout=60s -n openshift-monitoring
+# Disable the statefulset for openshift-monitoring namespace
 ${OC} scale --replicas=0 statefulset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
