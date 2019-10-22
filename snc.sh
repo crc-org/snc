@@ -237,6 +237,11 @@ ${OC} scale --replicas=0 deployment --all -n openshift-cloud-credential-operator
 # Apply registry pvc to bound with pv0001
 ${OC} apply -f registry_pvc.yaml
 
+# Add registry storage to pvc
+${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
+# Remove emptyDir as storage for registry
+${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
+
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
