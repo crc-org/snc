@@ -226,6 +226,9 @@ ${OC} scale --replicas=0 deployment.apps/downloads -n openshift-console
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
+# Set replica for cloud-credential-operator from 1 to 0
+${OC} scale --replicas=0 deployment --all -n openshift-cloud-credential-operator
+
 # Apply registry pvc to bound with pv0001
 ${OC} apply -f registry_pvc.yaml
 
