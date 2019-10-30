@@ -157,12 +157,6 @@ ${YQ} write --inplace $INSTALL_DIR/install-config.yaml sshKey "$(cat id_rsa_crc.
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create manifests || exit 1
 
-# Copy the config which removes taint from master
-cp 99_master-kubelet-no-taint.yaml $INSTALL_DIR/openshift/
-
-# Add worker label to master machine config
-${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.metadata.labels[node-role.kubernetes.io/worker] ""
-
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 
