@@ -169,6 +169,28 @@ export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug
 
+export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
+
+oc apply -f kubelet-bootstrap-cred-manager-ds.yaml
+
+# Delete the current csr signer to get new request.
+oc delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
+
+# Wait for 5 min to make sure cluster is stable again.
+sleep 300
+
+# Remove the 24 hours certs and bootstrap kubeconfig
+# this kubeconfig will be regenerated and new certs will be created in pki folder
+# which will have 30 days validity.
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
+
+# Wait until bootstrap csr request is generated.
+until oc get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
+oc get csr -oname | xargs oc adm certificate approve
+
+
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR wait-for install-complete --log-level debug
 if [ $? -ne 0 ]; then
@@ -183,8 +205,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HO
 
 create_json_description
 
-# export the kubeconfig
-export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
@@ -239,3 +259,12 @@ ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": 
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
+
+# Get the cert pod name
+cert_pod=$(${OC} get pod -l k8s-app=kubelet-bootstrap-cred-manager -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
+# Remove the bootstrap-cred-manager daemonset
+${OC} delete daemonset.apps/kubelet-bootstrap-cred-manager -n openshift-machine-config-operator
+# Wait till the cert pod is removed
+${OC} wait --for=delete pod/$cert_pod --timeout=60s -n openshift-machine-config-operator
+# Remove the cli image which was used for the bootstrap-cred-manager daemonset
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:v4.0
