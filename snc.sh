@@ -271,6 +271,6 @@ cert_pod=$(${OC} get pod -l k8s-app=kubelet-bootstrap-cred-manager -o jsonpath="
 # Remove the bootstrap-cred-manager daemonset
 ${OC} delete daemonset.apps/kubelet-bootstrap-cred-manager -n openshift-machine-config-operator
 # Wait till the cert pod is removed
-${OC} wait --for=delete pod/$cert_pod --timeout=60s -n openshift-machine-config-operator
+${OC} wait --for=delete pod/$cert_pod --timeout=120s -n openshift-machine-config-operator
 # Remove the cli image which was used for the bootstrap-cred-manager daemonset
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:v4.0
