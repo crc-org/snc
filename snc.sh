@@ -159,8 +159,14 @@ ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create manifests || exit 1
 
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
+# Add master memory to 12 GB and 6 cpus 
+# This is only valid for openshift 4.3 onwards
+${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 12288
+${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
 
 # Start the cluster with 10GB memory and 4 CPU create and wait till it finish
+# Todo: we need to remove this once stop building 4.2 bits.
+# For 4.3 this is ignored.
 export TF_VAR_libvirt_master_memory=10192
 export TF_VAR_libvirt_master_vcpu=4
 
