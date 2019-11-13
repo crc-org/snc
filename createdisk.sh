@@ -61,12 +61,18 @@ function create_qemu_image {
             exit 1
     fi
 
+    # Remove immutable attribute for OpenShift 4.3+
+    guestfish -a $destDir/${CRC_VM_NAME}.qcow2 -m /dev/sda4 set-e2attrs / i clear:true
+
     # TMPDIR must point at a directory with as much free space as the size of the image we want to sparsify
     # Read limitation section of `man virt-sparsify`.
     TMPDIR=$(pwd)/$destDir ${VIRT_SPARSIFY} -o lazy_refcounts=on $destDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}_sparse.qcow2
     rm -f $destDir/${CRC_VM_NAME}.qcow2
     mv $destDir/${CRC_VM_NAME}_sparse.qcow2 $destDir/${CRC_VM_NAME}.qcow2
     rm -fr $destDir/.guestfs-*
+
+    # Set immutable attribute back for /dev/sda4
+    guestfish -a $destDir/${CRC_VM_NAME}.qcow2 -m /dev/sda4 set-e2attrs / i
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
