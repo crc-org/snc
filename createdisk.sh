@@ -50,9 +50,12 @@ function create_qemu_image {
     ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
+    # Check which partition is labeled as `root`
+    partition=$(${VIRT_FILESYSTEMS} -a $destDir/${VM_PREFIX}-base  -l | grep root | cut -f1 -d' ')
+
     # Resize the image from the default 1+15GB to 1+30GB
     ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 31G
-    ${VIRT_RESIZE} --expand /dev/sda3 $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
+    ${VIRT_RESIZE} --expand $partition $destDir/${VM_PREFIX}-base $destDir/${CRC_VM_NAME}.qcow2
     if [ $? -ne 0 ]; then
             echo "${VIRT_RESIZE} call failed, disk image was not properly resized, aborting"
             exit 1
@@ -192,6 +195,7 @@ JQ=${JQ:-jq}
 VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_SPARSIFY=${VIRT_SPARSIFY:-virt-sparsify}
+VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 
 if [[ $# -ne 1 ]]; then
    echo "You need to provide the running cluster directory to copy kubeconfig"
@@ -204,6 +208,10 @@ fi
 
 if ! which ${VIRT_RESIZE}; then
     sudo yum -y install /usr/bin/virt-resize libguestfs-xfs
+fi
+
+if ! which ${VIRT_FILESYSTEMS}; then
+    sudo yum -y install /usr/bin/virt-filesystems
 fi
 
 # The CoreOS image uses an XFS filesystem
