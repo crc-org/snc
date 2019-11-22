@@ -255,6 +255,10 @@ ${OC} --config $1/auth/kubeconfig create secret generic htpass-secret --from-lit
 ${OC} --config $1/auth/kubeconfig apply -f htpasswd_cr.yaml
 ${OC} --config $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
+# Get cluster-kube-apiserver-operator image along with hash and tag it
+certImage=$(${OC} --config $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
+
 # Replace pull secret with a null json string '{}'
 ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 
