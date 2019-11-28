@@ -51,7 +51,7 @@ function create_qemu_image {
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
     # Check which partition is labeled as `root`
-    partition=$(${VIRT_FILESYSTEMS} -a $destDir/${VM_PREFIX}-base  -l | grep root | cut -f1 -d' ')
+    partition=$(${VIRT_FILESYSTEMS} -a $destDir/${VM_PREFIX}-base -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
 
     # Resize the image from the default 1+15GB to 1+30GB
     ${QEMU_IMG} create -o lazy_refcounts=on -f qcow2 $destDir/${CRC_VM_NAME}.qcow2 31G
