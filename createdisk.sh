@@ -114,29 +114,6 @@ function copy_additional_files {
     update_json_description $srcDir $destDir
 }
 
-function generate_vbox_directory {
-    local srcDir=$1
-    local destDir=$2
-
-    cp $srcDir/kubeadmin-password $destDir/
-    cp $srcDir/kubeconfig $destDir/
-    cp $srcDir/id_rsa_crc $destDir/
-
-    ${QEMU_IMG} convert -f qcow2 -O vmdk $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vmdk
-    
-    diskSize=$(du -b $destDir/${CRC_VM_NAME}.vmdk | awk '{print $1}')
-    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vmdk | awk '{print $1}')
-
-    cat $srcDir/crc-bundle-info.json \
-        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vmdk\"" \
-        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.vmdk\"" \
-        | ${JQ} '.storage.diskImages[0].format = "vmdk"' \
-        | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
-        | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
-        | ${JQ} '.driverInfo.name = "virtualbox"' \
-        >$destDir/crc-bundle-info.json
-}
-
 function generate_hyperkit_directory {
     local srcDir=$1
     local destDir=$2
@@ -352,17 +329,6 @@ mkdir $hyperkitDestDir
 generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1
 
 tar cJSf $hyperkitDestDir.$crcBundleSuffix $hyperkitDestDir
-
-# VirtualBox image generation
-#
-# This must be done after the generation of libvirt image as it reuses some of
-# the content of $libvirtDestDir
-vboxDestDir="crc_virtualbox_${destDirSuffix}"
-mkdir $vboxDestDir
-generate_vbox_directory $libvirtDestDir $vboxDestDir
-
-tar cJSf $vboxDestDir.$crcBundleSuffix $vboxDestDir
-
 
 # HyperV image generation
 #
