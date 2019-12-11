@@ -289,7 +289,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
 # Remove all the pods from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q)'
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q)'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'for i in {1..3}; do sudo crictl rmp $(sudo crictl pods -q) && break || sleep 2; done'
 
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
