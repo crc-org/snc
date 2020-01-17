@@ -271,6 +271,9 @@ ${OC} --config $1/auth/kubeconfig create clusterrolebinding developer --clusterr
 certImage=$(${OC} --config $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
 
+# Remove unused images from container storage
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
+
 # Replace pull secret with a null json string '{}'
 ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 
