@@ -298,17 +298,17 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'for i in {1..3}; do sudo crict
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
 
 # Download the hyperV daemons and libvarlink-util dependency on host
-mkdir $1/hyperv
-sudo yum install -y --downloadonly --downloaddir $1/hyperv hyperv-daemons libvarlink-util
+mkdir $1/packages
+sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons libvarlink-util
 
 # SCP the downloaded rpms to VM
-${SCP} -r $1/hyperv core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 
-# Install the hyperV rpms to VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/hyperv/*.rpm'
+# Install the hyperV and libvarlink-util rpms to VM
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
 
 # Remove the packages from VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/hyperv
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
