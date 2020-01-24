@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 export LC_ALL=C
 export LANG=C
 
@@ -119,7 +121,7 @@ if ! which ${JQ}; then
 fi
 
 # Destroy an existing cluster and resources
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug
+${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
 
 if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
     echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
@@ -173,7 +175,7 @@ export TF_VAR_libvirt_master_vcpu=4
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug
+${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 
