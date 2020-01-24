@@ -12,19 +12,30 @@ YQ=${YQ:-yq}
 OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
-QUAY_REGISTRY=${QUAY_REGISTRY:-quay.io/openshift-release-dev/ocp-release}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
-function get_openshift_version {
-    if [ "${OPENSHIFT_VERSION}" != "" ]; then
-        OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
+if test -n "${OPENSHIFT_VERSION}"; then
+    OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
+    echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
+else
+    OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
+    if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
+        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from local Git tags"
     else
-        OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
+        OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}/latest/release.txt | sed -n 's/^ *Version: //p')"
+        if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
+            echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
+        else
+            echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly.
+            exit 1
+        fi
     fi
-}
+fi
+
 
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
@@ -34,7 +45,7 @@ function create_json_description {
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
-            | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION:-git}\"" \
+            | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
             | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
             | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
@@ -98,11 +109,7 @@ get_openshift_version
 # Download the oc binary if not present in current directory
 if ! which $OC; then
     if [[ ! -e oc ]] ; then
-        if [ "${OPENSHIFT_RELEASE_VERSION}" != "" ]; then
-            curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz | tar zx oc
-        else
-            curl -L https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz | tar zx oc
-        fi
+        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar zx oc
     fi
     OC=./oc
 fi
@@ -128,12 +135,9 @@ if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
     exit 1
 fi
 
-# Use the release payload for the latest known openshift release as indicated by git tags
-if [ "${OPENSHIFT_RELEASE_VERSION}" != "" ]; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${QUAY_REGISTRY}:${OPENSHIFT_RELEASE_VERSION}
-    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
-    echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
-fi
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -l "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
+export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
 # Generate a new ssh keypair for this cluster
 rm id_rsa_crc* || true
