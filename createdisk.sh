@@ -287,6 +287,11 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
+# Remove all the pod before delete them using crio
+${OC} --config $1/auth/kubeconfig delete pods --all --all-namespaces --timeout=50s
+# Remove the pods from pending state
+${OC} --config $1/auth/kubeconfig delete pods --all-namespaces --field-selector=status.phase=Pending
+
 # Enable the io.podman.socket service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman.socket
 
