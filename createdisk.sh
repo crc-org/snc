@@ -280,6 +280,13 @@ ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 # Remove the Cluster ID with a empty string.
 ${OC} --config $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
+# Scale down deployments to 0
+${OC} --config $1/auth/kubeconfig get ns -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | xargs -n 1 ${OC} --config $1/auth/kubeconfig scale --replicas=0 deployment --all -n
+
+# Scale down daemonset to 0
+${OC} --config $1/auth/kubeconfig -n openshift-apiserver patch daemonset apiserver -p '{"spec": {"template": {"spec": {"nodeSelector": {"non-existing": "true"}}}}}'
+${OC} --config $1/auth/kubeconfig -n openshift-monitoring patch daemonset node-exporter -p '{"spec": {"template": {"spec": {"nodeSelector": {"non-existing": "true"}}}}}'
+
 # Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
