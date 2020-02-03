@@ -66,7 +66,7 @@ function resize_and_sparsify {
     guestfish --remote <<EOF
 add-drive $tmpFile
 run
-luks-open /dev/sda4 coreos-root
+luks-open $partition coreos-root
 mount /dev/mapper/coreos-root /
 xfs-growfs /
 zero-free-space /boot/
