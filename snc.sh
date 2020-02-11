@@ -179,10 +179,10 @@ ${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug || echo
 
 export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
 
-oc apply -f kubelet-bootstrap-cred-manager-ds.yaml
+${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
 
 # Delete the current csr signer to get new request.
-oc delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
+${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
 
 # Wait for 5 min to make sure cluster is stable again.
 sleep 300
@@ -195,8 +195,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/ku
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
 
 # Wait until bootstrap csr request is generated.
-until oc get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
-oc get csr -oname | xargs oc adm certificate approve
+until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
+${OC} get csr -oname | xargs ${OC} adm certificate approve
 
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
