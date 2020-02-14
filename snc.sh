@@ -104,8 +104,6 @@ function create_pvs() {
     done
 }
 
-get_openshift_version
-
 # Download the oc binary if not present in current directory
 if ! which $OC; then
     if [[ ! -e oc ]] ; then
