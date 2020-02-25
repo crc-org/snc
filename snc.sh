@@ -223,26 +223,30 @@ create_pvs "${CRC_PV_DIR}" 30
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
 ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
-# Get the pod name associated with cluster-monitoring-operator deployment
 cmo_pod=$(${OC} get pod -l app=cluster-monitoring-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
-# Disable the deployment/replicaset/statefulset config for openshift-monitoring namespace
-${OC} scale --replicas=0 deployment --all -n openshift-monitoring
-# Wait till the cluster-monitoring-operator pod is deleted
+${OC} delete deployment cluster-monitoring-operator -n openshift-monitoring
+# Wait till the cluster-monitoring-operator pod is deleted before deleting other resources
 ${OC} wait --for=delete pod/$cmo_pod --timeout=60s -n openshift-monitoring
-# Disable the statefulset for openshift-monitoring namespace
-${OC} scale --replicas=0 statefulset --all -n openshift-monitoring
+${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
 
-# Disable the deployment/replicaset for openshift-machine-api and openshift-machine-config-operator
-${OC} scale --replicas=0 deployment --all -n openshift-machine-api
-${OC} scale --replicas=0 deployment --all -n openshift-machine-config-operator
+mao_pod=$(${OC} get pod -l k8s-app=machine-api-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-api)
+${OC} delete deployment machine-api-operator -n openshift-machine-api
+# Wait till the machine-api-operator pod is deleted before deleting other resources
+${OC} wait --for=delete pod/$mao_pod --timeout=60s -n openshift-machine-api
+${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
-# Set replica to 0 for openshift-insights
-${OC} scale --replicas=0 deployment --all -n openshift-insights
+mco_pod=$(${OC} get pod -l k8s-app=machine-config-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
+${OC} delete deployment machine-config-operator -n openshift-machine-config-operator
+# Wait till the machine-config-operator pod is deleted before deleting other resources
+${OC} wait --for=delete pod/$mco_pod --timeout=60s -n openshift-machine-config-operator
+${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
+
+${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 
 # Scale route deployment from 2 to 1
 ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
@@ -256,8 +260,7 @@ ${OC} scale --replicas=0 deployment.apps/downloads -n openshift-console
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
-# Set replica for cloud-credential-operator from 1 to 0
-${OC} scale --replicas=0 deployment --all -n openshift-cloud-credential-operator
+${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
 
 # Apply registry pvc to bound with pv0001
 ${OC} apply -f registry_pvc.yaml
