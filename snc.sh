@@ -219,8 +219,9 @@ create_json_description
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
 
-# Once it is finished, disable the CVO
-${OC} scale --replicas=0 deployment --all -n openshift-cluster-version
+# Once it is finished, make few deployments unmanged by CVO
+# https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
+${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
 # Get the pod name associated with cluster-monitoring-operator deployment
 cmo_pod=$(${OC} get pod -l app=cluster-monitoring-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
