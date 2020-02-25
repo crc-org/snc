@@ -1,0 +1,38 @@
+- op: add
+  path: /spec/overrides
+  value:
+  - kind: Deployment
+    group: apps/v1
+    name: cluster-monitoring-operator
+    namespace: openshift-monitoring
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: machine-config-operator
+    namespace: openshift-machine-config-operator
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: etcd-quorum-guard
+    namespace: openshift-machine-config-operator
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: machine-api-operator
+    namespace: openshift-machine-api
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: cluster-autoscaler-operator
+    namespace: openshift-machine-api
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: insights-operator
+    namespace: openshift-insights
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: prometheus-k8s
+    namespace: openshift-cloud-credential-operator
+    unmanaged: true
