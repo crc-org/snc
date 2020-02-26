@@ -224,10 +224,20 @@ create_pvs "${CRC_PV_DIR}" 30
 ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
 cmo_pod=$(${OC} get pod -l app=cluster-monitoring-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
+prometheus_pod=$(${OC} get pod -l name=prometheus-adapter -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
+prometheus_op_pod=$(${OC} get pod -l app.kubernetes.io/name=prometheus-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
+alertmanager_pod=$(${OC} get pod -l app=alertmanager -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
 ${OC} delete deployment cluster-monitoring-operator -n openshift-monitoring
 # Wait till the cluster-monitoring-operator pod is deleted before deleting other resources
 ${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring
+${OC} delete deployment prometheus-operator -n openshift-monitoring
+# Wait till the prometheus operator pod is deleted before deleteing other resoureces
+${OC} wait --for=delete pod/$prometheus_op_pod --timeout=120s -n openshift-monitoring
 ${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
+# Wait till the prometheus-adapter pods (part of statefulset) deleted
+${OC} wait --for=delete pod/$prometheus_pod --timeout=120s -n openshift-monitoring
+# Wait till the alertmanager pods (part of statefulset) deleted
+${OC} wait --for=delete pod/$alertmanager_pod --timeout=120s -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
