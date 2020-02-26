@@ -226,7 +226,7 @@ ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 cmo_pod=$(${OC} get pod -l app=cluster-monitoring-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
 ${OC} delete deployment cluster-monitoring-operator -n openshift-monitoring
 # Wait till the cluster-monitoring-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$cmo_pod --timeout=60s -n openshift-monitoring
+${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring
 ${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
@@ -237,13 +237,13 @@ ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-m
 mao_pod=$(${OC} get pod -l k8s-app=machine-api-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-api)
 ${OC} delete deployment machine-api-operator -n openshift-machine-api
 # Wait till the machine-api-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$mao_pod --timeout=60s -n openshift-machine-api
+${OC} wait --for=delete pod/$mao_pod --timeout=120s -n openshift-machine-api
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
 mco_pod=$(${OC} get pod -l k8s-app=machine-config-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
 ${OC} delete deployment machine-config-operator -n openshift-machine-config-operator
 # Wait till the machine-config-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$mco_pod --timeout=60s -n openshift-machine-config-operator
+${OC} wait --for=delete pod/$mco_pod --timeout=120s -n openshift-machine-config-operator
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
 
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
