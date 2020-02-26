@@ -241,10 +241,13 @@ ${OC} wait --for=delete pod/$mao_pod --timeout=120s -n openshift-machine-api
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
 mco_pod=$(${OC} get pod -l k8s-app=machine-config-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
+cert_pod=$(${OC} get pod -l k8s-app=kubelet-bootstrap-cred-manager -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
 ${OC} delete deployment machine-config-operator -n openshift-machine-config-operator
 # Wait till the machine-config-operator pod is deleted before deleting other resources
 ${OC} wait --for=delete pod/$mco_pod --timeout=120s -n openshift-machine-config-operator
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
+# Wait till the cert pod is deleted before removing the image
+${OC} wait --for=delete pod/$cert_pod --timeout=120s -n openshift-machine-config-operator
 
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 
@@ -268,11 +271,5 @@ ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": 
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
 
-# Get the cert pod name
-cert_pod=$(${OC} get pod -l k8s-app=kubelet-bootstrap-cred-manager -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
-# Remove the bootstrap-cred-manager daemonset
-${OC} delete daemonset.apps/kubelet-bootstrap-cred-manager -n openshift-machine-config-operator
-# Wait till the cert pod is removed
-${OC} wait --for=delete pod/$cert_pod --timeout=120s -n openshift-machine-config-operator
 # Remove the cli image which was used for the bootstrap-cred-manager daemonset
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:v4.0
