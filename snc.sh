@@ -229,15 +229,15 @@ prometheus_op_pod=$(${OC} get pod -l app.kubernetes.io/name=prometheus-operator 
 alertmanager_pod=$(${OC} get pod -l app=alertmanager -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
 ${OC} delete deployment cluster-monitoring-operator -n openshift-monitoring
 # Wait till the cluster-monitoring-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring
+${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
 ${OC} delete deployment prometheus-operator -n openshift-monitoring
 # Wait till the prometheus operator pod is deleted before deleteing other resoureces
-${OC} wait --for=delete pod/$prometheus_op_pod --timeout=120s -n openshift-monitoring
+${OC} wait --for=delete pod/$prometheus_op_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
 ${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
 # Wait till the prometheus-adapter pods (part of statefulset) deleted
-${OC} wait --for=delete pod/$prometheus_pod --timeout=120s -n openshift-monitoring
+${OC} wait --for=delete pod/$prometheus_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
 # Wait till the alertmanager pods (part of statefulset) deleted
-${OC} wait --for=delete pod/$alertmanager_pod --timeout=120s -n openshift-monitoring
+${OC} wait --for=delete pod/$alertmanager_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $alertmanager_pod --grace-period=0 --force -n openshift-monitoring || true
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
@@ -247,17 +247,17 @@ ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-m
 mao_pod=$(${OC} get pod -l k8s-app=machine-api-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-api)
 ${OC} delete deployment machine-api-operator -n openshift-machine-api
 # Wait till the machine-api-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$mao_pod --timeout=120s -n openshift-machine-api
+${OC} wait --for=delete pod/$mao_pod --timeout=120s -n openshift-machine-api || ${OC} delete pod $mao_pod --grace-period=0 --force -n openshift-machine-api || true
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
 mco_pod=$(${OC} get pod -l k8s-app=machine-config-operator -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
 cert_pod=$(${OC} get pod -l k8s-app=kubelet-bootstrap-cred-manager -o jsonpath="{.items[0].metadata.name}" -n openshift-machine-config-operator)
 ${OC} delete deployment machine-config-operator -n openshift-machine-config-operator
 # Wait till the machine-config-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$mco_pod --timeout=120s -n openshift-machine-config-operator
+${OC} wait --for=delete pod/$mco_pod --timeout=120s -n openshift-machine-config-operator || ${OC} delete pod $mco_pod --grace-period=0 --force -n openshift-machine-config-operator || true
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
 # Wait till the cert pod is deleted before removing the image
-${OC} wait --for=delete pod/$cert_pod --timeout=120s -n openshift-machine-config-operator
+${OC} wait --for=delete pod/$cert_pod --timeout=120s -n openshift-machine-config-operator || ${OC} delete pod $cert_pod --grace-period=0 --force -n openshift-machine-config-operator || true
 
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 
