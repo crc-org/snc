@@ -125,9 +125,6 @@ if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
 fi
 
-# Destroy an existing cluster and resources
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
-
 if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
     echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
     exit 1
@@ -137,7 +134,21 @@ OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -l "${MIRROR}/${OPENSHIFT_RELEA
 export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
+# Extract openshift-install binary if not present in current direcory
+if ! which $OPENSHIFT_INSTALL; then
+    echo "Extracting installer binary from OpenShift baremetal-installer image"
+    echo ${OPENSHIFT_PULL_SECRET} > pull-secret
+    baremetal_installer_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
+    oc image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
+    chmod +x openshift-install
+    rm pull-secret
+    OPENSHIFT_INSTALL=./openshift-install
+fi
+
+# Destroy an existing cluster and resources
+${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
+
 rm id_rsa_crc* || true
 ssh-keygen -N "" -f id_rsa_crc -C "core"
 
