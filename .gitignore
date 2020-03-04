@@ -2,3 +2,4 @@ id_rsa_crc
 id_rsa_crc.pub
 crc-tmp-install-data
 openshift-install
+pull-secret
