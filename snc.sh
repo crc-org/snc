@@ -18,7 +18,7 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
-if test -n "${OPENSHIFT_VERSION}"; then
+if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
