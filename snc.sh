@@ -22,7 +22,7 @@ if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
-    OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
+    OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null || echo "")
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
         echo "Using release ${OPENSHIFT_RELEASE_VERSION} from local Git tags"
     else
