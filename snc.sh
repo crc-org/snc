@@ -264,13 +264,18 @@ ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-
 # Clean-up 'openshift-insights' namespace
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 
+# Clean-up 'openshift-cloud-credential-operator' namespace
+${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
+
+# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
+# Since this CRD block namespace deletion forever.
+${OC} delete apiservice v1beta1.metrics.k8s.io
+
 # Scale route deployment from 2 to 1
 ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
-
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
 
 # Apply registry pvc to bound with pv0001
 ${OC} apply -f registry_pvc.yaml
@@ -279,10 +284,6 @@ ${OC} apply -f registry_pvc.yaml
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
 # Remove emptyDir as storage for registry
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
-
-# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
-# Since this CRD block namespace deletion forever.
-${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Remove the cli image which was used for the bootstrap-cred-manager daemonset
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
