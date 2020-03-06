@@ -9,7 +9,6 @@ INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 OC=${OC:-oc}
 YQ=${YQ:-yq}
-OPENSHIFT_INSTALL=${OPENSHIFT_INSTALL:-./openshift-install}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp}
@@ -134,8 +133,8 @@ OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -l "${MIRROR}/${OPENSHIFT_RELEA
 export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
-# Extract openshift-install binary if not present in current direcory
-if ! which ${OPENSHIFT_INSTALL}; then
+# Extract openshift-install binary if not present in current directory
+if test -z ${OPENSHIFT_INSTALL-}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
     echo ${OPENSHIFT_PULL_SECRET} > pull-secret
     baremetal_installer_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
