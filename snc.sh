@@ -111,6 +111,34 @@ function create_pvs() {
     ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
 }
 
+# This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
+# in order to trigger regeneration of the initial 24h certs the installer created on the cluster
+function renew_certificates() {
+    ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
+
+    # Delete the current csr signer to get new request.
+    ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
+
+    # Wait for 5 min to make sure cluster is stable again.
+    sleep 300
+
+    # Remove the 24 hours certs and bootstrap kubeconfig
+    # this kubeconfig will be regenerated and new certs will be created in pki folder
+    # which will have 30 days validity.
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
+
+    # Wait until bootstrap csr request is generated.
+    until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
+    ${OC} get csr -oname | xargs ${OC} adm certificate approve
+
+    delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
+
+    # Remove the cli image which was used for the bootstrap-cred-manager daemonset
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
+}
+
 # deletes an operator and wait until the resources it manages are gone.
 function delete_operator() {
         local delete_object=$1
@@ -206,25 +234,7 @@ ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster --log-level debug || ec
 
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
-${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
-
-# Delete the current csr signer to get new request.
-${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
-
-# Wait for 5 min to make sure cluster is stable again.
-sleep 300
-
-# Remove the 24 hours certs and bootstrap kubeconfig
-# this kubeconfig will be regenerated and new certs will be created in pki folder
-# which will have 30 days validity.
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
-
-# Wait until bootstrap csr request is generated.
-until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
-${OC} get csr -oname | xargs ${OC} adm certificate approve
-
+renew_certificates
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete --log-level debug
@@ -266,7 +276,6 @@ ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
 # Clean-up 'openshift-machine-config-operator' namespace
 delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
 
 # Clean-up 'openshift-insights' namespace
@@ -284,6 +293,3 @@ ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/d
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
-
-# Remove the cli image which was used for the bootstrap-cred-manager daemonset
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
