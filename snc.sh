@@ -200,8 +200,14 @@ ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster --log-level debug || e
 rm id_rsa_crc* || true
 ssh-keygen -N "" -f id_rsa_crc -C "core"
 
+
+# Clean up old DNS overlay file
+if [ -f /etc/NetworkManager/dnsmasq.d/openshift.conf ]; then
+    sudo rm /etc/NetworkManager/dnsmasq.d/openshift.conf
+fi
+
 # Set NetworkManager DNS overlay file
-cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
+cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/crc-snc.conf
 server=/${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.1
 address=/apps-${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.11
 EOF
