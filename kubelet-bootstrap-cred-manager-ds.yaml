@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: kubelet-bootstrap-cred-manager
-        image: quay.io/openshift/origin-cli:v4.0
+        image: quay.io/openshift/origin-cli:4.3
         command: ['/bin/bash', '-ec']
         args:
           - |
