@@ -19,7 +19,7 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
 if test -n "${OPENSHIFT_VERSION-}"; then
-    OPENSHIFT_RELEASE_VERSION=$OPENSHIFT_VERSION
+    OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
     OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null || echo "")
@@ -105,7 +105,7 @@ function create_pvs() {
 }
 
 # Download the oc binary if not present in current directory
-if ! which $OC; then
+if ! which ${OC}; then
     if [[ ! -e oc ]] ; then
         curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar zx oc
     fi
@@ -113,7 +113,7 @@ if ! which $OC; then
 fi
 
 # Download yq for manipulating in place yaml configs
-if ! which $YQ; then
+if ! which ${YQ}; then
     if [[ ! -e yq ]]; then
         curl -L https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64 -o yq
         chmod +x yq
@@ -135,7 +135,7 @@ export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
 # Extract openshift-install binary if not present in current direcory
-if ! which $OPENSHIFT_INSTALL; then
+if ! which ${OPENSHIFT_INSTALL}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
     echo ${OPENSHIFT_PULL_SECRET} > pull-secret
     baremetal_installer_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
@@ -146,7 +146,7 @@ if ! which $OPENSHIFT_INSTALL; then
 fi
 
 # Destroy an existing cluster and resources
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
 
 rm id_rsa_crc* || true
@@ -162,29 +162,29 @@ EOF
 sudo systemctl reload NetworkManager
 
 # Create the INSTALL_DIR for the installer and copy the install-config
-rm -fr $INSTALL_DIR && mkdir $INSTALL_DIR && cp install-config.yaml $INSTALL_DIR
-${YQ} write --inplace $INSTALL_DIR/install-config.yaml baseDomain $BASE_DOMAIN
-${YQ} write --inplace $INSTALL_DIR/install-config.yaml metadata.name $CRC_VM_NAME
-${YQ} write --inplace $INSTALL_DIR/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace $INSTALL_DIR/install-config.yaml pullSecret "${OPENSHIFT_PULL_SECRET}"
-${YQ} write --inplace $INSTALL_DIR/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
+rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "${OPENSHIFT_PULL_SECRET}"
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create manifests || exit 1
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
 # Add custom domain to cluster-ingress
-${YQ} write --inplace $INSTALL_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
+${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
 # This is only valid for openshift 4.3 onwards
-${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 12288
-${YQ} write --inplace $INSTALL_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
+${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 12288
+${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
 
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR create cluster --log-level debug || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster --log-level debug || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
-export KUBECONFIG=$INSTALL_DIR/auth/kubeconfig
+export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
 ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
 
@@ -207,7 +207,7 @@ ${OC} get csr -oname | xargs ${OC} adm certificate approve
 
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
-${OPENSHIFT_INSTALL} --dir $INSTALL_DIR wait-for install-complete --log-level debug
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete --log-level debug
 if [ $? -ne 0 ]; then
     echo "This is known to fail with:
 'pool master is not ready - timed out waiting for the condition'
