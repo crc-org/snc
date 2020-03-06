@@ -223,7 +223,7 @@ create_json_description
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
 
-# Once it is finished, make few deployments unmanged by CVO
+# Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
 ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
