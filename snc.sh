@@ -101,6 +101,14 @@ function create_pvs() {
             echo "persistentvolume ${pvname} already exists"
         fi
     done
+
+    # Apply registry pvc to bound with pv0001
+    ${OC} apply -f registry_pvc.yaml
+
+    # Add registry storage to pvc
+    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
+    # Remove emptyDir as storage for registry
+    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
 }
 
 # deletes an operator and wait until the resources it manages are gone.
@@ -276,14 +284,6 @@ ${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/d
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
-
-# Apply registry pvc to bound with pv0001
-${OC} apply -f registry_pvc.yaml
-
-# Add registry storage to pvc
-${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
-# Remove emptyDir as storage for registry
-${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
 
 # Remove the cli image which was used for the bootstrap-cred-manager daemonset
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
