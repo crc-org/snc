@@ -285,4 +285,4 @@ ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": 
 ${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Remove the cli image which was used for the bootstrap-cred-manager daemonset
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:v4.0
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
