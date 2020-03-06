@@ -234,10 +234,10 @@ prometheus_op_pod=$(${OC} get pod -l app.kubernetes.io/name=prometheus-operator 
 alertmanager_pod=$(${OC} get pod -l app=alertmanager -o jsonpath="{.items[0].metadata.name}" -n openshift-monitoring)
 ${OC} delete deployment cluster-monitoring-operator -n openshift-monitoring
 # Wait till the cluster-monitoring-operator pod is deleted before deleting other resources
-${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
+${OC} wait --for=delete pod/$cmo_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $cmo_pod --grace-period=0 --force -n openshift-monitoring || true
 ${OC} delete deployment prometheus-operator -n openshift-monitoring
 # Wait till the prometheus operator pod is deleted before deleteing other resoureces
-${OC} wait --for=delete pod/$prometheus_op_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
+${OC} wait --for=delete pod/$prometheus_op_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_op_pod --grace-period=0 --force -n openshift-monitoring || true
 ${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
 # Wait till the prometheus-adapter pods (part of statefulset) deleted
 ${OC} wait --for=delete pod/$prometheus_pod --timeout=120s -n openshift-monitoring || ${OC} delete pod $prometheus_pod --grace-period=0 --force -n openshift-monitoring || true
