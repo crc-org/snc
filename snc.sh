@@ -35,7 +35,6 @@ else
     fi
 fi
 
-
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
@@ -193,8 +192,13 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
+# Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
+if test -n ${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}; then
+        OPENSHIFT_INSTALL_EXTRA_ARGS="--log-level debug"
+fi
+
 # Destroy an existing cluster and resources
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster --log-level debug || echo "failed to destroy previous cluster.  Continuing anyway"
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
 
 rm id_rsa_crc* || true
@@ -236,14 +240,14 @@ ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-m
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster --log-level debug || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
 renew_certificates
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete --log-level debug
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 if [ $? -ne 0 ]; then
     echo "This is known to fail with:
 'pool master is not ready - timed out waiting for the condition'
