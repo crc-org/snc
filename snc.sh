@@ -269,7 +269,7 @@ delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" 
 delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
 delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
 delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-${OC} delete deployment,statefulset,daemonset --all -n openshift-monitoring
+${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
