@@ -1,0 +1,18 @@
+# cluster role to view resources from api group operators.coreos.com
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: operator-view
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  - catalogsources
+  - installplans
+  - subscriptions
+  - operatorgroups
+  verbs:
+  - get
+  - list
+  - watch

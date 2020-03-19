@@ -265,7 +265,9 @@ fi
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 ${OC} --config $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
 ${OC} --config $1/auth/kubeconfig apply -f htpasswd_cr.yaml
+${OC} --config $1/auth/kubeconfig apply -f operator-view-clusterrole.yaml
 ${OC} --config $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
+${OC} --config $1/auth/kubeconfig create clusterrolebinding developer-operator-view --clusterrole=operator-view --user=developer
 
 # Get cluster-kube-apiserver-operator image along with hash and tag it
 certImage=$(${OC} --config $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
