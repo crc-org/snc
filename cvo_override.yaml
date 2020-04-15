@@ -38,6 +38,11 @@
     unmanaged: true
   - kind: Deployment
     group: apps/v1
+    name: cloud-credential-operator
+    namespace: openshift-cloud-credential-operator
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
     name: csi-snapshot-controller-operator
     namespace: openshift-cluster-storage-operator
     unmanaged: true
