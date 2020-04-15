@@ -113,6 +113,12 @@ function create_pvs() {
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
+    # Get the cli image from release payload and update it to bootstrap-cred-manager resource
+    echo ${OPENSHIFT_PULL_SECRET} > pull-secret
+    cli_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
+    rm pull-secret
+    ${YQ} write --inplace kubelet-bootstrap-cred-manager-ds.yaml spec.template.spec.containers[0].image ${cli_image}
+
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
 
     # Delete the current csr signer to get new request.
@@ -133,9 +139,6 @@ function renew_certificates() {
     ${OC} get csr -oname | xargs ${OC} adm certificate approve
 
     delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
-
-    # Remove the cli image which was used for the bootstrap-cred-manager daemonset
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl rmi quay.io/openshift/origin-cli:4.3
 }
 
 # deletes an operator and wait until the resources it manages are gone.
