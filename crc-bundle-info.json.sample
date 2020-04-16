@@ -45,6 +45,8 @@
       # Disk image used by the node, the 'storage' object will contain more
       # details about its format
       "diskImage": "crc.qcow2"
+      # Internal IP for which etcd certs are valid
+      "internalIP": "192.168.126.11"
       # kernel command line of the node
       "kernelCmdLine": "BOOT_IMAGE=/ostree/rhcos-bf3b38268ddb2a2070dc587b361ce45c46a6f9e3606bbd3b5e15b2e6d3d47e5d/vmlinuz-4.18.0-80.1.2.el8_0.x86_64 console=tty0 console=ttyS0,115200n8 rootflags=defaults,prjquota rw root=UUID=a8fbdcb1-63ea-421e-8f6f-dac9cbbcc822 ostree=/ostree/boot.0/rhcos/bf3b38268ddb2a2070dc587b361ce45c46a6f9e3606bbd3b5e15b2e6d3d47e5d/0 coreos.oem.id=qemu ignition.platform.id=qemu"
       # initramfs file of the node

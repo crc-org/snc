@@ -130,6 +130,7 @@ function update_json_description {
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
         | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
+        | ${JQ} ".nodes[0].internalIP = \"${INTERNAL_IP}\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
@@ -210,6 +211,7 @@ VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
+DIG=${DIG:-dig}
 
 if [[ $# -ne 1 ]]; then
    echo "You need to provide the running cluster directory to copy kubeconfig"
@@ -230,6 +232,10 @@ fi
 
 if ! which ${GUESTFISH}; then
     sudo yum -y install /usr/bin/guestfish
+fi
+
+if ! which ${DIG}; then
+    sudo yum -y install /usr/bin/dig
 fi
 
 # The CoreOS image uses an XFS filesystem
@@ -279,6 +285,9 @@ ${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
 
 # Remove the Cluster ID with a empty string.
 ${OC} --config $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+
+# Get the IP of the VM
+INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
 
 # Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
