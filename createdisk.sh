@@ -347,6 +347,9 @@ kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cm
 # SCP the vmlinuz/initramfs from VM to Host in provided folder.
 ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
 
+# Add a dummy network interface with internalIP
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo nmcli conn add type dummy ifname eth10 con-name internalEtcd ip4 ${INTERNAL_IP}/24  && sudo nmcli conn up internalEtcd"
+
 # Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1729603
 # TODO: Should be removed once latest podman available or the fix is backported.
 # Issue found in podman version 1.4.2-stable2 (podman-1.4.2-5.el8.x86_64)
