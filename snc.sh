@@ -115,7 +115,7 @@ function create_pvs() {
 function renew_certificates() {
     # Get the cli image from release payload and update it to bootstrap-cred-manager resource
     echo ${OPENSHIFT_PULL_SECRET} > pull-secret
-    cli_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
+    cli_image=$(${OC} adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
     rm pull-secret
     ${YQ} write --inplace kubelet-bootstrap-cred-manager-ds.yaml spec.template.spec.containers[0].image ${cli_image}
 
@@ -188,8 +188,8 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 if test -z ${OPENSHIFT_INSTALL-}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
     echo ${OPENSHIFT_PULL_SECRET} > pull-secret
-    baremetal_installer_image=$(oc adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
-    oc image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
+    baremetal_installer_image=$(${OC} adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
+    ${OC} image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
     chmod +x openshift-install
     rm pull-secret
     OPENSHIFT_INSTALL=./openshift-install
