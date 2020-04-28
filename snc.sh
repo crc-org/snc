@@ -165,7 +165,7 @@ fi
 # Download yq for manipulating in place yaml configs
 if ! which ${YQ}; then
     if [[ ! -e yq ]]; then
-        curl -L https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64 -o yq
+        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64 -o yq
         chmod +x yq
     fi
     YQ=./yq
