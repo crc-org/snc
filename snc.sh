@@ -163,7 +163,7 @@ if ! which ${OC}; then
 fi
 
 # Download yq for manipulating in place yaml configs
-if ! which ${YQ}; then
+if ! "${YQ}" -V; then
     if [[ ! -e yq ]]; then
         curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64 -o yq
         chmod +x yq
