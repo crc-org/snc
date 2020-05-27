@@ -196,7 +196,7 @@ if test -z ${OPENSHIFT_INSTALL-}; then
 fi
 
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
-if test -n ${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}; then
+if test -n "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
         OPENSHIFT_INSTALL_EXTRA_ARGS="--log-level debug"
 fi
 
