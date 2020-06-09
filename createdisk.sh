@@ -269,22 +269,22 @@ if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checken
 fi
 
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
-${OC} --config $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
-${OC} --config $1/auth/kubeconfig apply -f htpasswd_cr.yaml
-${OC} --config $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
+${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
+${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
+${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
 # Get cluster-kube-apiserver-operator image along with hash and tag it
-certImage=$(${OC} --config $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
+certImage=$(${OC} --kubeconfig $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
 
 # Remove unused images from container storage
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
 
 # Replace pull secret with a null json string '{}'
-${OC} --config $1/auth/kubeconfig replace -f pull-secret.yaml
+${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
 
 # Remove the Cluster ID with a empty string.
-${OC} --config $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+${OC} --kubeconfig $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
 # Get the IP of the VM
 INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
