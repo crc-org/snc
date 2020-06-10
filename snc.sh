@@ -35,6 +35,16 @@ else
     fi
 fi
 
+function apply_bootstrap_etcd_hack() {
+        # This is needed for now due to etcd changes in 4.4:
+        # https://github.com/openshift/cluster-etcd-operator/pull/279
+        while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+            sleep 3
+        done
+        echo "API server is up, applying etcd hack"
+        ${OC} patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge
+}
+
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
@@ -251,10 +261,11 @@ ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-m
 
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
+export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
+
+apply_bootstrap_etcd_hack &
 
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
-
-export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
 renew_certificates
 
