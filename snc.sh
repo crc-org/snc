@@ -127,7 +127,7 @@ function renew_certificates() {
     echo ${OPENSHIFT_PULL_SECRET} > pull-secret
     cli_image=$(${OC} adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
     rm pull-secret
-    ${YQ} write --inplace kubelet-bootstrap-cred-manager-ds.yaml spec.template.spec.containers[0].image ${cli_image}
+    ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
 
