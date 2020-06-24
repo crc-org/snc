@@ -155,15 +155,20 @@ function generate_hyperkit_directory {
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_rsa_crc $destDir/
-    cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
+    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.img\"" \
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
+        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.img\"" \
+        | ${JQ} '.storage.diskImages[0].format = "raw"' \
+        | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
+        | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
 }
