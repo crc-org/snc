@@ -35,26 +35,16 @@ function create_crc_libvirt_sh {
     chmod +x $destDir/crc_libvirt.sh
 }
 
-function resize_and_sparsify {
+function sparsify {
     local baseDir=$1
     local srcFile=$2
     local destFile=$3
-    local tmpFile=$(mktemp $baseDir/crc-resizedXXXX.qcow2)
 
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
 
-    # Resize the root partition from the default 1+15GB to 1+30GB
-    ${QEMU_IMG} create -f qcow2 $tmpFile 31G
-    ${VIRT_RESIZE} --expand $partition $baseDir/$srcFile $tmpFile
-    if [ $? -ne 0 ]; then
-            echo "${VIRT_RESIZE} call failed, disk image was not properly resized, aborting"
-            exit 1
-    fi
-
     # Interact with guestfish directly
     # Starting with 4.3, the root partition is an encryption-ready luks partition
-    # - virt-resize is not able to run xfs_growfs directly on such a partition
     # - virt-sparsify is not able to deal at all with this partition
     # The following commands will do all of the above after mounting the luks partition
     eval $(echo nokey | ${GUESTFISH}  --keys-from-stdin --listen )
@@ -64,27 +54,25 @@ function resize_and_sparsify {
     fi
 
     guestfish --remote <<EOF
-add-drive $tmpFile
+add-drive $baseDir/$srcFile
 run
 luks-open $partition coreos-root
 mount /dev/mapper/coreos-root /
-xfs-growfs /
 zero-free-space /boot/
 EOF
     if [ $? -ne 0 ]; then
-            echo "Failed to resize and sparsify $baseDir/$srcFile, aborting"
+            echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
     fi
 
     ${GUESTFISH} --remote -- exit
 
-    ${QEMU_IMG} convert -p -f qcow2 -O qcow2 -o lazy_refcounts=on $tmpFile $baseDir/$destFile
+    ${QEMU_IMG} convert -p -f qcow2 -O qcow2 -o lazy_refcounts=on $baseDir/$srcFile $baseDir/$destFile
     if [ $? -ne 0 ]; then
-            echo "Failed to sparsify $tmpFile, aborting"
+            echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
     fi
 
-    rm $tmpFile
     rm -fr $baseDir/.guestfs-*
 }
 
@@ -103,7 +91,7 @@ function create_qemu_image {
     ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
-    resize_and_sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
+    sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
