@@ -8,6 +8,7 @@ export LANG=C
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 OC=${OC:-oc}
+XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
@@ -34,6 +35,66 @@ else
         fi
     fi
 fi
+
+function preflight_failure() {
+        local msg=$1
+        echo "$msg"
+        if [ -z "${SNC_NON_FATAL_PREFLIGHT_CHECKS-}" ]; then
+                exit 1
+        fi
+}
+
+function run_preflight_checks() {
+        echo "Checking libvirt and DNS configuration"
+
+        LIBVIRT_URI=qemu+tcp://localhost/system
+
+        # check if libvirtd is listening on a TCP socket
+        if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
+                preflight_failure  "libvirtd is not listening for plain-text TCP connections, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
+        fi
+
+        # check if libvirtd has access to an x86_64 hypervisor
+        local arch
+        arch=$(virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath '/capabilities/host/cpu/arch/text()' -)
+        if [ "${arch}" != "x86_64b" ]; then
+                # warn only
+                echo "The host architecture is ${arch}, SNC has only been tested on x86_64"
+        fi
+
+        # check for availability of a hypervisor using kvm
+        if ! virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${arch}']/domain[@type='kvm']" - &>/dev/null; then
+                preflight_failure "Your ${arch} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
+                return
+        fi
+
+        # check that api.crc.testing either can't be resolved, or resolves to 192.168.126.1[01]
+        local ping_status
+        ping_status="$(ping -c1 api.crc.testing | head -1 || true >/dev/null)"
+        if echo ${ping_status} | grep "PING api.crc.testing (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
+                preflight_failure "DNS setup seems wrong, api.crc.testing resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
+                return
+        fi
+
+        # check if firewalld is configured to allow traffic from 192.168.126.0/24 to 192.168.122.1
+        # this check is very basic and expects the configuration to match
+        # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld
+        local zone
+        if firewall-cmd -h >/dev/null; then
+                # With older libvirt, the 'libvirt' zone will not exist
+                if firewall-cmd --get-zones |grep '\<libvirt\>'; then
+                        zone=libvirt
+                else
+                        zone=dmz
+                fi
+                if ! firewall-cmd --zone=${zone} --list-services | grep '\<libvirt\>'; then
+                        preflight_failure "firewalld is available, but it is not configured to allow 'libvirt' traffic in either the 'libvirt' or 'dmz' zone, please check https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld"
+                        return
+                fi
+        fi
+
+        echo "libvirt and DNS configuration successfully checked"
+}
 
 function apply_bootstrap_etcd_hack() {
         # This is needed for now due to etcd changes in 4.4:
@@ -182,6 +243,12 @@ fi
 if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
 fi
+
+if ! which ${XMLLINT}; then
+    sudo yum -y install /usr/bin/xmllint
+fi
+
+run_preflight_checks
 
 if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
     echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
