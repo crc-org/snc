@@ -79,19 +79,22 @@ function run_preflight_checks() {
         # check if firewalld is configured to allow traffic from 192.168.126.0/24 to 192.168.122.1
         # this check is very basic and expects the configuration to match
         # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld
-        local zone
-        if firewall-cmd -h >/dev/null; then
-                # With older libvirt, the 'libvirt' zone will not exist
-                if firewall-cmd --get-zones |grep '\<libvirt\>'; then
-                        zone=libvirt
-                else
-                        zone=dmz
-                fi
-                if ! firewall-cmd --zone=${zone} --list-services | grep '\<libvirt\>'; then
-                        preflight_failure "firewalld is available, but it is not configured to allow 'libvirt' traffic in either the 'libvirt' or 'dmz' zone, please check https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld"
-                        return
-                fi
-        fi
+        # Disabled for now as on stock RHEL8 installs, additional permissions are needed for
+        # firewall-cmd --list-services, so this test fails for unrelated reasons
+        #
+        #local zone
+        #if firewall-cmd -h >/dev/null; then
+        #        # With older libvirt, the 'libvirt' zone will not exist
+        #        if firewall-cmd --get-zones |grep '\<libvirt\>'; then
+        #                zone=libvirt
+        #        else
+        #                zone=dmz
+        #        fi
+        #        if ! firewall-cmd --zone=${zone} --list-services | grep '\<libvirt\>'; then
+        #                preflight_failure "firewalld is available, but it is not configured to allow 'libvirt' traffic in either the 'libvirt' or 'dmz' zone, please check https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld"
+        #                return
+        #        fi
+        #fi
 
         echo "libvirt and DNS configuration successfully checked"
 }
