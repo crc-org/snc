@@ -124,8 +124,7 @@ function create_pvs() {
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
     # Get the cli image from release payload and update it to bootstrap-cred-manager resource
-    echo ${OPENSHIFT_PULL_SECRET} > pull-secret
-    cli_image=$(${OC} adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
+    cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
     rm pull-secret
     ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
@@ -185,8 +184,11 @@ if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
 fi
 
-if [ "${OPENSHIFT_PULL_SECRET}" = "" ]; then
-    echo "OpenShift pull secret must be specified through the OPENSHIFT_PULL_SECRET environment variable"
+if [ "${OPENSHIFT_PULL_SECRET_PATH}" = "" ]; then
+    echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
+    exit 1
+elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
+    echo "Provided ${OPENSHIFT_PULL_SECRET_PATH} not exists"
     exit 1
 fi
 
@@ -203,8 +205,7 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
-    echo ${OPENSHIFT_PULL_SECRET} > pull-secret
-    baremetal_installer_image=$(${OC} adm release -a pull-secret info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
+    baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
     ${OC} image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
     chmod +x openshift-install
     rm pull-secret
@@ -245,7 +246,7 @@ rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTAL
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "${OPENSHIFT_PULL_SECRET}"
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "$(cat ${OPENSHIFT_PULL_SECRET_PATH})"
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
