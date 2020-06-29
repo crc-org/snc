@@ -205,7 +205,7 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 if test -z ${OPENSHIFT_INSTALL-}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
     baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
-    ${OC} image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
+    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
     chmod +x openshift-install
     OPENSHIFT_INSTALL=./openshift-install
 fi
