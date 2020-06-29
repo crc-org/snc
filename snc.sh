@@ -125,7 +125,6 @@ function create_pvs() {
 function renew_certificates() {
     # Get the cli image from release payload and update it to bootstrap-cred-manager resource
     cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
-    rm pull-secret
     ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
@@ -208,7 +207,6 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
     ${OC} image -a pull-secret extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
     chmod +x openshift-install
-    rm pull-secret
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
