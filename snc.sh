@@ -184,7 +184,7 @@ if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
 fi
 
-if [ "${OPENSHIFT_PULL_SECRET_PATH}" = "" ]; then
+if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
     echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
     exit 1
 elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
