@@ -99,6 +99,15 @@ function run_preflight_checks() {
         echo "libvirt and DNS configuration successfully checked"
 }
 
+function replace_pull_secret() {
+        # Hide the output of 'cat $OPENSHIFT_PULL_SECRET_PATH' so that it doesn't
+        # get leaked in CI logs
+        set +x
+        local filename=$1
+        sed -i "s!@HIDDEN_PULL_SECRET@!$(cat $OPENSHIFT_PULL_SECRET_PATH)!" $filename
+        set -x
+}
+
 function apply_bootstrap_etcd_hack() {
         # This is needed for now due to etcd changes in 4.4:
         # https://github.com/openshift/cluster-etcd-operator/pull/279
@@ -315,11 +324,8 @@ rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTAL
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-# Hide the output of cat $OPENSHIFT_PULL_SECRET_PATH so that it doesn't get leak
-# from the CI using command grouping
-{
-  ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "$(cat ${OPENSHIFT_PULL_SECRET_PATH})"
-} &> /dev/null
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
+replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
