@@ -244,7 +244,11 @@ rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTAL
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "$(cat ${OPENSHIFT_PULL_SECRET_PATH})"
+# Hide the output of cat $OPENSHIFT_PULL_SECRET_PATH so that it doesn't get leak
+# from the CI using command grouping
+{
+  ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "$(cat ${OPENSHIFT_PULL_SECRET_PATH})"
+} &> /dev/null
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
