@@ -253,7 +253,10 @@ VM_PREFIX=${CRC_VM_NAME}-${random_string}
 # leeway regarding when we run the check with respect to rotation time
 if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
     echo "Certs are not yet rotated to have 30 days validity"
-    exit 1;
+    # Only validate the cert expire time if SNC_VALIDATE_CERT is set to true
+    if [ "${SNC_VALIDATE_CERT:-true}" = true ]; then
+        exit 1;
+    fi
 fi
 
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
