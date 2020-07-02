@@ -25,7 +25,7 @@ else
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
         echo "Using release ${OPENSHIFT_RELEASE_VERSION} from local Git tags"
     else
-        OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/latest/release.txt | sed -n 's/^ *Version: *//p')"
+        OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/stable-4.4/release.txt | sed -n 's/^ *Version: *//p')"
         if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
             echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
         else
