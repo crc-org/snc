@@ -263,7 +263,8 @@ ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-m
 # Add master disk size to 31 GB
 # This is only valid for openshift 4.5 onwards
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value.volume[volumeSize] 33285996544
-
+# Add network resource to lower the mtu for CNV
+cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
