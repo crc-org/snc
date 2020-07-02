@@ -42,7 +42,9 @@ function sparsify {
 
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
-
+    
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1837765
+    export LIBGUESTFS_MEMSIZE=2048
     # Interact with guestfish directly
     # Starting with 4.3, the root partition is an encryption-ready luks partition
     # - virt-sparsify is not able to deal at all with this partition
