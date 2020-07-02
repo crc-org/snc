@@ -192,6 +192,7 @@ function renew_certificates() {
     ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
+    rm kubelet-bootstrap-cred-manager-ds.yaml
 
     # Delete the current csr signer to get new request.
     ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
