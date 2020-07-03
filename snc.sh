@@ -405,7 +405,7 @@ ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-ve
 ${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Scale route deployment from 2 to 1
-${OC} patch --patch='{"spec": {"replicas": 1}}' --type=merge ingresscontroller/default -n openshift-ingress-operator
+${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
