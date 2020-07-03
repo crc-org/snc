@@ -1,0 +1,9 @@
+resources:
+  - crc-tmp-install-data/manifests/cvo-overrides.yaml
+patchesJson6902:
+  - target:
+      group: config.openshift.io
+      version: v1
+      kind: ClusterVersion
+      name: version
+    path: cvo_override.yaml

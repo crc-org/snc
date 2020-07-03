@@ -325,6 +325,11 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_cr
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
+# Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
+# https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
+${OC} kustomize ./ > cvo-overrides.tmp
+mv cvo-overrides.tmp crc-tmp-install-data/manifests/cvo-overrides.yaml
+
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
@@ -359,13 +364,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HO
 
 create_json_description
 
-
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
-
-# Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
-# https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
-${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
 # Clean-up 'openshift-monitoring' namespace
 delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
