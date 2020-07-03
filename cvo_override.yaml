@@ -8,11 +8,6 @@
     unmanaged: true
   - kind: Deployment
     group: apps/v1
-    name: machine-config-operator
-    namespace: openshift-machine-config-operator
-    unmanaged: true
-  - kind: Deployment
-    group: apps/v1
     name: etcd-quorum-guard
     namespace: openshift-machine-config-operator
     unmanaged: true
