@@ -380,7 +380,7 @@ create_qemu_image $libvirtDestDir
 
 copy_additional_files $1 $libvirtDestDir
 
-tar cJSf $libvirtDestDir.$crcBundleSuffix $libvirtDestDir
+tar cSf - $libvirtDestDir | xz --threads=0 >$libvirtDestDir.$crcBundleSuffix
 
 # HyperKit image generation
 # This must be done after the generation of libvirt image as it reuse some of
@@ -389,7 +389,7 @@ hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
 mkdir $hyperkitDestDir
 generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1
 
-tar cJSf $hyperkitDestDir.$crcBundleSuffix $hyperkitDestDir
+tar cSf - $hyperkitDestDir | xz --threads=0 >$hyperkitDestDir.$crcBundleSuffix
 
 # HyperV image generation
 #
@@ -399,4 +399,4 @@ hypervDestDir="crc_hyperv_${destDirSuffix}"
 mkdir $hypervDestDir
 generate_hyperv_directory $libvirtDestDir $hypervDestDir
 
-tar cJSf $hypervDestDir.$crcBundleSuffix $hypervDestDir
+tar cSf - $hypervDestDir | xz --threads=0 >$hypervDestDir.$crcBundleSuffix
