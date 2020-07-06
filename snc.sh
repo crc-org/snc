@@ -367,42 +367,10 @@ create_json_description
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
 
-# Clean-up 'openshift-monitoring' namespace
-delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
-
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
-
-# Clean-up 'openshift-machine-api' namespace
-delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
-
-# Clean-up 'openshift-machine-config-operator' namespace
-delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
-
-# Clean-up 'openshift-insights' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
-
-# Clean-up 'openshift-cloud-credential-operator' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
-
-# Clean-up 'openshift-cluster-storage-operator' namespace
-delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
-
-# Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
-
-# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
-# Since this CRD block namespace deletion forever.
-${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Scale route deployment from 2 to 1
 ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
