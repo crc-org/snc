@@ -256,3 +256,53 @@
     name: kube-scheduler
     namespace: openshift-kube-scheduler
     unmanaged: true
+  - kind: PrometheusRule
+    group: monitoring.coreos.com/v1
+    name: kube-apiserver
+    namespace: openshift-kube-apiserver
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: cloud-credential
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: cluster-autoscaler
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: csi-snapshot-controller
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: insights
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: kube-storage-version-migrator
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: monitoring
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: storage
+    namespace: ""
+    unmanaged: true
+  - kind: ServiceMonitor
+    group: monitoring.coreos.com/v1
+    name: insights-operator
+    namespace: openshift-insights
+    unmanaged: true
+  - kind: PrometheusRule
+    group: monitoring.coreos.com/v1
+    name: cluster-autoscaler-operator-rules
+    namespace: openshift-machine-api
+    unmanaged: true
