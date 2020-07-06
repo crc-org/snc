@@ -13,11 +13,6 @@
     unmanaged: true
   - kind: Deployment
     group: apps/v1
-    name: machine-api-operator
-    namespace: openshift-machine-api
-    unmanaged: true
-  - kind: Deployment
-    group: apps/v1
     name: cluster-autoscaler-operator
     namespace: openshift-machine-api
     unmanaged: true
