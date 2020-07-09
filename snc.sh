@@ -12,9 +12,16 @@ XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+ARCH=$(uname -m)
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+
+yq_ARCH=${ARCH}
+# yq and install_config.yaml use amd64 as arch for x86_64
+if [ "${ARCH}" == "x86_64" ]; then
+    yq_ARCH="amd64"
+fi
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -53,18 +60,18 @@ function run_preflight_checks() {
         if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
                 preflight_failure  "libvirtd is not listening for plain-text TCP connections, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
         fi
-
-        # check if libvirtd has access to an x86_64 hypervisor
-        local arch
-        arch=$(virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath '/capabilities/host/cpu/arch/text()' -)
-        if [ "${arch}" != "x86_64b" ]; then
-                # warn only
-                echo "The host architecture is ${arch}, SNC has only been tested on x86_64"
-        fi
+	
+	#Just warn if architecture is not supported
+	case $ARCH in
+		x86_64|ppc64le|s390x)
+			echo "The host arch is ${ARCH}.";;
+		*)	
+ 			echo "The host arch is ${ARCH}. This is not supported by SNC!";;
+	esac	
 
         # check for availability of a hypervisor using kvm
-        if ! virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${arch}']/domain[@type='kvm']" - &>/dev/null; then
-                preflight_failure "Your ${arch} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
+        if ! virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
+                preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
                 return
         fi
 
@@ -247,7 +254,7 @@ fi
 # Download yq for manipulating in place yaml configs
 if ! "${YQ}" -V; then
     if [[ ! -e yq ]]; then
-        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_amd64 -o yq
+        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_${yq_ARCH} -o yq
         chmod +x yq
     fi
     YQ=./yq
@@ -321,6 +328,8 @@ sudo systemctl reload NetworkManager
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].architecture ${yq_ARCH}
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml controlPlane.architecture ${yq_ARCH}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
