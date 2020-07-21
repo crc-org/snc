@@ -400,3 +400,6 @@ mkdir $hypervDestDir
 generate_hyperv_directory $libvirtDestDir $hypervDestDir
 
 tar cSf - $hypervDestDir | xz --threads=0 >$hypervDestDir.$crcBundleSuffix
+
+# Cleanup up packages and vmlinux/initramfs files
+rm -fr $1/packages $1/vmlinuz* $1/initramfs*
