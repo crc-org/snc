@@ -16,6 +16,8 @@ CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+OKD_MIRROR=${OKD_MIRROR:-https://github.com/openshift/okd/releases/download}
+OKD_INSTALL=false
 
 yq_ARCH=${ARCH}
 # yq and install_config.yaml use amd64 as arch for x86_64
@@ -41,6 +43,24 @@ else
             exit 1
         fi
     fi
+fi
+
+# Check if OKD install is requested and override some of the variables
+# OPENSHIFT_PULL_SECRET_PATH, MIRROR, OKD_INSTALL
+if [ $# -eq 2 ]; then
+    case $1 in
+        --install-type=okd)
+            MIRROR=${OKD_MIRROR}
+            OKD_INSTALL=true
+            echo "OKD install requested, using MIRROR: $MIRROR"
+            ;;
+        --install-type=ocp)
+            echo "OCP Install requested, using MIRROR: $MIRROR"
+            ;;
+        *)
+            echo "To switch between OKD/OCP install, Use flag '--install-type=ocp|okd'"
+            exit 1
+    esac
 fi
 
 function preflight_failure() {
@@ -204,7 +224,7 @@ function create_pvs() {
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
     # Get the cli image from release payload and update it to bootstrap-cred-manager resource
-    cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
+    cli_image=$(${OC} adm release ${OC_AUTH_FLAG} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
     ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
@@ -270,16 +290,22 @@ fi
 
 run_preflight_checks
 
-if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
-    echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
-    exit 1
-elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
-    echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
-    exit 1
+if [ ${OKD_INSTALL} == false ]; then
+    if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
+        echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
+        exit 1
+    elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
+        echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
+        exit 1
+    fi
+    OC_AUTH_FLAG="-a ${OPENSHIFT_PULL_SECRET_PATH}"
+else
+    # OKD install so we don't care about the pull-secret file
+    OC_AUTH_FLAG=''
 fi
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -l "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
     export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 elif test -n "${OPENSHIFT_VERSION-}"; then
     echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
@@ -291,8 +317,8 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
     echo "Extracting installer binary from OpenShift baremetal-installer image"
-    baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
+    baremetal_installer_image=$(${OC} adm release ${OC_AUTH_FLAG} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
+    ${OC} image ${OC_AUTH_FLAG} extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
     chmod +x openshift-install
     OPENSHIFT_INSTALL=./openshift-install
 fi
@@ -333,8 +359,13 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml controlPlane.architectu
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
-replace_pull_secret ${INSTALL_DIR}/install-config.yaml
+# if OKD install type was requested inject dummy pull-secret
+if [ ${OKD_INSTALL} == false ]; then
+    ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
+    replace_pull_secret ${INSTALL_DIR}/install-config.yaml
+else
+    ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret '{"auths":{"fake":{"auth": "bar"}}}'
+fi
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
