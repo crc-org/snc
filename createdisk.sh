@@ -54,14 +54,24 @@ function sparsify {
             echo "${GUESTFISH} failed to start, aborting"
             exit 1
     fi
-
-    guestfish --remote <<EOF
+    
+    if [ ${OKD_INSTALL} == false ]; then
+        guestfish --remote <<EOF
 add-drive $baseDir/$srcFile
 run
 luks-open $partition coreos-root
 mount /dev/mapper/coreos-root /
 zero-free-space /boot/
 EOF
+    else
+        guestfish --remote <<EOF
+add-drive $baseDir/$srcFile
+run
+mount $partition /
+zero-free-space /boot/
+EOF
+    fi
+
     if [ $? -ne 0 ]; then
             echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
@@ -92,9 +102,7 @@ function create_qemu_image {
     sudo chown $USER:$USER -R $destDir
     ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
-
     sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
-
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
     if [ $? -ne 0 ]; then
@@ -202,10 +210,28 @@ QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
 DIG=${DIG:-dig}
+# OKD_INSTALL: variable to switch between ocp/okd bundle creation
+OKD_INSTALL=false
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -eq 0 ]]; then
    echo "You need to provide the running cluster directory to copy kubeconfig"
    exit 1
+fi
+
+if [[ $# -eq 2 ]]; then
+    case $2 in
+        --install-type=okd)
+            echo "OKD install requested"
+            OKD_INSTALL=true
+            ;;
+        --install-type=ocp)
+            echo "Doing default OCP install"
+            ;;
+        *)
+            echo "To switch between OKD/OCP install, Use flag '--install-type=ocp|okd'"
+            exit 1
+            ;;
+    esac
 fi
 
 if ! which ${JQ}; then
@@ -274,7 +300,12 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage open
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
 
 # Replace pull secret with a null json string '{}'
-${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
+# If its an OKD install we don't need to remove as that's not a real pull-secret
+if [ ${OKD_INSTALL} == false]; then
+    ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
+    # Remove pull secret from the VM
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
+fi
 
 # Remove the Cluster ID with a empty string.
 ${OC} --kubeconfig $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
@@ -296,21 +327,25 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q)'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'for i in {1..3}; do sudo crictl rmp $(sudo crictl pods -q) && break || sleep 2; done'
 
-# Remove pull secret from the VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
 
-# Download the hyperV daemons and libvarlink-util dependency on host
-mkdir $1/packages
-sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons libvarlink-util
+if [ ${OKD_INSTALL} == false ]; then
+    # Download the hyperV daemons and libvarlink-util dependency on host
+    mkdir $1/packages
+    sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons libvarlink-util
 
-# SCP the downloaded rpms to VM
-${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+    # SCP the downloaded rpms to VM
+    ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 
-# Install the hyperV and libvarlink-util rpms to VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+    # Install the hyperV and libvarlink-util rpms to VM
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
 
-# Remove the packages from VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
+    # Remove the packages from VM
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
+else
+    # In fedora coreos libvarlink-util is already installed
+    # need to install hyperv-daemons which is available in the repo
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install hyperv-daemons'
+fi
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
@@ -328,8 +363,13 @@ until ping -c1 api.${CRC_VM_NAME}.${BASE_DOMAIN} >/dev/null 2>&1; do
     sleep 2
 done
 
-# Get the rhcos ostree Hash ID
-ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline | grep -oP "(?<=rhcos-).*(?=/vmlinuz)"')
+ostree_dir=rhcos
+if [ ${OKD_INSTALL} == true ]; then
+    ostree_dir=fedora-coreos
+fi
+    
+# Get the rhcos/fedora-coreos ostree Hash ID
+ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat /proc/cmdline | grep -oP \"(?<=${ostree_dir}-).*(?=/vmlinuz)\"")
 
 # Get the rhcos kernel release
 kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
@@ -338,7 +378,7 @@ kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
 kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
 
 # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/rhcos-${ostree_hash}/* $1
+${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${ostree_dir}-${ostree_hash}/* $1
 
 # Add a dummy network interface with internalIP
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo nmcli conn add type dummy ifname eth10 con-name internalEtcd ip4 ${INTERNAL_IP}/24  && sudo nmcli conn up internalEtcd"
