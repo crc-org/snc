@@ -289,6 +289,9 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
+# Stop the network time sync
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo timedatectl set-ntp off
+
 # Enable the io.podman.socket service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman.socket
 
