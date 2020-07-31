@@ -372,11 +372,6 @@ renew_certificates
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
-if [ $? -ne 0 ]; then
-    echo "This is known to fail with:
-'pool master is not ready - timed out waiting for the condition'
-see https://github.com/openshift/machine-config-operator/issues/579"
-fi
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
