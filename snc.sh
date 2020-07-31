@@ -297,6 +297,15 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
+# Extract oc binary from the payload and use it for all following operations
+if ! test -f oc; then
+    echo "Extracting oc binary from OpenShift payload image"
+    oc_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli-artifacts)
+    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${oc_image} --confirm --path /usr/bin/oc:.
+    chmod +x oc
+    OC=./oc
+fi
+
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
 if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
         OPENSHIFT_INSTALL_EXTRA_ARGS="--log-level debug"
