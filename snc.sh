@@ -225,7 +225,7 @@ function renew_certificates() {
 
     # Wait until bootstrap csr request is generated.
     until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
-    ${OC} get csr -oname | xargs ${OC} adm certificate approve
+    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
     delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
 }
