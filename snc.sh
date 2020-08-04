@@ -20,7 +20,6 @@ fi
 
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
-OC=${OC:-oc}
 XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
 UNZIP=${UNZIP:-unzip}
@@ -277,11 +276,7 @@ curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" |
 curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
 curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
 ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
-
-# Download the oc binary if not present in current directory
-if ! which ${OC}; then
-    OC=./openshift-clients/linux/oc
-fi
+OC=./openshift-clients/linux/oc
 
 # Download yq for manipulating in place yaml configs
 if ! "${YQ}" -V; then
@@ -329,14 +324,6 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
-# Extract oc binary from the payload and use it for all following operations
-if ! test -f oc; then
-    echo "Extracting oc binary from OpenShift payload image"
-    oc_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli-artifacts)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${oc_image} --confirm --path /usr/bin/oc:.
-    chmod +x oc
-    OC=./oc
-fi
 
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
 if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
