@@ -7,7 +7,7 @@ export LANG=C
 
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
-OC=${OC:-oc}
+OC=${OC:-./oc}
 XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
@@ -244,10 +244,8 @@ function delete_operator() {
 }
 
 # Download the oc binary if not present in current directory
-if ! which ${OC}; then
-    if [[ ! -e oc ]] ; then
-        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar zx oc
-    fi
+if [[ ! -e ${OC} ]] ; then
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar zx oc
     OC=./oc
 fi
 
@@ -297,14 +295,6 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
-# Extract oc binary from the payload and use it for all following operations
-if ! test -f oc; then
-    echo "Extracting oc binary from OpenShift payload image"
-    oc_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli-artifacts)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${oc_image} --confirm --path /usr/bin/oc:.
-    chmod +x oc
-    OC=./oc
-fi
 
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
 if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
