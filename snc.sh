@@ -232,3 +232,10 @@ retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Unmanage openshift-console operator config
+${OC} patch console.operator.openshift.io cluster -p='{"spec": {"managementState": "Unmanaged"}}' --type merge
+
+# Scale console and download pods to 1
+${OC} scale --replicas=1 deployment downloads -n openshift-console
+${OC} scale --replicas=1 deployment console -n openshift-console
