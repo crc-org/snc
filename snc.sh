@@ -5,6 +5,9 @@ set -exuo pipefail
 export LC_ALL=C
 export LANG=C
 
+# kill all the child processes for this script when it exits
+trap 'kill -9 $(jobs -p) || true' EXIT
+
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 OC=${OC:-oc}
