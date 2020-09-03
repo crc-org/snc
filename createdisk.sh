@@ -56,12 +56,24 @@ function sparsify {
             exit 1
     fi
 
-    guestfish --remote <<EOF
+    if [[ ${BASE_OS} == "rhcos" ]]
+    then
+        guestfish --remote <<EOF
+add-drive $baseDir/$srcFile
+run
+luks-open $partition coreos-root
+mount /dev/mapper/coreos-root /
+zero-free-space /boot/
+EOF
+    else
+        guestfish --remote <<EOF
 add-drive $baseDir/$srcFile
 run
 mount $partition /
 zero-free-space /boot/
 EOF
+    fi
+    
     if [ $? -ne 0 ]; then
             echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
