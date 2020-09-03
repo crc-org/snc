@@ -138,6 +138,16 @@ function apply_bootstrap_etcd_hack() {
         ${OC} patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge
 }
 
+function apply_auth_hack() {
+        # This is needed for now due to recent change in auth:
+        # https://github.com/openshift/cluster-authentication-operator/pull/318
+        while ! ${OC} get authentications.operator.openshift.io cluster >/dev/null 2>&1; do
+            sleep 3
+        done
+        echo "Auth operator is now available, applying auth hack"
+        ${OC} patch authentications.operator.openshift.io cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableOAuthServer": true}}}' --type=merge
+}
+
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
@@ -378,6 +388,8 @@ export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
 apply_bootstrap_etcd_hack &
+apply_auth_hack &
+
 
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
