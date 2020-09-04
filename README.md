@@ -21,6 +21,28 @@ $ export KUBECONFIG=<directory_to_cloned_repo>/crc-tmp-install-data/auth/kubecon
 $ kubectl get pods --all-namespaces
 ```
 
+## Building SNC for OKD 4
+- Before running `./snc.sh`, you need to create a pull secret file, and set a couple of environment variables to override the default behavior.
+- Select the OKD 4 release that you want to build from: [https://origin-release.apps.ci.l2s4.p1.openshiftapps.com](https://origin-release.apps.ci.l2s4.p1.openshiftapps.com)
+- For example, to build release: 4.5.0-0.okd-2020-08-12-020541
+
+```bash
+# Create a pull secret file
+
+cat << EOF > /tmp/pull_secret.json
+{"auths":{"fake":{"auth": "Zm9vOmJhcgo="}}}
+EOF
+
+# Set environment for OKD build
+export OKD_VERSION=4.5.0-0.okd-2020-08-12-020541
+export OPENSHIFT_PULL_SECRET_PATH="/tmp/pull_secret.json"
+
+# Build the Single Node cluster
+./snc.sh
+```
+
+- When the build is complete, create the disk image as described above.
+
 ## Troubleshooting
 
 OpenShift installer will create 2 VMs. It is sometimes useful to ssh inside the VMs.
