@@ -315,6 +315,11 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/
 # Remove the packages from VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
 
+# Adding Hyper-V vsock support
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    echo hv_sock > /etc/modules-load.d/vsock.conf
+EOF
+
 # SCP the kubeconfig file to VM
 ${SCP} $1/auth/kubeconfig core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
