@@ -9,7 +9,7 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_c
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 OC=${OC:-oc}
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
-BASE_OS=${BASE_OS:rhcos}
+BASE_OS=${BASE_OS:-rhcos}
 
 function get_dest_dir {
     if [ ${OPENSHIFT_VERSION} != "" ]; then
