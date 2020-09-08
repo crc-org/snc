@@ -226,8 +226,8 @@ function renew_certificates() {
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
 
-    # Wait until bootstrap csr request is generated.
-    until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done
+    # Wait until bootstrap csr request is generated with 5 min timeout
+    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
     ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
     delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
