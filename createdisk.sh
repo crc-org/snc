@@ -368,6 +368,14 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
     echo hv_sock > /etc/modules-load.d/vsock.conf
 EOF
 
+# Add gvisor-tap-vsock service
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+  podman run -d --name=gvisor-tap-vsock --privileged --net=host -it quay.io/crcont/gvisor-tap-vsock:v3
+  podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
+  systemctl daemon-reload
+  systemctl enable gvisor-tap-vsock.service
+EOF
+
 # SCP the kubeconfig file to VM
 ${SCP} $1/auth/kubeconfig core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
