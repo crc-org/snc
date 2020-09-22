@@ -7,6 +7,7 @@
 - `./snc.sh`
 
 ## How to create disk image?
+- Require CentOS/RHEL 8.x box for creating CRC disk image
 - Once your `snc.sh` script run successfully.
 - You need to wait for around 30 mins till cluster settle.
 - `./createdisk.sh crc-tmp-install-data`
