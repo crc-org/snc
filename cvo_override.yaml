@@ -56,3 +56,8 @@
     name: kube-storage-version-migrator-operator
     namespace: openshift-kube-storage-version-migrator-operator
     unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: cluster-node-tuning-operator
+    namespace: openshift-cluster-node-tuning-operator
+    unmanaged: true
