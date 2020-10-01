@@ -45,7 +45,7 @@ sleep 120
 echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
 ./delete-pods.sh
 echo 'Wait for pods to get recreated by the respective operators ....'
-sleep 840
+sleep 60
 
 ######
 ##  Remove all the resources related MutatingWebhook (MutatingWebhook, service and the deployment for the webhook) ##
