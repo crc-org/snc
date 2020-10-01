@@ -1,27 +1,33 @@
 OC=${OC:-oc}
 
-${OC} delete pods -n  openshift-authentication-operator --all
-${OC} delete pods -n  openshift-authentication --all
-${OC} delete pods -n openshift-cluster-machine-approver --all
-${OC} delete pods -n openshift-cluster-node-tuning-operator --all
-${OC} delete pods -n openshift-cluster-samples-operator  --all
-${OC} delete pods -n openshift-config-operator  --all
-${OC} delete pods -n openshift-console-operator  --all
-${OC} delete pods -n openshift-console --all
-${OC} delete pods -n openshift-controller-manager-operator  --all
-${OC} delete pods -n openshift-controller-manager  --all
-${OC} delete pods -n openshift-dns-operator  --all
-${OC} delete pods -n  openshift-dns --all
-${OC} delete pods -n openshift-image-registry   --all
-${OC} delete pods -n openshift-kube-storage-version-migrator --all
-${OC} delete pods -n openshift-marketplace  --all
-${OC} delete pods -n openshift-multus  --all
-${OC} delete pods -n openshift-network-operator   --all
-${OC} delete pods -n openshift-operator-lifecycle-manager   --all
-${OC} delete pods -n openshift-sdn   --all
-${OC} delete pods -n openshift-service-ca-operator    --all
-${OC} delete pods -n openshift-service-ca   --all
-${OC} delete pods -n openshift-apiserver-operator  --all
-${OC} delete pods -n openshift-apiserver  --all
-${OC} delete pods -n openshift-ingress-operator --all
-${OC} delete pods -n openshift-ingress --all
+delete_pods_for_a_namespace() {
+	${OC} delete pods -n  $1 --all
+	sleep 30
+}
+
+delete_pods_for_a_namespace openshift-authentication  
+delete_pods_for_a_namespace openshift-authentication-operator 
+delete_pods_for_a_namespace openshift-cluster-machine-approver 
+delete_pods_for_a_namespace openshift-cluster-node-tuning-operator 
+delete_pods_for_a_namespace openshift-cluster-samples-operator 
+delete_pods_for_a_namespace openshift-config-operator  
+delete_pods_for_a_namespace openshift-console 
+delete_pods_for_a_namespace openshift-console-operator  
+delete_pods_for_a_namespace openshift-controller-manager  
+delete_pods_for_a_namespace openshift-controller-manager-operator  
+delete_pods_for_a_namespace openshift-dns
+delete_pods_for_a_namespace openshift-dns-operator  
+delete_pods_for_a_namespace openshift-image-registry   
+delete_pods_for_a_namespace openshift-kube-storage-version-migrator 
+delete_pods_for_a_namespace openshift-marketplace  
+delete_pods_for_a_namespace openshift-multus  
+delete_pods_for_a_namespace openshift-network-operator   
+delete_pods_for_a_namespace openshift-operator-lifecycle-manager   
+delete_pods_for_a_namespace openshift-sdn   
+delete_pods_for_a_namespace openshift-service-ca   
+delete_pods_for_a_namespace openshift-service-ca-operator    
+delete_pods_for_a_namespace openshift-apiserver  
+delete_pods_for_a_namespace openshift-apiserver-operator 
+delete_pods_for_a_namespace openshift-ingress 
+delete_pods_for_a_namespace openshift-ingress-operator 
+sleep 160
