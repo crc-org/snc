@@ -365,6 +365,12 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
 
+# Make all Kube-control plane manifest files as immutable. This helps not lose the performance related (ENV and initial resource requests) be overwritten by the respective oeprators
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo chattr +i  /etc/kubernetes/manifests/kube-controller-manager-pod.yaml
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo chattr +i  /etc/kubernetes/manifests/kube-scheduler-pod.yaml
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo chattr +i  /etc/kubernetes/manifests/etcd-pod.yaml
+
 # Shutdown the VM
 sudo virsh shutdown ${VM_PREFIX}-master-0
 # Wait till instance shutdown gracefully
