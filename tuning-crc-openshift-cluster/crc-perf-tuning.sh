@@ -70,4 +70,10 @@ echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
 ./make-kube-control-manifests-immutable.sh
 sleep 120
 
+######
+##  Apply required RHCOS Kernel parameters
+#####
+echo 'Apply required Kernel paramters to the CRC VM..'
+./apply-kernel-paramters.sh
+
 echo 'All the perfomance settings been applied. DONE'
