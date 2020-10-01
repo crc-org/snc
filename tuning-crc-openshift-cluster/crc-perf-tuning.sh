@@ -18,7 +18,9 @@ sleep 60
 ##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
 #####
 echo 'Update Kube control plane manifest files ......'
+./make-kube-control-manifests-mutable.sh
 ./update-kube-controlplane.sh
+./make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep 180
 
