@@ -1,5 +1,4 @@
-!bin/sh 
-
+SSH_KEYS_OF_MASTER_NODE=../id_rsa_crc
 JQ=${JQ:-jq}
 
 set -x
