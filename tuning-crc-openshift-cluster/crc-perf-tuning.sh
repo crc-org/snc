@@ -10,6 +10,8 @@ OC=${OC:-oc}
 #####
 echo 'Enable Kube V1/alpha API .....'
 ./enable-alpha-api.sh
+./make-kube-control-manifests-immutable.sh
+sleep 60
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
