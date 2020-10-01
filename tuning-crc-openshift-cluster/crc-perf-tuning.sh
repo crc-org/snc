@@ -74,6 +74,6 @@ sleep 120
 ##  Apply required RHCOS Kernel parameters
 #####
 echo 'Apply required Kernel paramters to the CRC VM..'
-./apply-kernel-paramters.sh
+./apply-kernel-parameters.sh
 
 echo 'All the perfomance settings been applied. DONE'
