@@ -51,5 +51,6 @@ sleep 60
 ##  Remove all the resources related MutatingWebhook (MutatingWebhook, service and the deployment for the webhook) ##
 #####
 echo 'Removing admission webhooks ..'
-${OC} delete MutatingWebhookConfiguration/mutateme svc/mutateme deploy/mutateme 
+./remove-admission-webhook.sh
+sleep 60
 echo 'All the perfomance settings been applied. DONE'
