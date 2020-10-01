@@ -53,4 +53,12 @@ sleep 60
 echo 'Removing admission webhooks ..'
 ./remove-admission-webhook.sh
 sleep 60
+
+######
+##  Delete all the created podpresets
+#####
+echo 'Removing podpresets across all the namespaces ..'
+./remove-podpresets.sh
+sleep 60
+
 echo 'All the perfomance settings been applied. DONE'
