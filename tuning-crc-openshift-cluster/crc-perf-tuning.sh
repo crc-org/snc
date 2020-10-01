@@ -61,4 +61,13 @@ echo 'Removing podpresets across all the namespaces ..'
 ./remove-podpresets.sh
 sleep 60
 
+######
+##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks 
+#####
+echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
+./make-kube-control-manifests-mutable.sh
+./remove-alpha-api.sh
+./make-kube-control-manifests-immutable.sh
+sleep 120
+
 echo 'All the perfomance settings been applied. DONE'
