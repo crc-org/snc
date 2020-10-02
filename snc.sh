@@ -256,12 +256,16 @@ function delete_operator() {
         ${OC} wait --for=delete pod/${pod} --timeout=120s -n ${namespace} || ${OC} delete pod/${pod} --grace-period=0 --force -n ${namespace} || true
 }
 
+# Download the oc binary for all platforms
+mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
+unzip -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
+
 # Download the oc binary if not present in current directory
 if ! which ${OC}; then
-    if [[ ! -e oc ]] ; then
-        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar zx oc
-    fi
-    OC=./oc
+    OC=./openshift-clients/linux/oc
 fi
 
 # Download yq for manipulating in place yaml configs

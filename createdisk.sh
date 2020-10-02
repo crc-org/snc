@@ -164,6 +164,9 @@ function copy_additional_files {
     cp id_rsa_crc $destDir/
     chmod 400 $destDir/id_rsa_crc
 
+    # Copy oc client
+    cp openshift-clients/linux/oc $destDir/
+
     update_json_description $srcDir $destDir
 }
 
@@ -178,6 +181,9 @@ function generate_hyperkit_directory {
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
+
+    # Copy oc client
+    cp openshift-clients/mac/oc $destDir/
 
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
@@ -195,6 +201,9 @@ function generate_hyperv_directory {
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_rsa_crc $destDir/
+
+    # Copy oc client
+    cp openshift-clients/windows/oc.exe $destDir/
 
     ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
 
