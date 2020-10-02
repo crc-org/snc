@@ -35,7 +35,7 @@ echo 'Create podpresets ....'
 ##  Source code for this Webhook is located at https://github.com/spaparaju/k8s-mutate-webhook
 #####
 echo 'Deploy MutatingWebhook for admission controller .....'
-oc apply -f admission-webhook.yaml
+oc apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
 echo 'Wait for  MutatingWebhook to be available ....'
 sleep 120
 
