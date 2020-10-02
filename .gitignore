@@ -5,3 +5,4 @@ openshift-install
 pull-secret
 oc
 yq
+openshift-clients/
