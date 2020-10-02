@@ -470,3 +470,6 @@ ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Apply performance related changes to the CRC OpenShift components
+./tuning-crc-openshift-cluster/crc-perf-tuning.sh
