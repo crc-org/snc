@@ -27,7 +27,9 @@ UNZIP=${UNZIP:-unzip}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
+SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 
@@ -190,7 +192,7 @@ function setup_pv_dirs() {
     local dir="${1}"
     local count="${2}"
 
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    ${SSH_CMD} 'sudo bash -x -s' <<EOF
     for pvsubdir in \$(seq -f "pv%04g" 1 ${count}); do
         mkdir -p "${dir}/\${pvsubdir}"
     done
@@ -243,9 +245,9 @@ function renew_certificates() {
     # Remove the 24 hours certs and bootstrap kubeconfig
     # this kubeconfig will be regenerated and new certs will be created in pki folder
     # which will have 30 days validity.
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
+    ${SSH_CMD} sudo rm -fr /var/lib/kubelet/pki
+    ${SSH_CMD} sudo rm -fr /var/lib/kubelet/kubeconfig
+    ${SSH_CMD} sudo systemctl restart kubelet
 
     # Wait until bootstrap csr request is generated with 5 min timeout
     timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
@@ -415,8 +417,8 @@ renew_certificates
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
-HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
+HOSTNAME=$(${SSH_CMD} hostnamectl status --transient)
+${SSH_CMD} sudo hostnamectl set-hostname ${HOSTNAME}
 
 create_json_description
 
