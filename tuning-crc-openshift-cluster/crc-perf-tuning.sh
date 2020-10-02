@@ -25,6 +25,14 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep 180
 
 ######
+##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
+#####
+echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
+tuning-crc-openshift-cluster/delete-pods.sh
+echo 'Wait for pods to get recreated by the respective operators ....'
+sleep 60
+
+######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
 echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
