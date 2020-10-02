@@ -25,11 +25,27 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep 180
 
 ######
+##  Deploy Mutatingwebhook for specifying the appropriate resources to CRC OpenShift pods ##
+##  Source code for this Webhook is located at https://github.com/spaparaju/k8s-mutate-webhook
+#####
+echo 'Deploy MutatingWebhook for admission controller .....'
+oc apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
+echo 'Wait for  MutatingWebhook to be available ....'
+sleep 120
+
+######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
 #####
 echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
 tuning-crc-openshift-cluster/delete-pods.sh
 echo 'Wait for pods to get recreated by the respective operators ....'
+sleep 60
+
+######
+##  Remove all the resources related MutatingWebhook (MutatingWebhook, service and the deployment for the webhook) ##
+#####
+echo 'Removing admission webhooks ..'
+tuning-crc-openshift-cluster/remove-admission-webhook.sh
 sleep 60
 
 ######
