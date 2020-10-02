@@ -1,4 +1,6 @@
-OC=${OC:-oc}
+#!/bin/bash
+
+set -exuo pipefail
 
 delete_pods_for_a_namespace() {
 	${OC} delete pods -n  $1 --all

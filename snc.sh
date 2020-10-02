@@ -474,4 +474,10 @@ ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
 # Apply performance related changes to the CRC OpenShift components
-./tuning-crc-openshift-cluster/crc-perf-tuning.sh
+export JQ
+export YQ
+export OC
+export SSH_HOST
+export SSH_ARGS
+export SSH
+source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh

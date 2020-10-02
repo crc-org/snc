@@ -1,4 +1,6 @@
-OC=${OC:-oc}
+#!/bin/bash
+
+set -exuo pipefail
 
 for i in {1..60}
 do

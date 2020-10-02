@@ -1,4 +1,9 @@
-OC=${OC:-oc}
+#!/bin/bash
+
+set -exuo pipefail
+
+SCP="scp ${SSH_ARGS}"
+export SCP
 
 ######
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
