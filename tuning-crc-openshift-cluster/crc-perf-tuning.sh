@@ -14,4 +14,10 @@ tuning-crc-openshift-cluster/update-kube-controlplane.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep 180
 
+######
+##  Apply required RHCOS Kernel parameters
+#####
+echo 'Apply required Kernel paramters to the CRC VM..'
+tuning-crc-openshift-cluster/apply-kernel-parameters.sh
+
 echo 'All the perfomance settings been applied. DONE'
