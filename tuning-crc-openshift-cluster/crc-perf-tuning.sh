@@ -25,6 +25,12 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep 180
 
 ######
+##  Now that v1alpha1/setting API is enabled, create podpresets across all the namespaces ##
+#####
+echo 'Create podpresets ....'
+tuning-crc-openshift-cluster/trigger-podpresets.sh
+
+######
 ##  Deploy Mutatingwebhook for specifying the appropriate resources to CRC OpenShift pods ##
 ##  Source code for this Webhook is located at https://github.com/spaparaju/k8s-mutate-webhook
 #####
@@ -46,6 +52,13 @@ sleep 60
 #####
 echo 'Removing admission webhooks ..'
 tuning-crc-openshift-cluster/remove-admission-webhook.sh
+sleep 60
+
+######
+##  Delete all the created podpresets
+#####
+echo 'Removing podpresets across all the namespaces ..'
+tuning-crc-openshift-cluster/remove-podpresets.sh
 sleep 60
 
 ######
