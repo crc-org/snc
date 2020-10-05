@@ -412,7 +412,7 @@ create_qemu_image $libvirtDestDir
 
 copy_additional_files $1 $libvirtDestDir
 
-tar cSf - $libvirtDestDir | xz --threads=0 >$libvirtDestDir.$crcBundleSuffix
+tar cSf - --sort=name $libvirtDestDir | xz --threads=0 >$libvirtDestDir.$crcBundleSuffix
 
 # HyperKit image generation
 # This must be done after the generation of libvirt image as it reuse some of
@@ -421,7 +421,7 @@ hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
 mkdir $hyperkitDestDir
 generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1
 
-tar cSf - $hyperkitDestDir | xz --threads=0 >$hyperkitDestDir.$crcBundleSuffix
+tar cSf - --sort=name $hyperkitDestDir | xz --threads=0 >$hyperkitDestDir.$crcBundleSuffix
 
 # HyperV image generation
 #
@@ -431,7 +431,7 @@ hypervDestDir="crc_hyperv_${destDirSuffix}"
 mkdir $hypervDestDir
 generate_hyperv_directory $libvirtDestDir $hypervDestDir
 
-tar cSf - $hypervDestDir | xz --threads=0 >$hypervDestDir.$crcBundleSuffix
+tar cSf - --sort=name $hypervDestDir | xz --threads=0 >$hypervDestDir.$crcBundleSuffix
 
 # Cleanup up packages and vmlinux/initramfs files
 rm -fr $1/packages $1/vmlinuz* $1/initramfs*
