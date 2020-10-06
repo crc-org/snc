@@ -13,7 +13,7 @@ set -exuo pipefail
     ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
     kubeapi_limit_cpu_value=$5
     ${JQ}  --arg kubeapi_limit_cpu_value "$kubeapi_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.limits.cpu) |= $kubeapi_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
-    cat final_manifest.json | ${JQ} -c > unformatted_final_manifest.json
+    cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-apiserver-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-apiserver-manifest.yaml $1
@@ -32,7 +32,7 @@ set -exuo pipefail
     ${JQ}  --arg new_kube_controller_cpu_value "$new_kube_controller_cpu_value" '(.spec.containers[] | select(.name == "kube-controller-manager") | .resources.requests.cpu) |= $new_kube_controller_cpu_value' updated_with_env_manifest.json  > updated_with_cpu_requests_manifest.json
     kube_controller_limit_cpu_value=$5
     ${JQ}  --arg kube_controller_limit_cpu_value "$kube_controller_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-controller-manager") | .resources.limits.cpu) |= $kube_controller_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
-    cat final_manifest.json | ${JQ} -c > unformatted_final_manifest.json
+    cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-control-manager-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-control-manager-manifest.yaml $1
@@ -47,7 +47,7 @@ set -exuo pipefail
     ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' current_manifest.json > updated_wth_memory_manifest.json
     ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' updated_wth_memory_manifest.json > updated_wth_cpu_manifest.json
     ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json  > final_manifest.json
-    cat final_manifest.json | ${JQ} -c > unformatted_final_manifest.json
+    cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-scheduler-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-scheduler-manifest.yaml $1

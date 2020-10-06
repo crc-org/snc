@@ -8,7 +8,7 @@ additional_args=' --runtime-config=settings.k8s.io/v1alpha1=true --enable-admiss
 new_args="${current_args} ${additional_args}"
 echo $new_args
 ${JQ}  --arg new_args "$new_args" '(.spec.containers[] | select(.name == "kube-apiserver") | .args[0]) |= $new_args' current_kubeapiserver_manifest.json > updated_kubeapiserver_manifest.json
-cat updated_kubeapiserver_manifest.json | jq -c  > unformatted_updated_kubeapiserver_manifest.json
+cat updated_kubeapiserver_manifest.json | ${JQ} -c '.' > unformatted_updated_kubeapiserver_manifest.json
 ${SCP} -r unformatted_updated_kubeapiserver_manifest.json ${SSH_HOST}:/home/core/enable-alphaapi-kube-apiserver-pod.yaml
 ${SSH_CMD} sudo cp /home/core/enable-alphaapi-kube-apiserver-pod.yaml /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ## cleanup temp. files created ##
