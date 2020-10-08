@@ -347,6 +347,13 @@ ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EX
 rm id_rsa_crc* || true
 ssh-keygen -N "" -f id_rsa_crc -C "core"
 
+# Use dnsmasq as dns in network manager config
+if ! grep -iqR dns=dnsmasq /etc/NetworkManager/conf.d/ ; then
+   cat << EOF | sudo tee /etc/NetworkManager/conf.d/crc-snc-nm-dnsmasq.conf
+[main]
+dns=dnsmasq
+EOF
+fi
 
 # Clean up old DNS overlay file
 if [ -f /etc/NetworkManager/dnsmasq.d/openshift.conf ]; then
