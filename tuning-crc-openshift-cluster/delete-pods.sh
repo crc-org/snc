@@ -3,7 +3,17 @@
 set -exuo pipefail
 
 delete_pods_for_a_namespace() {
-	${OC} delete pods -n  $1 --all
+	local success
+	for i in {1..5}; do
+		if ${OC} delete pods -n  $1 --all; then
+			success=1
+			break
+		fi
+		sleep 1
+	done
+	if [ $success != 1 ]; then
+		exit 1
+	fi
 	sleep 30
 }
 
