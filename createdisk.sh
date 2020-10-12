@@ -149,6 +149,19 @@ function update_json_description {
         >$destDir/crc-bundle-info.json
 }
 
+function eventually_add_pull_secret {
+    local destDir=$1
+
+    if [[ -f "$BUNDLED_PULL_SECRET_PATH" ]]
+    then
+      cat "$BUNDLED_PULL_SECRET_PATH" > "$destDir/default-pull-secret"
+      cat $destDir/crc-bundle-info.json \
+          | ${JQ} '.clusterInfo.openshiftPullSecret = "default-pull-secret"' \
+          >$destDir/crc-bundle-info.json.tmp
+      mv $destDir/crc-bundle-info.json.tmp $destDir/crc-bundle-info.json
+    fi
+}
+
 function copy_additional_files {
     local srcDir=$1
     local destDir=$2
@@ -168,6 +181,8 @@ function copy_additional_files {
     cp openshift-clients/linux/oc $destDir/
 
     update_json_description $srcDir $destDir
+
+    eventually_add_pull_secret $destDir
 }
 
 function generate_hyperkit_directory {

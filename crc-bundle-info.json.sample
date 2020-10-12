@@ -32,6 +32,8 @@
     # Name of the file containing the kubeadmin password for use in the
     # openshift console
     "kubeadminPasswordFile": "kubeadmin-password"
+    # pull secret that can be used to fetch OpenShift container images (optional)
+    # "openshiftPullSecret": "default-pull-secret"
   },
   "nodes": [
     {
