@@ -41,7 +41,12 @@ export OPENSHIFT_PULL_SECRET_PATH="/tmp/pull_secret.json"
 ./snc.sh
 ```
 
-- When the build is complete, create the disk image as described above.
+- When the build is complete, create the disk image as described below.
+
+```
+export BUNDLED_PULL_SECRET_PATH="/tmp/pull_secret.json"
+./createdisk.sh crc-tmp-install-data
+```
 
 ## Troubleshooting
 
