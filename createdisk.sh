@@ -363,8 +363,8 @@ until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
 done
 
 sudo virsh start ${VM_PREFIX}-master-0
-# Wait till it is started properly.
-until ping -c1 api.${CRC_VM_NAME}.${BASE_DOMAIN} >/dev/null 2>&1; do
+# Wait till ssh connection available
+until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
     echo " ${VM_PREFIX}-master-0 still booting"
     sleep 2
 done
