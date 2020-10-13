@@ -1,9 +1,9 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 export LC_ALL=C
 export LANG=C
-
-set -x
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
@@ -22,10 +22,12 @@ BASE_OS=${BASE_OS:-rhcos}
 USE_LUKS=${USE_LUKS:-true}
 
 function get_dest_dir {
-    if [ ${OPENSHIFT_VERSION} != "" ]; then
+    if [ "${OPENSHIFT_VERSION-}" != "" ]; then
         DEST_DIR=$OPENSHIFT_VERSION
     else
+        set +e
         DEST_DIR=$(git describe --exact-match --tags HEAD)
+        set -e
         if [ -z ${DEST_DIR} ]; then
             DEST_DIR="$(date --iso-8601)"
         fi
@@ -53,7 +55,7 @@ function sparsify {
 
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
-    
+
     # https://bugzilla.redhat.com/show_bug.cgi?id=1837765
     export LIBGUESTFS_MEMSIZE=2048
     # Interact with guestfish directly
@@ -152,7 +154,7 @@ function update_json_description {
 function eventually_add_pull_secret {
     local destDir=$1
 
-    if [[ -f "$BUNDLED_PULL_SECRET_PATH" ]]
+    if [ "${BUNDLED_PULL_SECRET_PATH-}" != "" ]
     then
       cat "$BUNDLED_PULL_SECRET_PATH" > "$destDir/default-pull-secret"
       cat $destDir/crc-bundle-info.json \
@@ -315,7 +317,7 @@ certImage=$(${OC} --kubeconfig $1/auth/kubeconfig adm release info --image-for=c
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
 
 # Remove unused images from container storage
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null || true'
 
 # Replace pull secret with a null json string '{}'
 ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
@@ -341,11 +343,12 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman
 
 # Remove all the pods except openshift-sdn from the VM
 pods=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl pods -o json | jq '.items[] | select(.metadata.namespace != "openshift-sdn")' | jq -r .id)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl stopp ${pods}
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "for i in {1..3}; do sudo crictl rmp "${pods}" && break || sleep 2; done"
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo crictl stopp ${pods} || true"
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "for i in {1..3}; do sudo crictl rmp "${pods}" && break || sleep 2; done || true"
 
 # Remove openshift-sdn pods also from the VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q) && sudo crictl rmp $(sudo crictl pods -q)'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q) || true'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q) || true'
 
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
@@ -413,7 +416,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
 
 # Remove the journal logs.
-# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't 
+# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
 # remove all the journal logs so separate commands are used here.
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
