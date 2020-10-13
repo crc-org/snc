@@ -461,9 +461,6 @@ ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage
 # Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
 
-# Clean-up 'openshift-cluster-node-tuning-operator' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-node-tuning-operator
-
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
 ${OC} delete apiservice v1beta1.metrics.k8s.io
