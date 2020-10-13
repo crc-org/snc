@@ -63,3 +63,5 @@ Host bootstrap
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 ```
+
+Please note the SNC project is “as-is” on this Github repository. At this time, it is not an offically supported Red Hat solution.
