@@ -17,6 +17,10 @@ echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep 60
+${SSH_CMD} cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+${OC} api-resources
+${OC} api-resources  --api-group=settings.k8s.io
+
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##

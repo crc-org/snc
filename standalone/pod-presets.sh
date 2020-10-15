@@ -11,6 +11,7 @@ source "$top_dir/tuning-crc-openshift-cluster/crc-env.sh"
 #####
 echo 'Enable Kube V1/alpha API .....'
 "$top_dir"/tuning-crc-openshift-cluster/enable-alpha-api.sh
+# Wait for 'oc api-resources  --api-group=settings.k8s.io |grep PodPreset'
 sleep 60
 
 ######
