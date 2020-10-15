@@ -3,10 +3,11 @@
 # Force yq download
 export YQ=./yq
 
+set -exuo pipefail
+./shellcheck.sh
 ./snc.sh
-if [[ $? -ne 0 ]]; then
-  exit 1
-fi
+set +exuo pipefail
+
 # wait till the cluster is stable
 sleep 5m
 export KUBECONFIG=crc-tmp-install-data/auth/kubeconfig
@@ -20,9 +21,12 @@ done
 while oc get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Available")].status}' | grep -v True; do
    sleep 2
 done
+
+set -exuo pipefail
 # Run createdisk script
 export SNC_VALIDATE_CERT=false
 ./createdisk.sh crc-tmp-install-data
+set +exuo pipefail
 
 # Destroy the cluster
 ./openshift-install destroy cluster --dir crc-tmp-install-data
