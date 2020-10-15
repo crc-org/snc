@@ -479,5 +479,5 @@ export YQ
 export OC
 export SSH_HOST
 export SSH_ARGS
-export SSH
+export SSH_CMD
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
