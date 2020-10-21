@@ -310,10 +310,6 @@ ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from
 ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
 ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
-# Get cluster-kube-apiserver-operator image along with hash and tag it
-certImage=$(${OC} --kubeconfig $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
-
 # Remove unused images from container storage
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
 
