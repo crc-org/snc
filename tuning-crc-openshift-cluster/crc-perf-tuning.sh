@@ -34,6 +34,9 @@ tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep $SLEEP_TIME
 
+### Debug -- Make sure Podpresets are enabled by the API server
+${OC} api-resources  --api-group=settings.k8s.io
+
 ######
 ##  Now that v1alpha1/setting API is enabled, create podpresets across all the namespaces ##
 #####
