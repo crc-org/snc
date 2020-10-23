@@ -85,7 +85,7 @@ sleep $SLEEP_TIME
 ######
 ##  Apply required RHCOS Kernel parameters
 #####
-echo 'Apply required Kernel paramters to the CRC VM..'
-tuning-crc-openshift-cluster/apply-kernel-parameters.sh
+# echo 'Apply required Kernel paramters to the CRC VM..'
+# tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
 echo 'All the perfomance settings been applied. DONE'
