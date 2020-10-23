@@ -78,9 +78,8 @@ sleep $SLEEP_TIME
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
 echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
-tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 tuning-crc-openshift-cluster/remove-alpha-api.sh
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
 
 ######
