@@ -59,12 +59,12 @@ set -exuo pipefail
     ${SSH_CMD} sudo cat $1  > current_manifest.yaml
     new_memory_value=$2
     new_cpu_value=$3
-    ${YQ} r -j current_manifest.yaml | ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' -  | ${YQ} r -P - > updated_memory_manifest.yaml
-    ${YQ} r -j updated_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r -P - > updated_cpu_manifest.yaml
-    ${YQ} r -j updated_cpu_manifest.yaml | ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.initContainers[].resources.requests.memory) |= $new_memory_value' -  | ${YQ} r -P - > updated_init_containers_memory_manifest.yaml
-    ${YQ} r -j updated_init_containers_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.initContainers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r -P - > updated_init_containers_cpu_manifest.yaml
-    ${YQ} r -j updated_init_containers_cpu_manifest.yaml | ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r -P - > updated_with_env_manifest.yaml
-    ${YQ} r -j updated_with_env_manifest.yaml | ${JQ} '.spec.initContainers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r -P - > updated_init_containers_with_env_manifest.yaml
+    ${YQ} r -j current_manifest.yaml | ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' -  | ${YQ} r  - > updated_memory_manifest.yaml
+    ${YQ} r -j updated_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r  - > updated_cpu_manifest.yaml
+    ${YQ} r -j updated_cpu_manifest.yaml | ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.initContainers[].resources.requests.memory) |= $new_memory_value' -  | ${YQ} r  - > updated_init_containers_memory_manifest.yaml
+    ${YQ} r -j updated_init_containers_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.initContainers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r  - > updated_init_containers_cpu_manifest.yaml
+    ${YQ} r -j updated_init_containers_cpu_manifest.yaml | ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_with_env_manifest.yaml
+    ${YQ} r -j updated_with_env_manifest.yaml | ${JQ} '.spec.initContainers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_init_containers_with_env_manifest.yaml
     new_etcd_cpu_value=$4
     ${YQ} r -j updated_init_containers_with_env_manifest.yaml | ${JQ}  --arg new_etcd_cpu_value "$new_etcd_cpu_value" '(.spec.containers[] | select(.name == "etcd") | .resources.requests.cpu) |= $new_etcd_cpu_value' -  > updated_with_new_cpu_request_manifest.yaml
     etcd_cpu_limit_value=$4
