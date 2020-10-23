@@ -7,10 +7,11 @@ for namespace in $(oc get ns  -ojsonpath='{.items[*].metadata.name}')
 do
 	if [[ "$namespace" =~ "openshift-" ]]; then
 			success=0
-			sed 's/NAMESPACE_TO_REPLACE/"'"$namespace"'"/g' "$curdir"/podpreset-template.yaml > trigger-podpreset.yaml
+			sed 's/NAMESPACE_TO_REPLACE/"'"$namespace"'"/g' "$curdir"/podpreset-template.yaml > $curdir/trigger-podpreset.yaml
 			echo 'creating podpreset for the namespace: "'"$namespace"'"' 
-			for i in {1..5}; do
-				if ${OC} apply -f trigger-podpreset.yaml ; then
+			cat $curdir/trigger-podpreset.yaml
+			for i in {1..2}; do
+				if ${OC} apply -f $curdir/trigger-podpreset.yaml ; then
 					success=1
 					break
 				fi
