@@ -80,7 +80,8 @@ update_kubelet_systemd_service() {
     ${SSH_CMD} sudo cat $1  > current_kubelet.conf
     ${YQ} w  current_kubelet.conf systemReserved.cpu $3  > updated_cpu_kubelet.conf
     ${YQ} w  updated_cpu_kubelet.conf systemReserved.memory $2  > updated_memory_kubelet.conf
-    ${YQ} w  updated_memory_kubelet.conf containerLogMaxSize $4  > updated_final_kubelet.conf
+    ${YQ} w  updated_memory_kubelet.conf containerLogMaxSize $4  > updated_container_max_log_kubelet.conf
+    ${YQ} w  updated_container_max_log_kubelet.conf failSwapOn $5  > updated_final_kubelet.conf
 
     ${SCP} -r updated_final_kubelet.conf ${SSH_HOST}:/home/core/updated-kubelet.conf
     ${SSH_CMD} sudo cp /home/core/updated-kubelet.conf $1
@@ -90,7 +91,7 @@ update_kubelet_systemd_service() {
 
 
 echo '------------- Applying changes to Kubelet -----------'
-update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi
+update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
 # echo '------------- Applying changes to Kube API server  -----------'
 # update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 1Gi 10m 500m 700m

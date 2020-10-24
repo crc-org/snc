@@ -16,12 +16,18 @@ export SCP
 #####
 echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
+
+### Make the API server manifest file immutable
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+
+### Make the API server manifest file immutable
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
-${SSH_CMD} cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
-${OC} api-resources
-${OC} api-resources  --api-group=settings.k8s.io
 
+###
+# Create swap space
+###
+tuning-crc-openshift-cluster/enable-swap-space.sh
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
@@ -77,8 +83,10 @@ sleep $SLEEP_TIME
 ######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
-echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
+echo 'Remove immutability flag to mutate manifest of Kube API server .. '
 ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+
+echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
 
