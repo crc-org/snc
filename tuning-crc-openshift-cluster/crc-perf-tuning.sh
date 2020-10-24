@@ -10,6 +10,11 @@ export SCP
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
 #####
 
+######
+##  Apply required RHCOS Kernel parameters
+#####
+echo 'Apply required Kernel paramters to the CRC VM..'
+tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
@@ -89,11 +94,5 @@ ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
-
-######
-##  Apply required RHCOS Kernel parameters
-#####
-# echo 'Apply required Kernel paramters to the CRC VM..'
-# tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
 echo 'All the perfomance settings been applied. DONE'
