@@ -30,8 +30,6 @@ CRC_PV_DIR="/mnt/pv-data"
 SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
 SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
-MASTER_HOST="core@master"
-SSH_GRUBBY_CMD="ssh ${SSH_ARGS} ${MASTER_HOST} --"
 
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
@@ -483,5 +481,4 @@ export OC
 export SSH_HOST
 export SSH_ARGS
 export SSH_CMD
-export SSH_GRUBBY_CMD
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
