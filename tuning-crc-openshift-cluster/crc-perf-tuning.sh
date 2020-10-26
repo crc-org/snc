@@ -13,8 +13,8 @@ export SCP
 ######
 ##  Apply required RHCOS Kernel parameters
 #####
-# echo 'Apply required Kernel paramters to the CRC VM..'
-# tuning-crc-openshift-cluster/apply-kernel-parameters.sh
+ echo 'Apply required Kernel paramters to the CRC VM..'
+ tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
