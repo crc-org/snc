@@ -388,6 +388,11 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_cr
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
+# Use a fixed node name
+OLD_INFRA_NAME=$(${YQ} read ${INSTALL_DIR}/manifests/cluster-infrastructure-02-config.yml 'status.infrastructureName')
+NEW_INFRA_NAME=$(${YQ} read install-config.yaml metadata.name)-abcde
+find ${INSTALL_DIR} -type f -exec sed -i "s/${OLD_INFRA_NAME}/${NEW_INFRA_NAME}/g"  {} \;
+
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
