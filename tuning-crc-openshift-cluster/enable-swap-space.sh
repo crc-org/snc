@@ -16,6 +16,7 @@ What=/var/home/core/vm/crc-swapfile
 
 [Install]
 WantedBy=multi-user.target
+
 EOT
 
 ${SSH_CMD} sudo systemctl --now enable /etc/systemd/system/var-home-core-vm-swapfile.swap
