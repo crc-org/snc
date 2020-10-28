@@ -243,7 +243,6 @@ function generate_hyperv_directory {
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 JQ=${JQ:-jq}
-VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
@@ -256,10 +255,6 @@ fi
 
 if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
-fi
-
-if ! which ${VIRT_RESIZE}; then
-    sudo yum -y install /usr/bin/virt-resize libguestfs-xfs
 fi
 
 if ! which ${VIRT_FILESYSTEMS}; then
