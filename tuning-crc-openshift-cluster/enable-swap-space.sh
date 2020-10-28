@@ -3,16 +3,16 @@
 set -exuo pipefail
 
 ${SSH_CMD} sudo mkdir -p /var/home/core/vm
-${SSH_CMD} sudo fallocate -l 3G /var/home/core/vm/crc-swapfile
-${SSH_CMD} sudo chmod 600 /var/home/core/vm/crc-swapfile
-${SSH_CMD} sudo mkswap /var/home/core/vm/crc-swapfile
+${SSH_CMD} sudo fallocate -l 3G /var/home/core/vm/swapfile
+${SSH_CMD} sudo chmod 600 /var/home/core/vm/swapfile
+${SSH_CMD} sudo mkswap /var/home/core/vm/swapfile
 
 sudo tee -a /etc/systemd/system/var-home-core-vm-swapfile.swap > /dev/null <<EOT
 [Unit]
 Description=Turn on swap
 
 [Swap]
-What=/var/home/core/vm/crc-swapfile
+What=/var/home/core/vm/swapfile
 
 [Install]
 WantedBy=multi-user.target
