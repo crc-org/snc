@@ -7,7 +7,7 @@ ${SSH_CMD} sudo fallocate -l 3G /var/home/core/vm/swapfile
 ${SSH_CMD} sudo chmod 600 /var/home/core/vm/swapfile
 ${SSH_CMD} sudo mkswap /var/home/core/vm/swapfile
 
-sudo tee -a /etc/systemd/system/var-home-core-vm-swapfile.swap > /dev/null <<EOT
+sudo cat >  /etc/systemd/system/var-home-core-vm-swapfile.swap << EOF
 [Unit]
 Description=Turn on swap
 
@@ -17,7 +17,7 @@ What=/var/home/core/vm/swapfile
 [Install]
 WantedBy=multi-user.target
 
-EOT
+EOF
 
 ${SSH_CMD} sudo systemctl --now enable /etc/systemd/system/var-home-core-vm-swapfile.swap
 ${SSH_CMD} sudo systemctl status var-home-core-vm-swapfile.swap
