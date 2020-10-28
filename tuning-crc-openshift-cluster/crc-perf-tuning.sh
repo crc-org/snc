@@ -10,6 +10,11 @@ export SCP
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
 #####
 
+###
+# Create swap space
+###
+tuning-crc-openshift-cluster/enable-swap-space.sh
+
 ######
 ##  Apply required RHCOS Kernel parameters
 #####
@@ -28,11 +33,6 @@ ${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ### Make the API server manifest file immutable
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
-
-###
-# Create swap space
-###
-tuning-crc-openshift-cluster/enable-swap-space.sh
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
