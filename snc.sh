@@ -2,8 +2,8 @@
 
 set -exuo pipefail
 
-export LC_ALL=C
-export LANG=C
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
 
 # kill all the child processes for this script when it exits
 trap 'kill -9 $(jobs -p) || true' EXIT
