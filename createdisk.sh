@@ -320,8 +320,9 @@ else
 fi
 
 # Adding Hyper-V vsock support
+
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
-    echo hv_sock > /etc/modules-load.d/vsock.conf
+    echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 
 # Add gvisor-tap-vsock service
