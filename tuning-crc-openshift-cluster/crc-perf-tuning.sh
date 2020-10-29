@@ -10,11 +10,6 @@ export SCP
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
 #####
 
-###
-# Create swap space
-###
-tuning-crc-openshift-cluster/enable-swap-space.sh
-
 ######
 ##  Apply required RHCOS Kernel parameters
 #####
@@ -93,6 +88,12 @@ ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
 echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
+sleep $SLEEP_TIME
+
+###
+# Create swap space
+###
+tuning-crc-openshift-cluster/enable-swap-space.sh
 sleep $SLEEP_TIME
 
 echo 'All the perfomance settings been applied. DONE'
