@@ -12,4 +12,5 @@ echo '/var/home/core/vm/swapfile              swap                    swap    de
 
 ${SSH_CMD} sudo systemctl --now enable /etc/systemd/system/var-home-core-vm-swapfile.swap
 ${SSH_CMD} sudo systemctl status var-home-core-vm-swapfile.swap
+${SSH_CMD} sudo swapon -a
 ${SSH_CMD} sudo swapon -s
