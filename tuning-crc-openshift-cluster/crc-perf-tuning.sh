@@ -57,6 +57,7 @@ echo 'Deploy MutatingWebhook for admission controller .....'
 ${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
 echo 'Wait for  MutatingWebhook to be available ....'
 sleep $SLEEP_TIME
+sleep $SLEEP_TIME
 
 ######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##

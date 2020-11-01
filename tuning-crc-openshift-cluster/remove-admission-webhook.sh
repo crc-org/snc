@@ -6,4 +6,4 @@ set -exuo pipefail
 ## The source-code for this admission controller is located at 'https://github.com/spaparaju/k8s-mutate-webhook'. 
 ## Once all the OpenShift pods update their pod spec with the required resource requests/limits, these webhook related components are removed  so that the created CRC disk-image  does not contain any NON-standard OpenShift components.
 
-${OC} delete MutatingWebhookConfiguration/mutateme svc/mutateme deploy/mutateme
+${OC} delete MutatingWebhookConfiguration/crc-mutating svc/crc-mutating deploy/crc-mutating
