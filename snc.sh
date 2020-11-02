@@ -73,6 +73,18 @@ function run_preflight_checks() {
         if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
                 preflight_failure  "libvirtd is not listening for plain-text TCP connections, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
         fi
+
+	if ! virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
+		echo "Default libvirt network is not available. Exiting now!"
+		exit 1
+	fi
+	echo "default network is available"
+
+	#Check if default libvirt network is Active
+	if [[ $(virsh -c ${LIBVIRT_URI}  net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
+		echo "Default network is not active. Exiting now!"
+		exit 1
+	fi
 	
 	#Just warn if architecture is not supported
 	case $ARCH in
