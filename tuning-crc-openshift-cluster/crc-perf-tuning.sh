@@ -61,7 +61,7 @@ sleep $SLEEP_TIME
 ${OC} get pods
 ${OC} get svc
 if ${OC} get MutatingWebhookConfiguration; then
-   echo "webhook is created to mutate pod manifests'
+   echo 'webhook is created to mutate pod manifests'
 else
    exit 1
 fi
