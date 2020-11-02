@@ -22,7 +22,6 @@ INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
-UNZIP=${UNZIP:-unzip}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
@@ -266,16 +265,21 @@ function delete_operator() {
         ${OC} wait --for=delete pod/${pod} --timeout=120s -n ${namespace} || ${OC} delete pod/${pod} --grace-period=0 --force -n ${namespace} || true
 }
 
-if ! which ${UNZIP}; then
-    sudo yum -y install /usr/bin/unzip
+# All platforms use linux oc binary
+mkdir -p openshift-clients/linux
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
+
+# Download the oc binary for mac and windows
+if [ "${ARCH}" != "ppc64le" ]; then
+	mkdir -p openshift-clients/mac openshift-clients/windows
+	curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
+	curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
+	if ! which unzip; then
+		sudo yum -y install /usr/bin/unzip
+	fi
+	unzip -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
 fi
 
-# Download the oc binary for all platforms
-mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
-${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
 OC=./openshift-clients/linux/oc
 
 # Download yq for manipulating in place yaml configs
