@@ -60,8 +60,11 @@ sleep $SLEEP_TIME
 sleep $SLEEP_TIME
 ${OC} get pods
 ${OC} get svc
-${OC} get MutatingWebhookConfiguration
-
+if ${OC} get MutatingWebhookConfiguration; then
+   echo "webhook is created to mutate pod manifests'
+else
+   exit 1
+fi
 ######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
 #####
