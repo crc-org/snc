@@ -10,15 +10,16 @@ set -exuo pipefail
     ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' updated_wth_memory_manifest.json > updated_wth_cpu_manifest.json
     ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
     new_kubeapi_cpu_value=$4
-    ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
-    kubeapi_limit_cpu_value=$5
-    ${JQ}  --arg kubeapi_limit_cpu_value "$kubeapi_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.limits.cpu) |= $kubeapi_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
+    ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > final_manifest.json 
+#    ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
+  #  kubeapi_limit_cpu_value=$5
+  #  ${JQ}  --arg kubeapi_limit_cpu_value "$kubeapi_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.limits.cpu) |= $kubeapi_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
     cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-apiserver-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-apiserver-manifest.yaml $1
     ## Remove temp. files created
-    rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json updated_with_cpu_requests_manifest.json final_manifest.json unformatted_final_manifest.json
+    rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json  final_manifest.json unformatted_final_manifest.json
 }
 
  update_kube_controller_manifests() {
@@ -93,8 +94,9 @@ update_kubelet_systemd_service() {
 echo '------------- Applying changes to Kubelet -----------'
 update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
-# echo '------------- Applying changes to Kube API server  -----------'
-# update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 1Gi 10m 500m 700m
+#echo '------------- Applying changes to Kube API server  -----------'
+#update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 400Mi 50m 500m 
+
 
 echo '------------- Applying changes to Kube Scheduler  -----------'
 update_kube_scheduler_manifests  /etc/kubernetes/manifests/kube-scheduler-pod.yaml 10Mi 15m

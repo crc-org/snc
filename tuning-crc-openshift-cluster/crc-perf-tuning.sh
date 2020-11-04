@@ -23,9 +23,6 @@ echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 
 ### Make the API server manifest file immutable
-${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
-
-### Make the API server manifest file immutable
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
 
@@ -35,10 +32,14 @@ sleep $SLEEP_TIME
 #####
 echo 'Update Kube control plane manifest files ......'
 tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+
 tuning-crc-openshift-cluster/update-kube-controlplane.sh
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep $SLEEP_TIME
+
+### Debug -- Make sure API server is up and running
+${OC} api-resources
 
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io
@@ -89,13 +90,12 @@ echo 'Removing podpresets across all the namespaces ..'
 tuning-crc-openshift-cluster/remove-podpresets.sh
 sleep $SLEEP_TIME
 
+${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+
 ######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
-echo 'Remove immutability flag to mutate manifest of Kube API server .. '
-${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
-
-echo 'Removing support for v1alpha1/serttings APi and pre-compiled webhooks...'
+echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
 
