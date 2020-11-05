@@ -11,7 +11,6 @@ ${JQ}  --arg new_args "$new_args" '(.spec.containers[] | select(.name == "kube-a
 cat updated_kubeapiserver_manifest.json | ${JQ} -c '.' > unformatted_updated_kubeapiserver_manifest.json
 ${SCP} -r unformatted_updated_kubeapiserver_manifest.json ${SSH_HOST}:/home/core/enable-alphaapi-kube-apiserver-pod.yaml
 ${SSH_CMD} sudo cp /home/core/enable-alphaapi-kube-apiserver-pod.yaml /etc/kubernetes/manifests/kube-apiserver-pod.yaml
-${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
 ## cleanup temp. files created ##
 rm current_kubeapiserver_manifest.json updated_kubeapiserver_manifest.json unformatted_updated_kubeapiserver_manifest.json
