@@ -38,6 +38,9 @@ tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep $SLEEP_TIME
 
+## SOP
+${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+
 ### Debug -- Make sure API server is up and running
 ${OC} api-resources
 
