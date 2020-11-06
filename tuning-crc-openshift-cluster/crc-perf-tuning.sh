@@ -29,7 +29,7 @@ ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ${OC} api-resources
 
 ### Make the API server manifest file immutable
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+# TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
 
 ######
@@ -37,10 +37,10 @@ sleep $SLEEP_TIME
 ##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
 #####
 echo 'Update Kube control plane manifest files ......'
-tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+# TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
 
 tuning-crc-openshift-cluster/update-kube-controlplane.sh
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+#TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep $SLEEP_TIME
 
