@@ -20,7 +20,7 @@ export SCP
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
 #####
 echo 'Enable Kube V1/alpha API .....'
-# TODO-1 tuning-crc-openshift-cluster/enable-alpha-api.sh
+tuning-crc-openshift-cluster/enable-alpha-api.sh
 
 ## SOP
 ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
@@ -28,8 +28,11 @@ ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ### Debug -- Make sure API server is up and running
 ${OC} api-resources
 
+### Debug -- Make sure Podpresets are enabled by the API server
+${OC} api-resources  --api-group=settings.k8s.io
+
 ### Make the API server manifest file immutable
-# TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 sleep $SLEEP_TIME
 
 ######
@@ -37,10 +40,10 @@ sleep $SLEEP_TIME
 ##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
 #####
 echo 'Update Kube control plane manifest files ......'
-# TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
 
 tuning-crc-openshift-cluster/update-kube-controlplane.sh
-#TODO-9 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 sleep $SLEEP_TIME
 
@@ -51,13 +54,13 @@ ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ${OC} api-resources
 
 ### Debug -- Make sure Podpresets are enabled by the API server
-#TODO-2 ${OC} api-resources  --api-group=settings.k8s.io
+${OC} api-resources  --api-group=settings.k8s.io
 
 ######
 ##  Now that v1alpha1/setting API is enabled, create podpresets across all the namespaces ##
 #####
 echo 'Create podpresets ....'
-#TODO-3 tuning-crc-openshift-cluster/trigger-podpresets.sh
+tuning-crc-openshift-cluster/trigger-podpresets.sh
 
 ######
 ##  Deploy Mutatingwebhook for specifying the appropriate resources to CRC OpenShift pods ##
@@ -65,23 +68,19 @@ echo 'Create podpresets ....'
 #####
 
 echo 'Deploy MutatingWebhook for admission controller .....'
-# TODO-4 ${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
+${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
 echo 'Wait for  MutatingWebhook to be available ....'
 sleep $SLEEP_TIME
 sleep $SLEEP_TIME
 ${OC} get pods
 ${OC} get svc
-# TODO-5 if ${OC} get MutatingWebhookConfiguration; then
-# TODO-6   echo 'webhook is created to mutate pod manifests'
-# TODO-7 else
-# TODO-8   exit 1
-fi
+${OC} get MutatingWebhookConfiguration
 
 ######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
 #####
 echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
-# TODO-9 tuning-crc-openshift-cluster/delete-pods.sh
+tuning-crc-openshift-cluster/delete-pods.sh
 echo 'Wait for pods to get recreated by the respective operators ....'
 sleep $SLEEP_TIME
 
@@ -89,14 +88,14 @@ sleep $SLEEP_TIME
 ##  Remove all the resources related MutatingWebhook (MutatingWebhook, service and the deployment for the webhook) ##
 #####
 echo 'Removing admission webhooks ..'
-# TODO-10 tuning-crc-openshift-cluster/remove-admission-webhook.sh
+tuning-crc-openshift-cluster/remove-admission-webhook.sh
 sleep $SLEEP_TIME
 
 ######
 ##  Delete all the created podpresets
 #####
 echo 'Removing podpresets across all the namespaces ..'
-# TODO-11 tuning-crc-openshift-cluster/remove-podpresets.sh
+tuning-crc-openshift-cluster/remove-podpresets.sh
 sleep $SLEEP_TIME
 
 ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
@@ -105,7 +104,7 @@ ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
 echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
-# TODO-12 tuning-crc-openshift-cluster/remove-alpha-api.sh
+tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
 
 ###
@@ -113,5 +112,7 @@ sleep $SLEEP_TIME
 ###
 tuning-crc-openshift-cluster/enable-swap-space.sh
 sleep $SLEEP_TIME
+
+${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-controller-manager-pod.yaml
 
 echo 'All the perfomance settings been applied. DONE'
