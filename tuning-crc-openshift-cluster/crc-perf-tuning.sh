@@ -23,7 +23,7 @@ echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 
 ### Make the API server manifest file immutable
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 sleep $SLEEP_TIME
 
 ## SOP
@@ -41,8 +41,6 @@ ${OC} api-resources  --api-group=settings.k8s.io
 ##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
 #####
 echo 'Update Kube control plane manifest files ......'
-tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
-
 tuning-crc-openshift-cluster/update-kube-controlplane.sh
 tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
@@ -75,7 +73,11 @@ sleep $SLEEP_TIME
 sleep $SLEEP_TIME
 ${OC} get pods
 ${OC} get svc
-${OC} get MutatingWebhookConfiguration
+if ${OC} get MutatingWebhookConfiguration; then
+   echo 'webhook is created to mutate pod manifests'
+else
+   exit 1
+fi
 
 ######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
@@ -113,7 +115,5 @@ sleep $SLEEP_TIME
 ###
 tuning-crc-openshift-cluster/enable-swap-space.sh
 sleep $SLEEP_TIME
-
-${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-controller-manager-pod.yaml
 
 echo 'All the perfomance settings been applied. DONE'
