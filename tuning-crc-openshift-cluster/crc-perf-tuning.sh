@@ -22,6 +22,10 @@ export SCP
 echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 
+### Make the API server manifest file immutable
+tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+sleep $SLEEP_TIME
+
 ## SOP
 ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
@@ -31,9 +35,6 @@ ${OC} api-resources
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io
 
-### Make the API server manifest file immutable
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
-sleep $SLEEP_TIME
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
