@@ -105,5 +105,5 @@ echo '------------- Applying changes to Kube Control manager  -----------'
 update_kube_controller_manifests /etc/kubernetes/manifests/kube-controller-manager-pod.yaml 10Mi 10m 300m 400m
 
 echo '------------- Applying changes to Etcd -----------'
-update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 300m 500m
+#update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 300m 500m
 
