@@ -16,14 +16,15 @@ export SCP
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
+### Make the API server manifest file immutable
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
+sleep $SLEEP_TIME
+
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
 #####
 echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
-
-### Make the API server manifest file immutable
-${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 sleep $SLEEP_TIME
 
 ## SOP
@@ -116,4 +117,5 @@ sleep $SLEEP_TIME
 tuning-crc-openshift-cluster/enable-swap-space.sh
 sleep $SLEEP_TIME
 
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
 echo 'All the perfomance settings been applied. DONE'
