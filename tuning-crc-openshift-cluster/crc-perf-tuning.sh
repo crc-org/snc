@@ -31,10 +31,18 @@ sleep $SLEEP_TIME
 ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
 ### Debug -- Make sure API server is up and running
-${OC} api-resources
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
 
 ### Debug -- Make sure Podpresets are enabled by the API server
-${OC} api-resources  --api-group=settings.k8s.io
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 
 
 ######
@@ -50,11 +58,20 @@ sleep $SLEEP_TIME
 ## SOP
 ${SSH_CMD} sudo cat /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
+
 ### Debug -- Make sure API server is up and running
-${OC} api-resources
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
 
 ### Debug -- Make sure Podpresets are enabled by the API server
-${OC} api-resources  --api-group=settings.k8s.io
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 
 ######
 ##  Now that v1alpha1/setting API is enabled, create podpresets across all the namespaces ##
@@ -62,6 +79,19 @@ ${OC} api-resources  --api-group=settings.k8s.io
 echo 'Create podpresets ....'
 tuning-crc-openshift-cluster/trigger-podpresets.sh
 
+### Debug -- Make sure API server is up and running
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
+
+### Debug -- Make sure Podpresets are enabled by the API server
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 ######
 ##  Deploy Mutatingwebhook for specifying the appropriate resources to CRC OpenShift pods ##
 ##  Source code for this Webhook is located at https://github.com/spaparaju/k8s-mutate-webhook
@@ -71,10 +101,19 @@ echo 'Deploy MutatingWebhook for admission controller .....'
 ${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
 echo 'Wait for  MutatingWebhook to be available ....'
 sleep $SLEEP_TIME
-sleep $SLEEP_TIME
-${OC} get pods
-${OC} get svc
-if ${OC} get MutatingWebhookConfiguration; then
+if [ ${OC} get pods ]; then
+   echo 'could retrieve mutating webhook related pods'
+else
+   exit 1
+fi
+
+if [ ${OC} get svc ]; then
+   echo 'could retrieve mutating webhook related services'
+else
+   exit 1
+fi
+
+if [ ${OC} get MutatingWebhookConfiguration ]; then
    echo 'webhook is created to mutate pod manifests'
 else
    exit 1
@@ -88,6 +127,19 @@ tuning-crc-openshift-cluster/delete-pods.sh
 echo 'Wait for pods to get recreated by the respective operators ....'
 sleep $SLEEP_TIME
 
+### Debug -- Make sure API server is up and running
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
+
+### Debug -- Make sure Podpresets are enabled by the API server
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 ######
 ##  Remove all the resources related MutatingWebhook (MutatingWebhook, service and the deployment for the webhook) ##
 #####
@@ -95,6 +147,19 @@ echo 'Removing admission webhooks ..'
 tuning-crc-openshift-cluster/remove-admission-webhook.sh
 sleep $SLEEP_TIME
 
+### Debug -- Make sure API server is up and running
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
+
+### Debug -- Make sure Podpresets are enabled by the API server
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 ######
 ##  Delete all the created podpresets
 #####
@@ -102,6 +167,19 @@ echo 'Removing podpresets across all the namespaces ..'
 tuning-crc-openshift-cluster/remove-podpresets.sh
 sleep $SLEEP_TIME
 
+### Debug -- Make sure API server is up and running
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
+
+### Debug -- Make sure Podpresets are enabled by the API server
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 ${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
 ######
@@ -111,6 +189,19 @@ echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
 
+### Debug -- Make sure API server is up and running
+if [ ${OC} api-resources ]; then
+   echo '.... Could retrieve API resources .....'
+else
+   exit 1
+fi
+
+### Debug -- Make sure Podpresets are enabled by the API server
+if [ ${OC} api-resources  --api-group=settings.k8s.io ]; then
+   echo 'Could retrieve podpresets .... '
+else
+   exit 1
+fi
 ###
 # Create swap space
 ###
