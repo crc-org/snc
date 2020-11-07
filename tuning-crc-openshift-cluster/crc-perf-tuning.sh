@@ -16,6 +16,7 @@ echo '--------------------------------------------------------------------------
 ### Make the API server manifest file immutable
 ${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
 
+
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
