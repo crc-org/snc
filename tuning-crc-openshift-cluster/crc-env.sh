@@ -12,7 +12,13 @@ SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.crc/
 SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
 SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 SCP="scp ${SSH_ARGS}"
+SLEEP_TIME=200
+OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 
 export SSH_CMD
 export SSH_HOST
 export SCP
+export API_SERVER
+export OC_LOGIN_TOKEN
+export SLEEP_TIME
