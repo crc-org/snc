@@ -32,7 +32,6 @@ SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
 SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 SCP="scp ${SSH_ARGS}"
 SLEEP_TIME=200
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 
 ARCH=$(uname -m)
@@ -487,6 +486,6 @@ export SSH_ARGS
 export SSH_CMD
 export SCP
 export API_SERVER
-export OC_LOGIN_TOKEN
+export OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 export SLEEP_TIME
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
