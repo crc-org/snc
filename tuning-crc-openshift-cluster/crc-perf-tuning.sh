@@ -29,7 +29,7 @@ sleep $SLEEP_TIME
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
-${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io 
 
@@ -48,11 +48,11 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep $SLEEP_TIME
 sleep $SLEEP_TIME
 
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure Podpresets are enabled by the API server
-${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -79,8 +79,8 @@ echo 'Wait for  MutatingWebhook to be available ....'
 sleep $SLEEP_TIME
 sleep $SLEEP_TIME
 
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
+#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} get pods
 ${OC} get svc 
 ${OC} get MutatingWebhookConfiguration
@@ -98,8 +98,8 @@ sleep $SLEEP_TIME
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
+#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -113,8 +113,8 @@ sleep $SLEEP_TIME
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
+#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -128,7 +128,7 @@ sleep $SLEEP_TIME
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
+#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 ${OC} api-resources  --api-group=settings.k8s.io 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 
@@ -142,7 +142,7 @@ sleep $SLEEP_TIME
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
+#${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'

@@ -4,10 +4,7 @@ set -exuo pipefail
 
 delete_pods_for_a_namespace() {
  	${OC} delete pods -n  $1 --all
-	sleep 15
-        while !  ${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER >/dev/null 2>&1; do
-            sleep 15
-        done
+	sleep 360
 }
 
 #delete_pods_for_a_namespace openshift-authentication  
