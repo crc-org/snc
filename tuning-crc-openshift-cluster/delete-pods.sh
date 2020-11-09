@@ -4,7 +4,10 @@ set -exuo pipefail
 
 delete_pods_for_a_namespace() {
  	${OC} delete pods -n  $1 --all
-	sleep 360
+	sleep 60
+	while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+  		sleep 6
+	done
 }
 
 #delete_pods_for_a_namespace openshift-authentication  

@@ -13,11 +13,6 @@ set -exuo pipefail
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
-### Make the API server manifest file immutable
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
-
-
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
 #####
@@ -25,13 +20,16 @@ echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 
 sleep $SLEEP_TIME
-sleep $SLEEP_TIME
+while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+  sleep 6
+done
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 #${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io 
+${OC} api-resources  
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 
@@ -46,14 +44,16 @@ tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 
 sleep $SLEEP_TIME
-sleep $SLEEP_TIME
+while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+  sleep 6
+done
 
-#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure Podpresets are enabled by the API server
 #${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
+${OC} api-resources  
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
@@ -77,7 +77,9 @@ ${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/ma
 echo 'Wait for  MutatingWebhook to be available ....'
 
 sleep $SLEEP_TIME
-sleep $SLEEP_TIME
+while ! ${OC} get MutatingWebhookConfiguration >/dev/null 2>&1; do
+  sleep 6
+done
 
 #OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 #${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
@@ -109,6 +111,9 @@ echo '--------------------------------------------------------------------------
 echo 'Removing admission webhooks ..'
 tuning-crc-openshift-cluster/remove-admission-webhook.sh
 sleep $SLEEP_TIME
+while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+  sleep 6
+done
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
@@ -123,7 +128,6 @@ echo '--------------------------------------------------------------------------
 #####
 echo 'Removing podpresets across all the namespaces ..'
 tuning-crc-openshift-cluster/remove-podpresets.sh
-sleep $SLEEP_TIME
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
@@ -138,6 +142,9 @@ echo '--------------------------------------------------------------------------
 echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
+while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+  sleep 6
+done
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
@@ -150,9 +157,4 @@ echo '--------------------------------------------------------------------------
 # Create swap space
 ###
 tuning-crc-openshift-cluster/enable-swap-space.sh
-sleep $SLEEP_TIME
 
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
-echo 'All the perfomance settings been applied. DONE'
