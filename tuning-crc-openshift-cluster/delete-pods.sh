@@ -2,12 +2,24 @@
 
 set -exuo pipefail
 
+wait_for_api_server()
+{
+        count=1
+        while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+                if [ $count -lt 40 ]
+                then
+                        sleep 3
+                        count=`expr $count + 1`
+                else
+                        exit
+                fi
+        done
+}
+
 delete_pods_for_a_namespace() {
  	${OC} delete pods -n  $1 --all
 	sleep 60
-	while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-  		sleep 6
-	done
+	wait_for_api_server
 }
 
 #delete_pods_for_a_namespace openshift-authentication  

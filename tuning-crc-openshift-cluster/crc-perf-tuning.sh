@@ -2,6 +2,20 @@
 
 set -exuo pipefail
 
+wait_for_api_server()
+{
+	count=1
+	while ! ${OC} get etcds cluster >/dev/null 2>&1; do
+ 		if [ $count -lt 40 ]
+		then
+			sleep 3
+  			count=`expr $count + 1`
+		else
+			exit
+		fi
+	done
+}
+
 ######
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
 #####
@@ -20,9 +34,8 @@ echo 'Enable Kube V1/alpha API .....'
 tuning-crc-openshift-cluster/enable-alpha-api.sh
 
 sleep $SLEEP_TIME
-while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-  sleep 6
-done
+wait_for_api_server
+
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
@@ -44,10 +57,7 @@ tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
 echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 
 sleep $SLEEP_TIME
-while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-  sleep 6
-done
-
+wait_for_api_server
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure Podpresets are enabled by the API server
@@ -111,9 +121,7 @@ echo '--------------------------------------------------------------------------
 echo 'Removing admission webhooks ..'
 tuning-crc-openshift-cluster/remove-admission-webhook.sh
 sleep $SLEEP_TIME
-while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-  sleep 6
-done
+wait_for_api_server
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
@@ -142,9 +150,8 @@ echo '--------------------------------------------------------------------------
 echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
-while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-  sleep 6
-done
+wait_for_api_server
+
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
