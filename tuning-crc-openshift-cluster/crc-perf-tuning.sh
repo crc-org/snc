@@ -5,8 +5,8 @@ set -exuo pipefail
 wait_for_api_server()
 {
 	count=1
-	while ! ${OC} get etcds cluster >/dev/null 2>&1; do
- 		if [ $count -lt 40 ]
+	while ! ${OC} api-resources  --api-group=settings.k8s.io >/dev/null 2>&1; do
+ 		if [ $count -lt 100 ]
 		then
 			sleep 3
   			count=`expr $count + 1`

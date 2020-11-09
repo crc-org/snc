@@ -106,5 +106,5 @@ update_kube_controller_manifests /etc/kubernetes/manifests/kube-controller-manag
 
 echo '------------- Applying changes to Etcd -----------'
 #update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 300m 500m
-#${SSH_CMD} sudo cat /etc/kubernetes/manifests/etcd-pod.yaml
+${SSH_CMD} sudo cat /etc/kubernetes/manifests/etcd-pod.yaml
 
