@@ -51,6 +51,4 @@ delete_pods_for_a_namespace openshift-etcd-operator
 delete_pods_for_a_namespace openshift-kube-apiserver-operator
 delete_pods_for_a_namespace openshift-kube-controller-manager-operator
 delete_pods_for_a_namespace openshift-kube-scheduler-operator
-delete_pods_for_a_namespace openshift-oauth-apiserver
-delete_pods_for_a_namespace openshift-apiserver
 
