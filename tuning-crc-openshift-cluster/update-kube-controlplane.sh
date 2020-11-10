@@ -11,9 +11,9 @@ set -exuo pipefail
     ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "25"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
     new_kubeapi_cpu_value=$4
     ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > final_manifest.json 
-    ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
-    kubeapi_limit_cpu_value=$5
-    ${JQ}  --arg kubeapi_limit_cpu_value "$kubeapi_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.limits.cpu) |= $kubeapi_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
+ #   ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
+ #   kubeapi_limit_cpu_value=$5
+ #   ${JQ}  --arg kubeapi_limit_cpu_value "$kubeapi_limit_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.limits.cpu) |= $kubeapi_limit_cpu_value' updated_with_cpu_requests_manifest.json  > final_manifest.json
     cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-apiserver-manifest.yaml
@@ -95,7 +95,7 @@ echo '------------- Applying changes to Kubelet -----------'
 update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
 echo '------------- Applying changes to Kube API server  -----------'
-update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 20Mi 30m 600m 800m
+update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 20Mi 30m 600m 
 
 
 echo '------------- Applying changes to Kube Scheduler  -----------'
