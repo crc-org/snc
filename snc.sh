@@ -31,7 +31,7 @@ SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_
 SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
 SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 SCP="scp ${SSH_ARGS}"
-SLEEP_TIME=200
+SLEEP_TIME=100
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 
 ARCH=$(uname -m)
