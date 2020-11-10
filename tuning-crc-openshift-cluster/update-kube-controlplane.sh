@@ -94,8 +94,8 @@ update_kubelet_systemd_service() {
 echo '------------- Applying changes to Kubelet -----------'
 update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
-echo '------------- Applying changes to Kube API server  -----------'
-update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 20Mi 30m 600m 
+#echo '------------- Applying changes to Kube API server  -----------'
+#update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 20Mi 30m 600m 
 
 
 echo '------------- Applying changes to Kube Scheduler  -----------'

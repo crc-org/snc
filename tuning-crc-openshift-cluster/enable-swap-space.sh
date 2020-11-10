@@ -3,7 +3,7 @@
 set -exuo pipefail
 
 ${SSH_CMD} sudo mkdir -p /var/home/core/vm
-${SSH_CMD} sudo fallocate -l 6G /var/home/core/vm/swapfile
+${SSH_CMD} sudo fallocate -l 3G /var/home/core/vm/swapfile
 ${SSH_CMD} sudo chmod 600 /var/home/core/vm/swapfile
 ${SSH_CMD} sudo mkswap /var/home/core/vm/swapfile
 
