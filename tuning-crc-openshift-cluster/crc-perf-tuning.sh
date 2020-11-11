@@ -26,6 +26,9 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
+
+
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
@@ -164,4 +167,6 @@ echo '--------------------------------------------------------------------------
 # Create swap space
 ###
 tuning-crc-openshift-cluster/enable-swap-space.sh
+
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
 

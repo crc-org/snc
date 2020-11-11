@@ -8,7 +8,7 @@ set -exuo pipefail
     new_cpu_value=$3
     ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' current_manifest.json > updated_wth_memory_manifest.json
     ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' updated_wth_memory_manifest.json > updated_wth_cpu_manifest.json
-    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "25"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
+    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "20"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
     new_kubeapi_cpu_value=$4
     ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > final_manifest.json 
  #   ${JQ}  --arg new_kubeapi_cpu_value "$new_kubeapi_cpu_value" '(.spec.containers[] | select(.name == "kube-apiserver") | .resources.requests.cpu) |= $new_kubeapi_cpu_value' updated_with_env_manifest.json > updated_with_cpu_requests_manifest.json 
@@ -28,7 +28,7 @@ set -exuo pipefail
     new_cpu_value=$3
     ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' current_manifest.json > updated_wth_memory_manifest.json
     ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' updated_wth_memory_manifest.json > updated_wth_cpu_manifest.json
-    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
+    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "20"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json > updated_with_env_manifest.json
     new_kube_controller_cpu_value=$4
     ${JQ}  --arg new_kube_controller_cpu_value "$new_kube_controller_cpu_value" '(.spec.containers[] | select(.name == "kube-controller-manager") | .resources.requests.cpu) |= $new_kube_controller_cpu_value' updated_with_env_manifest.json  > updated_with_cpu_requests_manifest.json
     kube_controller_limit_cpu_value=$5
@@ -47,7 +47,7 @@ set -exuo pipefail
     new_cpu_value=$3
     ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.containers[].resources.requests.memory) |= $new_memory_value' current_manifest.json > updated_wth_memory_manifest.json
     ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' updated_wth_memory_manifest.json > updated_wth_cpu_manifest.json
-    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json  > final_manifest.json
+    ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "20"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' updated_wth_cpu_manifest.json  > final_manifest.json
     cat final_manifest.json | ${JQ} -c '.' > unformatted_final_manifest.json
 
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-scheduler-manifest.yaml
@@ -64,8 +64,8 @@ set -exuo pipefail
     ${YQ} r -j updated_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.containers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r  - > updated_cpu_manifest.yaml
     ${YQ} r -j updated_cpu_manifest.yaml | ${JQ}  --arg new_memory_value "$new_memory_value" '(.spec.initContainers[].resources.requests.memory) |= $new_memory_value' -  | ${YQ} r  - > updated_init_containers_memory_manifest.yaml
     ${YQ} r -j updated_init_containers_memory_manifest.yaml | ${JQ}  --arg new_cpu_value "$new_cpu_value" '(.spec.initContainers[].resources.requests.cpu) |= $new_cpu_value' -  | ${YQ} r  - > updated_init_containers_cpu_manifest.yaml
-    ${YQ} r -j updated_init_containers_cpu_manifest.yaml | ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_with_env_manifest.yaml
-    ${YQ} r -j updated_with_env_manifest.yaml | ${JQ} '.spec.initContainers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_init_containers_with_env_manifest.yaml
+    ${YQ} r -j updated_init_containers_cpu_manifest.yaml | ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "20"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_with_env_manifest.yaml
+    ${YQ} r -j updated_with_env_manifest.yaml | ${JQ} '.spec.initContainers[].env |= . + [{"name": "GOGC", "value": "20"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_init_containers_with_env_manifest.yaml
     new_etcd_cpu_value=$4
     ${YQ} r -j updated_init_containers_with_env_manifest.yaml | ${JQ}  --arg new_etcd_cpu_value "$new_etcd_cpu_value" '(.spec.containers[] | select(.name == "etcd") | .resources.requests.cpu) |= $new_etcd_cpu_value' -  > updated_final_manifest.yaml
 #    etcd_cpu_limit_value=$5
