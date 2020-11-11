@@ -42,29 +42,12 @@ wait_for_api_server
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io 
 ${OC} api-resources  
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
-
-######
-##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
-##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
-#####
-echo 'Update Kube control plane manifest files ......'
-tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
-tuning-crc-openshift-cluster/update-kube-controlplane.sh
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
-echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
-
-sleep $SLEEP_TIME
-wait_for_api_server
-
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure Podpresets are enabled by the API server
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 ${OC} api-resources  
 
@@ -95,7 +78,6 @@ while ! ${OC} get MutatingWebhookConfiguration >/dev/null 2>&1; do
 done
 
 #OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} get pods
 ${OC} get svc 
 ${OC} get MutatingWebhookConfiguration
@@ -114,7 +96,6 @@ echo '--------------------------------------------------------------------------
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
 #OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$API_SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -130,7 +111,6 @@ echo '--------------------------------------------------------------------------
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
 #OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -159,7 +139,6 @@ wait_for_api_server
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-#${OC} login --token  $OC_LOGIN_TOKEN --server=$SERVER
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -168,5 +147,17 @@ echo '--------------------------------------------------------------------------
 ###
 tuning-crc-openshift-cluster/enable-swap-space.sh
 
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
+######
+##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
+##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
+#####
+echo 'Update Kube control plane manifest files ......'
+tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+tuning-crc-openshift-cluster/update-kube-controlplane.sh
+tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 
+sleep $SLEEP_TIME
+wait_for_api_server
+
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
