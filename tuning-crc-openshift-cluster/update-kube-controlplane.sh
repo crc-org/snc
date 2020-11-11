@@ -67,14 +67,14 @@ set -exuo pipefail
     ${YQ} r -j updated_init_containers_cpu_manifest.yaml | ${JQ} '.spec.containers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_with_env_manifest.yaml
     ${YQ} r -j updated_with_env_manifest.yaml | ${JQ} '.spec.initContainers[].env |= . + [{"name": "GOGC", "value": "5"}, {"name": "GODEBUG", "value": "madvdontneed=1"}] ' -  | ${YQ} r  - > updated_init_containers_with_env_manifest.yaml
     new_etcd_cpu_value=$4
-    ${YQ} r -j updated_init_containers_with_env_manifest.yaml | ${JQ}  --arg new_etcd_cpu_value "$new_etcd_cpu_value" '(.spec.containers[] | select(.name == "etcd") | .resources.requests.cpu) |= $new_etcd_cpu_value' -  > updated_with_new_cpu_request_manifest.yaml
-    etcd_cpu_limit_value=$4
-    ${YQ} r -j updated_with_new_cpu_request_manifest.yaml | ${JQ}  --arg etcd_cpu_limit_value "$etcd_cpu_limit_value" '(.spec.containers[] | select(.name == "etcd") | .resources.limits.cpu) |= $etcd_cpu_limit_value' -  > updated_final_manifest.yaml
+    ${YQ} r -j updated_init_containers_with_env_manifest.yaml | ${JQ}  --arg new_etcd_cpu_value "$new_etcd_cpu_value" '(.spec.containers[] | select(.name == "etcd") | .resources.requests.cpu) |= $new_etcd_cpu_value' -  > updated_final_manifest.yaml
+#    etcd_cpu_limit_value=$5
+ #   ${YQ} r -j updated_with_new_cpu_request_manifest.yaml | ${JQ}  --arg etcd_cpu_limit_value "$etcd_cpu_limit_value" '(.spec.containers[] | select(.name == "etcd") | .resources.limits.cpu) |= $etcd_cpu_limit_value' -  > updated_final_manifest.yaml
 
     ${SCP} -r updated_final_manifest.yaml ${SSH_HOST}:/home/core/updated-etcd-final-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-etcd-final-manifest.yaml $1
     ## Remove temp. files created
-    rm  current_manifest.yaml updated_memory_manifest.yaml updated_cpu_manifest.yaml updated_init_containers_memory_manifest.yaml updated_with_env_manifest.yaml updated_init_containers_with_env_manifest.yaml updated_init_containers_cpu_manifest.yaml updated_with_new_cpu_request_manifest.yaml updated_final_manifest.yaml
+    rm  current_manifest.yaml updated_memory_manifest.yaml updated_cpu_manifest.yaml updated_init_containers_memory_manifest.yaml updated_with_env_manifest.yaml updated_init_containers_with_env_manifest.yaml updated_init_containers_cpu_manifest.yaml updated_final_manifest.yaml
 }
 
 update_kubelet_systemd_service() {
@@ -94,17 +94,23 @@ update_kubelet_systemd_service() {
 echo '------------- Applying changes to Kubelet -----------'
 update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
-#echo '------------- Applying changes to Kube API server  -----------'
-#update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 20Mi 30m 600m 
-
+echo '------------- Applying changes to Kube API server  -----------'
+update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 10Mi 30m 600m 
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Kube Scheduler  -----------'
 update_kube_scheduler_manifests  /etc/kubernetes/manifests/kube-scheduler-pod.yaml 10Mi 15m
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-scheduler-pod.yaml
+sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Kube Control manager  -----------'
 update_kube_controller_manifests /etc/kubernetes/manifests/kube-controller-manager-pod.yaml 10Mi 10m 100m 400m
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-controller-manager-pod.yaml
+sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Etcd -----------'
 update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 30m 500m
-${SSH_CMD} sudo cat /etc/kubernetes/manifests/etcd-pod.yaml
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/etcd-pod.yaml
+sleep $SLEEP_TIME
 
