@@ -26,9 +26,6 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
-
-
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
@@ -160,4 +157,3 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep $SLEEP_TIME
 wait_for_api_server
 
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
