@@ -19,3 +19,6 @@ done
 # Run createdisk script
 export SNC_VALIDATE_CERT=false
 ./createdisk.sh crc-tmp-install-data
+
+# Destroy the cluster
+./openshift-install destroy cluster --dir crc-tmp-install-data
