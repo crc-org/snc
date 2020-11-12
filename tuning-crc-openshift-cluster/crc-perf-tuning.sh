@@ -151,6 +151,4 @@ wait_for_api_server
 ## TODO After this step, somehow openshift-monitoring components are showing up in the disk image
 echo 'start managing KUBE api server'
 ${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
-sleep $SLEEP_TIME
-wait_for_api_server
 
