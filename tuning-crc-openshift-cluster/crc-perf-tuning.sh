@@ -5,7 +5,7 @@ set -exuo pipefail
 wait_for_api_server()
 {
 	count=1
-	while ! ${OC} api-resources  --api-group=settings.k8s.io >/dev/null 2>&1; do
+	while ! ${OC} api-resources  >/dev/null 2>&1; do
  		if [ $count -lt 100 ]
 		then
 			sleep 3
@@ -41,12 +41,6 @@ echo '--------------------------------------------------------------------------
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
 ${OC} api-resources  --api-group=settings.k8s.io 
-${OC} api-resources  
-
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
-### Debug -- Make sure Podpresets are enabled by the API server
-${OC} api-resources  --api-group=settings.k8s.io 
-${OC} api-resources  
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
@@ -74,7 +68,6 @@ while ! ${OC} get MutatingWebhookConfiguration >/dev/null 2>&1; do
   sleep 6
 done
 
-#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 ${OC} get pods
 ${OC} get svc 
 ${OC} get MutatingWebhookConfiguration
@@ -88,11 +81,11 @@ tuning-crc-openshift-cluster/delete-pods.sh
 echo 'Wait for pods to get recreated by the respective operators ....'
 
 sleep $SLEEP_TIME
+sleep $SLEEP_TIME
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ### Debug -- Make sure Podpresets are enabled by the API server
-#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 ${OC} api-resources  --api-group=settings.k8s.io 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -106,9 +99,7 @@ wait_for_api_server
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
-### Debug -- Make sure Podpresets are enabled by the API server
-#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-${OC} api-resources  --api-group=settings.k8s.io 
+${OC} api-resources 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
@@ -119,15 +110,13 @@ tuning-crc-openshift-cluster/remove-podpresets.sh
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
-### Debug -- Make sure Podpresets are enabled by the API server
-#OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
-${OC} api-resources  --api-group=settings.k8s.io 
-echo '-----------------------------------------------------------------------------------------------------------------------------------'
+${OC} api-resources 
 
+echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
-echo 'Removing support for v1alpha1/serttings API and pre-compiled webhooks...'
+echo 'Removing support for v1alpha1/settings API and pre-compiled webhooks...'
 tuning-crc-openshift-cluster/remove-alpha-api.sh
 sleep $SLEEP_TIME
 wait_for_api_server
@@ -135,8 +124,7 @@ wait_for_api_server
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
-### Debug -- Make sure Podpresets are enabled by the API server
-${OC} api-resources  --api-group=settings.k8s.io 
+${OC} api-resources 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ###
