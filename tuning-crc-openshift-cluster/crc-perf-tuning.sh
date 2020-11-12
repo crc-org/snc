@@ -26,6 +26,9 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
+echo 'un-manage KUBE API server'
+${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
+
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Enable v1alpha1/settings API for using Podpresets to set ENV variables while pods get created ##
@@ -144,4 +147,10 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 
 sleep $SLEEP_TIME
 wait_for_api_server
+
+## TODO After this step, somehow openshift-monitoring components are showing up in the disk image
+#echo 'start managing KUBE api server'
+#${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
+#sleep $SLEEP_TIME
+#wait_for_api_server
 
