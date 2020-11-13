@@ -139,14 +139,14 @@ tuning-crc-openshift-cluster/enable-swap-space.sh
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
 ##  Thes changes inject ENV variables and changes to the resources related to CRC OpenShift components ##
 #####
-echo 'Update Kube control plane manifest files ......'
-tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
-tuning-crc-openshift-cluster/update-kube-controlplane.sh
-tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
-echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
+#echo 'Update Kube control plane manifest files ......'
+#tuning-crc-openshift-cluster/make-kube-control-manifests-mutable.sh
+#tuning-crc-openshift-cluster/update-kube-controlplane.sh
+#tuning-crc-openshift-cluster/make-kube-control-manifests-immutable.sh
+#echo 'Wait for Kube API to be available after the restart (triggered from updating the manifest files) .....'
 
-sleep $SLEEP_TIME
-wait_for_api_server
+#sleep $SLEEP_TIME
+#wait_for_api_server
 
 ## TODO After this step, somehow openshift-monitoring components are showing up in the disk image
 echo 'start managing KUBE api server'
