@@ -20,7 +20,6 @@ wait_for_api_server()
 ##  Series of steps to inject necessary ENV variables and resources related changes for CRC ##
 #####
 
-
 ######
 ##  Apply required RHCOS Kernel parameters
 #####
