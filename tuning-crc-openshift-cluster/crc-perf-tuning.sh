@@ -26,8 +26,8 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
-echo 'un-manage KUBE API server'
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
+#echo 'un-manage KUBE API server'
+#${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
@@ -149,6 +149,6 @@ tuning-crc-openshift-cluster/enable-swap-space.sh
 #wait_for_api_server
 
 ## TODO After this step, somehow openshift-monitoring components are showing up in the disk image
-echo 'start managing KUBE api server'
-${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
+#echo 'start managing KUBE api server'
+#${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
 
