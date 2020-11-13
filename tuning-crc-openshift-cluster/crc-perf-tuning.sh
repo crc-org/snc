@@ -68,6 +68,7 @@ ${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/ma
 echo 'Wait for  MutatingWebhook to be available ....'
 
 sleep $SLEEP_TIME
+sleep $SLEEP_TIME
 while ! ${OC} get MutatingWebhookConfiguration >/dev/null 2>&1; do
   sleep 6
 done
