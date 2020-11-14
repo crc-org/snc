@@ -120,10 +120,10 @@ echo '--------------------------------------------------------------------------
 ######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
-echo 'Removing support for v1alpha1/settings API and pre-compiled webhooks...'
-tuning-crc-openshift-cluster/remove-alpha-api.sh
-sleep $SLEEP_TIME
-wait_for_api_server
+#echo 'Removing support for v1alpha1/settings API and pre-compiled webhooks...'
+#tuning-crc-openshift-cluster/remove-alpha-api.sh
+#sleep $SLEEP_TIME
+#wait_for_api_server
 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
@@ -152,4 +152,3 @@ tuning-crc-openshift-cluster/enable-swap-space.sh
 ## TODO After this step, somehow openshift-monitoring components are showing up in the disk image
 #echo 'start managing KUBE api server'
 #${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/manage_kubeapi.yaml)"
-
