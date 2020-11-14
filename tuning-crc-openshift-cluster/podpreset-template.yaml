@@ -11,4 +11,4 @@ spec:
     - name: "GODEBUG"
       value: "madvdontneed=1"
     - name: "GOGC"
-      value: "5"
+      value: "90"
