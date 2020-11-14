@@ -22,15 +22,20 @@ delete_pods_for_a_namespace() {
 	wait_for_api_server
 }
 
-#delete_pods_for_a_namespace openshift-authentication  
-#delete_pods_for_a_namespace openshift-authentication-operator 
+## 1
+delete_pods_for_a_namespace openshift-authentication  
+
+## 2
+delete_pods_for_a_namespace openshift-authentication-operator 
 delete_pods_for_a_namespace openshift-cluster-machine-approver 
 delete_pods_for_a_namespace openshift-cluster-node-tuning-operator 
 delete_pods_for_a_namespace openshift-cluster-samples-operator 
 delete_pods_for_a_namespace openshift-config-operator  
 delete_pods_for_a_namespace openshift-console 
 delete_pods_for_a_namespace openshift-console-operator  
-#delete_pods_for_a_namespace openshift-controller-manager  
+
+## 3
+delete_pods_for_a_namespace openshift-controller-manager  
 delete_pods_for_a_namespace openshift-controller-manager-operator  
 delete_pods_for_a_namespace openshift-dns
 delete_pods_for_a_namespace openshift-dns-operator  
@@ -48,12 +53,12 @@ delete_pods_for_a_namespace openshift-apiserver-operator
 delete_pods_for_a_namespace openshift-ingress 
 delete_pods_for_a_namespace openshift-ingress-operator 
 
-#delete_pods_for_a_namespace openshift-cluster-version
-#delete_pods_for_a_namespace openshift-config-operator
-#delete_pods_for_a_namespace openshift-etcd-operator
-#delete_pods_for_a_namespace openshift-kube-apiserver-operator
-#delete_pods_for_a_namespace openshift-kube-controller-manager-operator
-#delete_pods_for_a_namespace openshift-kube-scheduler-operator
-#delete_pods_for_a_namespace openshift-oauth-apiserver
+delete_pods_for_a_namespace openshift-cluster-version
+delete_pods_for_a_namespace openshift-config-operator
+delete_pods_for_a_namespace openshift-etcd-operator
+delete_pods_for_a_namespace openshift-kube-apiserver-operator
+delete_pods_for_a_namespace openshift-kube-controller-manager-operator
+delete_pods_for_a_namespace openshift-kube-scheduler-operator
+delete_pods_for_a_namespace openshift-oauth-apiserver
 
 
