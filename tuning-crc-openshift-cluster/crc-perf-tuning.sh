@@ -134,7 +134,7 @@ echo '--------------------------------------------------------------------------
 ###
 # Create swap space
 ###
-tuning-crc-openshift-cluster/enable-swap-space.sh
+#tuning-crc-openshift-cluster/enable-swap-space.sh
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
