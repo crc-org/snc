@@ -105,12 +105,12 @@ ${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-scheduler-pod.yaml
 sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Kube Control manager  -----------'
-update_kube_controller_manifests /etc/kubernetes/manifests/kube-controller-manager-pod.yaml 10Mi 10m 100m 400m
+update_kube_controller_manifests /etc/kubernetes/manifests/kube-controller-manager-pod.yaml 10Mi 10m 100m 300m
 ${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-controller-manager-pod.yaml
 sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Etcd -----------'
-update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 30m 500m
+update_etcd_manifests   /etc/kubernetes/manifests/etcd-pod.yaml 10Mi 10m 500m
 ${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/etcd-pod.yaml
 sleep $SLEEP_TIME
 
