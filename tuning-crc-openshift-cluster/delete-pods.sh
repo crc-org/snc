@@ -26,7 +26,7 @@ delete_pods_for_a_namespace() {
 #delete_pods_for_a_namespace openshift-authentication  
 
 ## 2
-delete_pods_for_a_namespace openshift-authentication-operator 
+#delete_pods_for_a_namespace openshift-authentication-operator 
 delete_pods_for_a_namespace openshift-cluster-machine-approver 
 delete_pods_for_a_namespace openshift-cluster-node-tuning-operator 
 delete_pods_for_a_namespace openshift-cluster-samples-operator 
@@ -54,7 +54,7 @@ delete_pods_for_a_namespace openshift-ingress
 delete_pods_for_a_namespace openshift-ingress-operator 
 
 #delete_pods_for_a_namespace openshift-cluster-version
-delete_pods_for_a_namespace openshift-config-operator
+#delete_pods_for_a_namespace openshift-config-operator
 #delete_pods_for_a_namespace openshift-etcd-operator
 #delete_pods_for_a_namespace openshift-kube-apiserver-operator
 #delete_pods_for_a_namespace openshift-kube-controller-manager-operator
