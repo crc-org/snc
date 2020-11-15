@@ -82,12 +82,12 @@ echo '--------------------------------------------------------------------------
 ######
 ##  Now that Podpresets (across all the openshift- namespaces) Mutatingwebhook(cluster wide) are available, delete CRC OpenShift pods to get them recreated (by the respective operators) with the required ENV variables (from Podpresets) and required resources specified (from MutatingWebhook) ##
 #####
-echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
-tuning-crc-openshift-cluster/delete-pods.sh
-echo 'Wait for pods to get recreated by the respective operators ....'
+#echo 'Delete pods to inject ENV. and memroy/cpu initial requests ....'
+#tuning-crc-openshift-cluster/delete-pods.sh
+#echo 'Wait for pods to get recreated by the respective operators ....'
 
-sleep $SLEEP_TIME
-sleep $SLEEP_TIME
+#sleep $SLEEP_TIME
+#sleep $SLEEP_TIME
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
