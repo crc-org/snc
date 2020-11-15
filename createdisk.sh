@@ -135,6 +135,7 @@ function update_json_description {
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
