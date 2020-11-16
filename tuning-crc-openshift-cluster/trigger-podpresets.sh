@@ -2,12 +2,12 @@
 
 set -exuo pipefail
 
-curdir="$(dirname $0)"
+#curdir="$(dirname $0)"
 for namespace in $(oc get ns  -ojsonpath='{.items[*].metadata.name}')
 do
 	if [[ "$namespace" =~ "openshift-" ]]; then
-			sed 's/NAMESPACE_TO_REPLACE/"'"$namespace"'"/g' "$curdir"/podpreset-template.yaml > $curdir/trigger-podpreset.yaml
+			sed 's/NAMESPACE_TO_REPLACE/"'"$namespace"'"/g' ./tuning-crc-openshift-cluster/podpreset-template.yaml > ./tuning-crc-openshift-cluster/trigger-podpreset.yaml
 			echo 'creating podpreset for the namespace: "'"$namespace"'"' 
-			${OC} apply -f $curdir/trigger-podpreset.yaml
+			${OC} apply -f ./tuning-crc-openshift-cluster/trigger-podpreset.yaml
 	fi
 done
