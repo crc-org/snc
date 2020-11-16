@@ -151,5 +151,5 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep $SLEEP_TIME
 wait_for_api_server
 
-${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+#${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
 
