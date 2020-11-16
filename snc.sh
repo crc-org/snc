@@ -488,4 +488,4 @@ export SCP
 export API_SERVER
 export OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 export SLEEP_TIME
-# source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
+source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
