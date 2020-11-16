@@ -74,7 +74,7 @@ set -exuo pipefail
     ${SCP} -r updated_final_manifest.yaml ${SSH_HOST}:/home/core/updated-etcd-final-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-etcd-final-manifest.yaml $1
     ## Remove temp. files created
-    rm  current_manifest.yaml updated_memory_manifest.yaml updated_cpu_manifest.yaml updated_init_containers_memory_manifest.yaml updated_with_env_manifest.yaml updated_init_containers_with_env_manifest.yaml updated_init_containers_cpu_manifest.yaml updated_final_manifest.yaml
+#    rm  current_manifest.yaml updated_memory_manifest.yaml updated_cpu_manifest.yaml updated_init_containers_memory_manifest.yaml updated_with_env_manifest.yaml updated_init_containers_with_env_manifest.yaml updated_init_containers_cpu_manifest.yaml updated_final_manifest.yaml
 }
 
 update_kubelet_systemd_service() {
