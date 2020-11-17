@@ -94,10 +94,10 @@ update_kubelet_systemd_service() {
 echo '------------- Applying changes to Kubelet -----------'
 update_kubelet_systemd_service /etc/kubernetes/kubelet.conf 150Mi 200m 2Mi false
 
-#echo '------------- Applying changes to Kube API server  -----------'
-#update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 10Mi 30m 600m 
-#${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
-#sleep $SLEEP_TIME
+echo '------------- Applying changes to Kube API server  -----------'
+update_kube_apiserver_manifests   /etc/kubernetes/manifests/kube-apiserver-pod.yaml 10Mi 30m 500m 
+${SSH_CMD} sudo chattr +i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+sleep $SLEEP_TIME
 
 echo '------------- Applying changes to Kube Scheduler  -----------'
 update_kube_scheduler_manifests  /etc/kubernetes/manifests/kube-scheduler-pod.yaml 10Mi 15m
