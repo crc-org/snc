@@ -152,5 +152,19 @@ echo 'Wait for Kube API to be available after the restart (triggered from updati
 sleep $SLEEP_TIME
 wait_for_api_server
 
-#${SSH_CMD} sudo chattr -i  /etc/kubernetes/manifests/kube-apiserver-pod.yaml
+## Remove ValidatingWebhooks 
+${OC} delete ValidatingWebhookConfiguration --all 
+
+${OC} delete pods --all -n openshift-etcd
+sleep $SLEEP_TIME
+wait_for_api_server
+
+${OC} delete pods --all -n openshift-kube-apiserver
+sleep $SLEEP_TIME
+wait_for_api_server
+
+${OC} delete pods --all -n openshift-kube-controller-manager
+sleep $SLEEP_TIME
+wait_for_api_server
+
 

@@ -53,12 +53,12 @@ delete_pods_for_a_namespace openshift-apiserver-operator
 delete_pods_for_a_namespace openshift-ingress 
 delete_pods_for_a_namespace openshift-ingress-operator 
 
-#delete_pods_for_a_namespace openshift-cluster-version
-#delete_pods_for_a_namespace openshift-config-operator
-#delete_pods_for_a_namespace openshift-etcd-operator
-#delete_pods_for_a_namespace openshift-kube-apiserver-operator
-#delete_pods_for_a_namespace openshift-kube-controller-manager-operator
-#delete_pods_for_a_namespace openshift-kube-scheduler-operator
-#delete_pods_for_a_namespace openshift-oauth-apiserver
+delete_pods_for_a_namespace openshift-cluster-version
+delete_pods_for_a_namespace openshift-config-operator
+delete_pods_for_a_namespace openshift-etcd-operator
+delete_pods_for_a_namespace openshift-kube-apiserver-operator
+delete_pods_for_a_namespace openshift-kube-controller-manager-operator
+delete_pods_for_a_namespace openshift-kube-scheduler-operator
+delete_pods_for_a_namespace openshift-oauth-apiserver
 
 
