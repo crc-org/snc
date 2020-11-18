@@ -435,11 +435,11 @@ create_pvs "${CRC_PV_DIR}" 30
 ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
 # Clean-up 'openshift-monitoring' namespace
-delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
+#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
+#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
+#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
+#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
