@@ -63,6 +63,7 @@ else
     fi
 fi
 
+
 function preflight_failure() {
         local msg=$1
         echo "$msg"
