@@ -433,14 +433,14 @@ create_pvs "${CRC_PV_DIR}" 30
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
 
-if [$PERF_TUNE_DISK_LEVEL -eq 1]
+if [ $PERF_TUNE_DISK_LEVEL -eq 1 ]
 then
-	./tuning-crc-openshift-cluster/delete-required-resources-for-level-1.sh 
-elif [$PERF_TUNE_DISK_LEVEL -eq 2]
+	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-1.sh 
+elif [ $PERF_TUNE_DISK_LEVEL -eq 2 ]
 then
-	./tuning-crc-openshift-cluster/delete-required-resources-for-level-2.sh
+	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-2.sh
 else
-	./tuning-crc-openshift-cluster/delete-required-resources-for-level-3.sh	
+	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-3.sh	
 fi
 
 # Delete the pods which are there in Complete state
