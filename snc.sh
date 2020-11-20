@@ -33,9 +33,9 @@ SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 SCP="scp ${SSH_ARGS}"
 SLEEP_TIME=180
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
-
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+export PERF_TUNE_DISK_LEVEL=3
 
 yq_ARCH=${ARCH}
 # yq and install_config.yaml use amd64 as arch for x86_64
@@ -432,14 +432,16 @@ create_pvs "${CRC_PV_DIR}" 30
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
-${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
-# Clean-up 'openshift-monitoring' namespace
-#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+if [$PERF_TUNE_DISK_LEVEL -eq 1]
+then
+	./tuning-crc-openshift-cluster/delete-required-resources-for-level-1.sh 
+elif [$PERF_TUNE_DISK_LEVEL -eq 2]
+then
+	./tuning-crc-openshift-cluster/delete-required-resources-for-level-2.sh
+else
+	./tuning-crc-openshift-cluster/delete-required-resources-for-level-3.sh	
+fi
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
