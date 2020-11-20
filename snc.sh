@@ -433,6 +433,8 @@ delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kub
 delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
 delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
 ${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+# Delete prometheus rule application webhook
+${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
