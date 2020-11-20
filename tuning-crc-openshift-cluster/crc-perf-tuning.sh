@@ -27,8 +27,6 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
-#echo 'un-manage KUBE API server'
-#${OC} patch clusterversion version --type json -p "$(cat tuning-crc-openshift-cluster/unmanage_kubeapi.yaml)"
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
@@ -137,7 +135,6 @@ echo '--------------------------------------------------------------------------
 ###
 #tuning-crc-openshift-cluster/enable-swap-space.sh
 ${SCP} -r ./tuning-crc-openshift-cluster/enable-swap-space.sh ${SSH_HOST}:/home/core/enable-swap-space.sh
-
 
 ######
 ##  Update manifest files for the Kube. control plane (static pods created by Kubelet). ##
