@@ -15,3 +15,12 @@ function delete_operator() {
 }
 
 ${OC}  patch clusterversion version --type json -p "$(cat  ./tuning-crc-openshift-cluster/enable-cvo-override-level-3.yaml)"
+
+delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
+delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
+
+ ${OC} scale --replicas=1 deployment prometheus-adapter -n openshift-monitoring
+ ${OC} scale --replicas=1 statefulset alertmanager-main -n openshift-monitoring
+ ${OC} scale --replicas=1 statefulset prometheus-k8s -n openshift-monitoring
+ ${OC} scale --replicas=1 deployment thanos-querier -n openshift-monitoring
+
