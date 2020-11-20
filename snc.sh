@@ -37,6 +37,7 @@ ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 export PERF_TUNE_DISK_LEVEL=1
 
+
 yq_ARCH=${ARCH}
 # yq and install_config.yaml use amd64 as arch for x86_64
 if [ "${ARCH}" == "x86_64" ]; then
