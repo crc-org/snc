@@ -164,4 +164,5 @@ ${OC} delete pods --all -n openshift-kube-controller-manager
 sleep $SLEEP_TIME
 wait_for_api_server
 
-
+## Reduce replicas under openshift-console namespace
+source ./tuning-crc-openshift-cluster/reduce-replicas-for-console.sh 
