@@ -79,9 +79,13 @@ set -exuo pipefail
 
 update_kubelet_systemd_service() {
     ${SSH_CMD} sudo cat $1  > current_kubelet.conf
-    ${YQ} w  current_kubelet.conf systemReserved.cpu $3  > updated_cpu_kubelet.conf
-    ${YQ} w  updated_cpu_kubelet.conf systemReserved.memory $2  > updated_memory_kubelet.conf
-    ${YQ} w  updated_memory_kubelet.conf containerLogMaxSize $4  > updated_container_max_log_kubelet.conf
+    ${YQ} w  current_kubelet.conf systemReserved.cpu $3  > updated_system_cpu_kubelet.conf
+    ${YQ} w  updated_system_cpu_kubelet.conf systemReserved.memory $2  > updated_system_memory_kubelet.conf
+
+    ${YQ} w  updated_system_memory_kubelet.conf kubeReserved.cpu $3  > updated_kube_cpu_kubelet.conf
+    ${YQ} w  updated_kube_cpu_kubelet.conf systemReserved.memory $2  > updated_kube_memory_kubelet.conf
+    
+    ${YQ} w  updated_kube_memory_kubelet.conf containerLogMaxSize $4  > updated_container_max_log_kubelet.conf
     ${YQ} w  updated_container_max_log_kubelet.conf failSwapOn $5  > updated_swapon_kubelet.conf
     ${YQ} w  updated_swapon_kubelet.conf kubeAPIQPS $6  > updated_kube_api_qps_kubelet.conf
     ${YQ} w  updated_kube_api_qps_kubelet.conf kubeAPIBurst $7  > updated_final_kubelet.conf
