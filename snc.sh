@@ -2,8 +2,8 @@
 
 set -exuo pipefail
 
-export LC_ALL=C
-export LANG=C
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
 
 # kill all the child processes for this script when it exits
 trap 'kill -9 $(jobs -p) || true' EXIT
@@ -20,7 +20,6 @@ fi
 
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
-OC=${OC:-oc}
 XMLLINT=${XMLLINT:-xmllint}
 YQ=${YQ:-yq}
 UNZIP=${UNZIP:-unzip}
@@ -82,6 +81,18 @@ function run_preflight_checks() {
         if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
                 preflight_failure  "libvirtd is not listening for plain-text TCP connections, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
         fi
+
+	if ! virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
+		echo "Default libvirt network is not available. Exiting now!"
+		exit 1
+	fi
+	echo "default network is available"
+
+	#Check if default libvirt network is Active
+	if [[ $(virsh -c ${LIBVIRT_URI}  net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
+		echo "Default network is not active. Exiting now!"
+		exit 1
+	fi
 	
 	#Just warn if architecture is not supported
 	case $ARCH in
@@ -235,17 +246,26 @@ function create_pvs() {
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
-    # Get the cli image from release payload and update it to bootstrap-cred-manager resource
-    cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
-    ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
+    # Create the unsupported cert rotation config for a day (validity will increase by 30 times so it will become 30days)
+    ${OC} create -n openshift-config configmap unsupported-cert-rotation-config --from-literal='base=86400s'
 
-    ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
-    rm kubelet-bootstrap-cred-manager-ds.yaml
+    # Delete the pods to have cert rotation
+    ${OC} delete pods --all -A --force --grace-period=0
+
+    # Wait till the api server again started
+     while ! ${OC} get nodes >/dev/null 2>&1; do
+         sleep 3
+     done
+     echo "API server is up"
+
+    # Force the rotation for secrets
+    ${OC} get secret -A -o json | ${JQ} -r '.items[] | select(.metadata.annotations."auth.openshift.io/certificate-not-after" | .!=null and fromdateiso8601<='$( date --date='+1year' +%s )') | "-n \(.metadata.namespace) \(.metadata.name)"' | \
+        xargs -n3 ${OC} patch secret -p='{"metadata": {"annotations": {"auth.openshift.io/certificate-not-after": null}}}'
 
     # Delete the current csr signer to get new request.
-    ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
-
-    # Wait for 5 min to make sure cluster is stable again.
+    ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator || true
+    
+    echo "Waiting for 5 mins to make sure cluster is stable again"
     sleep 300
 
     # Retry 4 times to make sure kubelet certs are rotated correctly.
@@ -302,11 +322,7 @@ curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" |
 curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
 curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
 ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
-
-# Download the oc binary if not present in current directory
-if ! which ${OC}; then
-    OC=./openshift-clients/linux/oc
-fi
+OC=./openshift-clients/linux/oc
 
 # Download yq for manipulating in place yaml configs
 if ! "${YQ}" -V; then
@@ -354,14 +370,6 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
 fi
 
-# Extract oc binary from the payload and use it for all following operations
-if ! test -f oc; then
-    echo "Extracting oc binary from OpenShift payload image"
-    oc_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli-artifacts)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${oc_image} --confirm --path /usr/bin/oc:.
-    chmod +x oc
-    OC=./oc
-fi
 
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
 if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
@@ -419,7 +427,7 @@ ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spe
 # This is only valid for openshift 4.3 onwards
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 16432
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
-# Add master disk size to 31 GB
+# Add master disk size to 31 GiB
 # This is only valid for openshift 4.5 onwards
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value.volume[volumeSize] 33285996544
 # Add network resource to lower the mtu for CNV
@@ -493,6 +501,9 @@ ${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Scale route deployment from 2 to 1
 ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
+
+# Scale etcd-quorum deployment from 3 to 1
+${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge

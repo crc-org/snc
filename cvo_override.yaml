@@ -46,3 +46,8 @@
     name: kube-storage-version-migrator-operator
     namespace: openshift-kube-storage-version-migrator-operator
     unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: etcd-quorum-guard
+    namespace: openshift-etcd
+    unmanaged: true

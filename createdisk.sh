@@ -1,13 +1,13 @@
 #!/bin/bash
 
+set -exuo pipefail
+
 export LC_ALL=C
 export LANG=C
 
-set -x
-
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
-OC=${OC:-oc}
+OC=./openshift-clients/linux/oc
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS, and set USE_LUKS
 # Unless, those variables are explicitly set as well.
@@ -22,10 +22,12 @@ BASE_OS=${BASE_OS:-rhcos}
 USE_LUKS=${USE_LUKS:-true}
 
 function get_dest_dir {
-    if [ ${OPENSHIFT_VERSION} != "" ]; then
+    if [ "${OPENSHIFT_VERSION-}" != "" ]; then
         DEST_DIR=$OPENSHIFT_VERSION
     else
+        set +e
         DEST_DIR=$(git describe --exact-match --tags HEAD)
+        set -e
         if [ -z ${DEST_DIR} ]; then
             DEST_DIR="$(date --iso-8601)"
         fi
@@ -53,7 +55,7 @@ function sparsify {
 
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
-    
+
     # https://bugzilla.redhat.com/show_bug.cgi?id=1837765
     export LIBGUESTFS_MEMSIZE=2048
     # Interact with guestfish directly
@@ -152,7 +154,7 @@ function update_json_description {
 function eventually_add_pull_secret {
     local destDir=$1
 
-    if [[ -f "$BUNDLED_PULL_SECRET_PATH" ]]
+    if [ "${BUNDLED_PULL_SECRET_PATH-}" != "" ]
     then
       cat "$BUNDLED_PULL_SECRET_PATH" > "$destDir/default-pull-secret"
       cat $destDir/crc-bundle-info.json \
@@ -241,7 +243,6 @@ function generate_hyperv_directory {
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 JQ=${JQ:-jq}
-VIRT_RESIZE=${VIRT_RESIZE:-virt-resize}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
@@ -254,10 +255,6 @@ fi
 
 if ! which ${JQ}; then
     sudo yum -y install /usr/bin/jq
-fi
-
-if ! which ${VIRT_RESIZE}; then
-    sudo yum -y install /usr/bin/virt-resize libguestfs-xfs
 fi
 
 if ! which ${VIRT_FILESYSTEMS}; then
@@ -293,29 +290,13 @@ if [ -z $random_string ]; then
 fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
-# First check if cert rotation happened.
-# Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
-# We check if it's valid for more than 25 days rather than 30 days to give us some
-# leeway regarding when we run the check with respect to rotation time
-if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-    echo "Certs are not yet rotated to have 30 days validity"
-    # Only validate the cert expire time if SNC_VALIDATE_CERT is set to true
-    if [ "${SNC_VALIDATE_CERT:-true}" = true ]; then
-        exit 1;
-    fi
-fi
-
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
 ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
 ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
-# Get cluster-kube-apiserver-operator image along with hash and tag it
-certImage=$(${OC} --kubeconfig $1/auth/kubeconfig adm release info --image-for=cluster-kube-apiserver-operator)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman tag $certImage openshift/cert-recovery
-
 # Remove unused images from container storage
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null || true'
 
 # Replace pull secret with a null json string '{}'
 ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
@@ -341,11 +322,12 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman
 
 # Remove all the pods except openshift-sdn from the VM
 pods=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl pods -o json | jq '.items[] | select(.metadata.namespace != "openshift-sdn")' | jq -r .id)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl stopp ${pods}
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "for i in {1..3}; do sudo crictl rmp "${pods}" && break || sleep 2; done"
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo crictl stopp "${pods}" || true"
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "for i in {1..3}; do sudo crictl rmp "${pods}" && break || sleep 2; done || true"
 
 # Remove openshift-sdn pods also from the VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q) && sudo crictl rmp $(sudo crictl pods -q)'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q) || true'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q) || true'
 
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
@@ -421,7 +403,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
 
 # Remove the journal logs.
-# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't 
+# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
 # remove all the journal logs so separate commands are used here.
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
