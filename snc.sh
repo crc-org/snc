@@ -248,18 +248,35 @@ function renew_certificates() {
     # Wait for 5 min to make sure cluster is stable again.
     sleep 300
 
-    # Remove the 24 hours certs and bootstrap kubeconfig
-    # this kubeconfig will be regenerated and new certs will be created in pki folder
-    # which will have 30 days validity.
-    ${SSH_CMD} sudo rm -fr /var/lib/kubelet/pki
-    ${SSH_CMD} sudo rm -fr /var/lib/kubelet/kubeconfig
-    ${SSH_CMD} sudo systemctl restart kubelet
+    # Retry 4 times to make sure kubelet certs are rotated correctly.
+    i=0
+    while [ $i -lt 4 ]; do
+        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+            # Remove the 24 hours certs and bootstrap kubeconfig
+            # this kubeconfig will be regenerated and new certs will be created in pki folder
+            # which will have 30 days validity.
+            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
+            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
+            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
 
-    # Wait until bootstrap csr request is generated with 5 min timeout
-    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
-    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
+	    # Wait until bootstrap csr request is generated with 5 min timeout
+	    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
+	    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
+            
+	    echo "Retry loop $i, wait for 60sec before starting next loop"
+            sleep 60
+	else
+            break
+        fi
+	i=$[$i+1]
+    done
 
-    delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
+    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+        preflight_failure "Certs are not yet rotated to have 30 days validity"
+    fi
+
+    # go back to normal certrotation setting (remove unsupported-cert-rotation-config)
+    ${OC} delete -n openshift-config configmap unsupported-cert-rotation-config
 }
 
 # deletes an operator and wait until the resources it manages are gone.
@@ -434,6 +451,15 @@ create_pvs "${CRC_PV_DIR}" 30
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
+
+# Clean-up 'openshift-monitoring' namespace
+#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
+#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
+#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
+#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
+#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+# Delete prometheus rule application webhook
+#${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
 if [ $PERF_TUNE_DISK_LEVEL -eq 1 ]
 then
