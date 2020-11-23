@@ -19,7 +19,7 @@ set -exuo pipefail
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-apiserver-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-apiserver-manifest.yaml $1
     ## Remove temp. files created
-    rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json  final_manifest.json unformatted_final_manifest.json
+    # rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json  final_manifest.json unformatted_final_manifest.json
 }
 
  update_kube_controller_manifests() {
@@ -38,7 +38,7 @@ set -exuo pipefail
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-control-manager-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-control-manager-manifest.yaml $1
     ## Remove temp. files created
-    rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json final_manifest.json unformatted_final_manifest.json
+    # rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json updated_with_env_manifest.json final_manifest.json unformatted_final_manifest.json
 }
 
  update_kube_scheduler_manifests() {
@@ -53,7 +53,7 @@ set -exuo pipefail
     ${SCP} -r unformatted_final_manifest.json ${SSH_HOST}:/home/core/updated-kube-scheduler-manifest.yaml
     ${SSH_CMD} sudo cp /home/core/updated-kube-scheduler-manifest.yaml $1
     ## Remove temp. files created
-    rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json  final_manifest.json unformatted_final_manifest.json
+    # rm current_manifest.json updated_wth_memory_manifest.json updated_wth_cpu_manifest.json  final_manifest.json unformatted_final_manifest.json
 }
 
  update_etcd_manifests() {
@@ -93,7 +93,7 @@ update_kubelet_systemd_service() {
     ${SCP} -r updated_final_kubelet.conf ${SSH_HOST}:/home/core/updated-kubelet.conf
     ${SSH_CMD} sudo cp /home/core/updated-kubelet.conf $1
     ## clean up temp. files created
-    rm current_kubelet.conf updated_cpu_kubelet.conf updated_memory_kubelet.conf updated_final_kubelet.conf
+    # rm current_kubelet.conf updated_cpu_kubelet.conf updated_memory_kubelet.conf updated_final_kubelet.conf
 }
 
 
