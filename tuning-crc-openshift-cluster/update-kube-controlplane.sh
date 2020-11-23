@@ -83,7 +83,7 @@ update_kubelet_systemd_service() {
     ${YQ} w  updated_system_cpu_kubelet.conf systemReserved.memory $2  > updated_system_memory_kubelet.conf
 
     ${YQ} w  updated_system_memory_kubelet.conf kubeReserved.cpu $3  > updated_kube_cpu_kubelet.conf
-    ${YQ} w  updated_kube_cpu_kubelet.conf systemReserved.memory $2  > updated_kube_memory_kubelet.conf
+    ${YQ} w  updated_kube_cpu_kubelet.conf kubeReserved.memory $2  > updated_kube_memory_kubelet.conf
     
     ${YQ} w  updated_kube_memory_kubelet.conf containerLogMaxSize $4  > updated_container_max_log_kubelet.conf
     ${YQ} w  updated_container_max_log_kubelet.conf failSwapOn $5  > updated_swapon_kubelet.conf
