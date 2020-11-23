@@ -61,6 +61,11 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
+# Remove system reserved block from kubelet config
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} cat /etc/kubernetes/kubelet.conf \
+  | ${YQ} delete - systemReserved \
+  | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo tee /etc/kubernetes/kubelet.conf
+
 # Unmask the chronyd service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl unmask chronyd
 # Disable the chronyd service
