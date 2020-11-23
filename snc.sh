@@ -18,6 +18,7 @@ then
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-quay.io/openshift/okd:${OPENSHIFT_VERSION}}
 fi
 
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 XMLLINT=${XMLLINT:-xmllint}
