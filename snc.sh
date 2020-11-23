@@ -452,15 +452,14 @@ create_pvs "${CRC_PV_DIR}" 30
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
 
-if [ $PERF_TUNE_DISK_LEVEL -eq 1 ]
-then
-	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-1.sh 
-elif [ $PERF_TUNE_DISK_LEVEL -eq 2 ]
-then
-	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-2.sh
-else
-	source ./tuning-crc-openshift-cluster/delete-required-resources-for-level-3.sh	
-fi
+# Clean-up 'openshift-monitoring' namespace
+#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
+#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
+#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
+#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
+#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+# Delete prometheus rule application webhook
+#${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
@@ -509,4 +508,5 @@ export SCP
 export API_SERVER
 export OC_LOGIN_TOKEN=` ${OC} whoami --show-token`
 export SLEEP_TIME
+export PERF_TUNE_DISK_LEVEL
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
