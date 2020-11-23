@@ -116,25 +116,25 @@ echo '--------------------------------------------------------------------------
 ### Debug -- Make sure API server is up and running
 ${OC} api-resources 
 
-#echo '-----------------------------------------------------------------------------------------------------------------------------------'
+echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  Delete all the created podpresets
 #####
-#echo 'Removing podpresets across all the namespaces ..'
-#source ./tuning-crc-openshift-cluster/remove-podpresets.sh
+echo 'Removing podpresets across all the namespaces ..'
+source ./tuning-crc-openshift-cluster/remove-podpresets.sh
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ### Debug -- Make sure API server is up and running
 ${OC} api-resources 
 
-#echo '-----------------------------------------------------------------------------------------------------------------------------------'
+echo '-----------------------------------------------------------------------------------------------------------------------------------'
 ######
 ##  From Kube-API server, removing support for v1alpha1/serttings API and pre-compiled webhooks
 #####
-#echo 'Removing support for v1alpha1/settings API and pre-compiled webhooks...'
-#source ./tuning-crc-openshift-cluster/remove-alpha-api.sh
-#sleep $SLEEP_TIME
-#wait_for_api_server
+echo 'Removing support for v1alpha1/settings API and pre-compiled webhooks...'
+source ./tuning-crc-openshift-cluster/remove-alpha-api.sh
+sleep $SLEEP_TIME
+wait_for_api_server
 
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'
