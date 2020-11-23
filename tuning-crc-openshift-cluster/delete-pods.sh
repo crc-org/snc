@@ -41,10 +41,10 @@ delete_pods_for_a_namespace openshift-dns
 delete_pods_for_a_namespace openshift-dns-operator  
 delete_pods_for_a_namespace openshift-image-registry   
 delete_pods_for_a_namespace openshift-kube-storage-version-migrator 
-delete_pods_for_a_namespace openshift-marketplace  
+#delete_pddods_for_a_namespace openshift-marketplace  
 delete_pods_for_a_namespace openshift-multus  
 delete_pods_for_a_namespace openshift-network-operator   
-delete_pods_for_a_namespace openshift-operator-lifecycle-manager   
+#delete_pods_for_a_namespace openshift-operator-lifecycle-manager   
 delete_pods_for_a_namespace openshift-sdn   
 delete_pods_for_a_namespace openshift-service-ca   
 delete_pods_for_a_namespace openshift-service-ca-operator    
@@ -60,6 +60,15 @@ delete_pods_for_a_namespace openshift-kube-apiserver-operator
 delete_pods_for_a_namespace openshift-kube-controller-manager-operator
 delete_pods_for_a_namespace openshift-kube-scheduler-operator
 delete_pods_for_a_namespace openshift-oauth-apiserver
-delete_pods_for_a_namespace openshift-monitoring
+#delete_pods_for_a_namespace openshift-monitoring
 
+if [ $PERF_TUNE_DISK_LEVEL -eq 2 ]
+then
+	delete_pods_for_a_namespace openshift-marketplace  
+	delete_pods_for_a_namespace openshift-operator-lifecycle-manager   
+	delete_pods_for_a_namespace openshift-monitoring
+elif [ $PERF_TUNE_DISK_LEVEL -eq 3 ]
+then
+	delete_pods_for_a_namespace openshift-monitoring
+fi
 
