@@ -83,3 +83,5 @@ function retry {
     return 0
 }
 
+# Restart the libvirt service after update
+sudo systemctl restart libvirtd
