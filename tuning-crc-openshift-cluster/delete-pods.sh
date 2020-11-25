@@ -18,7 +18,7 @@ wait_for_api_server()
 
 delete_pods_for_a_namespace() {
  	${OC} delete pods -n  $1 --all
-	sleep 60
+	sleep 10
 	wait_for_api_server
 }
 
