@@ -18,6 +18,7 @@ then
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-quay.io/openshift/okd:${OPENSHIFT_VERSION}}
 fi
 
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 INSTALL_DIR=crc-tmp-install-data
 JQ=${JQ:-jq}
 XMLLINT=${XMLLINT:-xmllint}
@@ -26,9 +27,16 @@ UNZIP=${UNZIP:-unzip}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
+SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
+SCP="scp ${SSH_ARGS}"
+SLEEP_TIME=180
+API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+export PERF_TUNE_DISK_LEVEL=2
+
 
 yq_ARCH=${ARCH}
 # yq and install_config.yaml use amd64 as arch for x86_64
@@ -55,6 +63,7 @@ else
         fi
     fi
 fi
+
 
 function preflight_failure() {
         local msg=$1
@@ -417,7 +426,7 @@ ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
 # This is only valid for openshift 4.3 onwards
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 14336
+${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 16432
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
 # Add master disk size to 31 GiB
 # This is only valid for openshift 4.5 onwards
@@ -451,16 +460,15 @@ create_pvs "${CRC_PV_DIR}" 30
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
-${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
 
 # Clean-up 'openshift-monitoring' namespace
-delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
+#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
+#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
+#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
+#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
 # Delete prometheus rule application webhook
-${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
+#${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
 # Delete the pods which are there in Complete state
 ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
@@ -500,3 +508,16 @@ ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Apply performance related changes to the CRC OpenShift components
+export JQ
+export YQ
+export OC
+export SSH_HOST
+export SSH_ARGS
+export SSH_CMD
+export SCP
+export API_SERVER
+export SLEEP_TIME
+export PERF_TUNE_DISK_LEVEL
+source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
