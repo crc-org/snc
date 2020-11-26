@@ -233,6 +233,10 @@ function renew_certificates() {
     cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
     ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
 
+    # Enable the network time sync and set the clock back to present on host
+    sudo date -s '1 day'
+    sudo timedatectl set-ntp on
+
     ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
     rm kubelet-bootstrap-cred-manager-ds.yaml
 
@@ -351,6 +355,10 @@ EOF
 # Reload the NetworkManager to make DNS overlay effective
 sudo systemctl reload NetworkManager
 
+# Disable the network time sync and set the clock to past (for a day) on host
+sudo timedatectl set-ntp off
+sudo date -s '-1 day'
+
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].architecture ${yq_ARCH}
@@ -389,13 +397,13 @@ cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' 
 apply_bootstrap_etcd_hack &
 apply_auth_hack &
 
-
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
 renew_certificates
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
