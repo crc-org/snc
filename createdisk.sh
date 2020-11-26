@@ -263,18 +263,18 @@ fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
-${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
-${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
-${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
+retry ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
+retry ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
+retry ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
 # Remove unused images from container storage
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null || true'
 
 # Replace pull secret with a null json string '{}'
-${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
+retry ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
 
 # Remove the Cluster ID with a empty string.
-${OC} --kubeconfig $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+retry ${OC} --kubeconfig $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
 # Get the IP of the VM
 INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
