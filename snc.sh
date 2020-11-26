@@ -35,7 +35,7 @@ SLEEP_TIME=90
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 ARCH=$(uname -m)
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
-export PERF_TUNE_DISK_LEVEL=1
+export PERF_TUNE_DISK_LEVEL=3
 
 
 yq_ARCH=${ARCH}
