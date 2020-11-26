@@ -229,35 +229,36 @@ function create_pvs() {
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
-    # Get the cli image from release payload and update it to bootstrap-cred-manager resource
-    cli_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=cli)
-    ${YQ} write kubelet-bootstrap-cred-manager-ds.yaml.in spec.template.spec.containers[0].image ${cli_image} >kubelet-bootstrap-cred-manager-ds.yaml
+    local vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
+    shutdown_vm ${vm_prefix}
 
     # Enable the network time sync and set the clock back to present on host
     sudo date -s '1 day'
     sudo timedatectl set-ntp on
 
-    ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
-    rm kubelet-bootstrap-cred-manager-ds.yaml
+    start_vm ${vm_prefix}
 
-    # Delete the current csr signer to get new request.
-    ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
-
-    # Wait for 5 min to make sure cluster is stable again.
-    sleep 300
-
-    # Remove the 24 hours certs and bootstrap kubeconfig
-    # this kubeconfig will be regenerated and new certs will be created in pki folder
-    # which will have 30 days validity.
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
-
-    # Wait until bootstrap csr request is generated with 5 min timeout
+    # After cluster starts kube-apiserver-client-kubelet signer need to be approved
     timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
     ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
-    delete_operator "daemonset/kubelet-bootstrap-cred-manager" "openshift-machine-config-operator" "k8s-app=kubelet-bootstrap-cred-manager"
+    # Retry 5 times to make sure kubelet certs are rotated correctly.
+    i=0
+    while [ $i -lt 5 ]; do
+        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+	    # Wait until bootstrap csr request is generated with 5 min timeout
+	    echo "Retry loop $i, wait for 60sec before starting next loop"
+            sleep 60
+	else
+            break
+        fi
+	i=$[$i+1]
+    done
+
+    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+        echo "Certs are not yet rotated to have 30 days validity"
+	exit 1
+    fi
 }
 
 # deletes an operator and wait until the resources it manages are gone.
