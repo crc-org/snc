@@ -1,0 +1,14 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: chronyd-mask
+spec:
+  config:
+    ignition:
+      version: 3.1.0
+    systemd:
+      units:
+       - name: chronyd.service
+         mask: true
