@@ -290,6 +290,18 @@ if [ -z $random_string ]; then
 fi
 VM_PREFIX=${CRC_VM_NAME}-${random_string}
 
+# First check if cert rotation happened.
+# Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
+# We check if it's valid for more than 25 days rather than 30 days to give us some
+# leeway regarding when we run the check with respect to rotation time
+if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+    echo "Certs are not yet rotated to have 30 days validity"
+    # Only validate the cert expire time if SNC_VALIDATE_CERT is set to true
+    if [ "${SNC_VALIDATE_CERT:-true}" = true ]; then
+        exit 1;
+    fi
+fi
+
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
 ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
