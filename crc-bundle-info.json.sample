@@ -6,6 +6,8 @@
   # Type of this bundle content
   # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
   "type": "snc",
+  # Name of the bundle
+  "name": "crc_libvirt_4.6.1",
   "buildInfo": {
     # Time this bundle was built
     "buildTime": "2019-04-23T14:55:32+00:00",

@@ -5,6 +5,8 @@ set -exuo pipefail
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
+source tools.sh
+
 # kill all the child processes for this script when it exits
 trap 'kill -9 $(jobs -p) || true' EXIT
 
@@ -20,10 +22,6 @@ fi
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 INSTALL_DIR=crc-tmp-install-data
-JQ=${JQ:-jq}
-XMLLINT=${XMLLINT:-xmllint}
-YQ=${YQ:-yq}
-UNZIP=${UNZIP:-unzip}
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
@@ -34,15 +32,10 @@ SCP="scp ${SSH_ARGS}"
 SLEEP_TIME=90
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 ARCH=$(uname -m)
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 export PERF_TUNE_DISK_LEVEL=3
 
-
-yq_ARCH=${ARCH}
-# yq and install_config.yaml use amd64 as arch for x86_64
-if [ "${ARCH}" == "x86_64" ]; then
-    yq_ARCH="amd64"
-fi
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -306,41 +299,28 @@ function delete_operator() {
         local namespace=$2
         local pod_selector=$3
 
+	retry ${OC} get pods
         pod=$(${OC} get pod -l ${pod_selector} -o jsonpath="{.items[0].metadata.name}" -n ${namespace})
 
-        ${OC} delete ${delete_object} -n ${namespace}
+        retry ${OC} delete ${delete_object} -n ${namespace}
         # Wait until the operator pod is deleted before trying to delete the resources it manages
         ${OC} wait --for=delete pod/${pod} --timeout=120s -n ${namespace} || ${OC} delete pod/${pod} --grace-period=0 --force -n ${namespace} || true
 }
 
-if ! which ${UNZIP}; then
-    sudo yum -y install /usr/bin/unzip
-fi
-
 # Download the oc binary for all platforms
 mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
+if [[ ${OKD_VERSION} != "none" ]]
+then
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
+else
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
+fi
 ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
 OC=./openshift-clients/linux/oc
-
-# Download yq for manipulating in place yaml configs
-if ! "${YQ}" -V; then
-    if [[ ! -e yq ]]; then
-        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_${yq_ARCH} -o yq
-        chmod +x yq
-    fi
-    YQ=./yq
-fi
-
-if ! which ${JQ}; then
-    sudo yum -y install /usr/bin/jq
-fi
-
-if ! which ${XMLLINT}; then
-    sudo yum -y install /usr/bin/xmllint
-fi
 
 run_preflight_checks
 
@@ -471,40 +451,40 @@ create_pvs "${CRC_PV_DIR}" 30
 #${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
 # Delete the pods which are there in Complete state
-${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
-${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
-${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
+retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
+retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
+retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
 
 # Clean-up 'openshift-machine-api' namespace
 delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
 
 # Clean-up 'openshift-machine-config-operator' namespace
 delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
 
 # Clean-up 'openshift-insights' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 
 # Clean-up 'openshift-cloud-credential-operator' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
 
 # Clean-up 'openshift-cluster-storage-operator' namespace
 delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
 
 # Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
-${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
 
 # Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
 # Since this CRD block namespace deletion forever.
-${OC} delete apiservice v1beta1.metrics.k8s.io
+retry ${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Scale route deployment from 2 to 1
-${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
+retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
 # Scale etcd-quorum deployment from 3 to 1
-${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
+retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
