@@ -8,7 +8,7 @@ wait_for_api_server()
 	while ! ${OC} api-resources  >/dev/null 2>&1; do
  		if [ $count -lt 100 ]
 		then
-			sleep 3
+			sleep $SLEEP_TIME
   			count=`expr $count + 1`
 		else
 			exit
