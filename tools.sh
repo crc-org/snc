@@ -66,7 +66,7 @@ if ! which ${UNZIP}; then
 fi
 
 function retry {
-    local retries=5
+    local retries=10
     local count=0
     until "$@"; do
         exit=$?
