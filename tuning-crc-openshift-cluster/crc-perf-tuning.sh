@@ -27,8 +27,7 @@ wait_for_api_server()
 #echo 'Apply required Kernel paramters to the CRC VM..'
 #tuning-crc-openshift-cluster/apply-kernel-parameters.sh
 
-### Create the disk image as per the level (1,2,3) indicated
-
+## Apply CVO overrides and copy the required scripts to disable monitoring, OLM on the fly (based on crc config setting)
 source ./tuning-crc-openshift-cluster/delete-required-resources-for-various-levels.sh
 
 echo '-----------------------------------------------------------------------------------------------------------------------------------'

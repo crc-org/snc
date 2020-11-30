@@ -34,7 +34,6 @@ API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 ARCH=$(uname -m)
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
-export PERF_TUNE_DISK_LEVEL=3
 
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
@@ -499,5 +498,4 @@ export SSH_CMD
 export SCP
 export API_SERVER
 export SLEEP_TIME
-export PERF_TUNE_DISK_LEVEL
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
