@@ -251,16 +251,7 @@ if [[ $# -ne 1 ]]; then
    exit 1
 fi
 
-
-# This random_string is created by installer and added to each resource type,
-# in installer side also variable name is kept as `random_string`
-# so to maintain consistancy, we are also using random_string here.
-random_string=$(sudo virsh list --all | grep -oP "(?<=${CRC_VM_NAME}-).*(?=-master-0)")
-if [ -z $random_string ]; then
-    echo "Could not find virtual machine created by snc.sh"
-    exit 1;
-fi
-VM_PREFIX=${CRC_VM_NAME}-${random_string}
+VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 
 # First check if cert rotation happened.
 # Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
@@ -359,19 +350,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig 
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
-sudo virsh shutdown ${VM_PREFIX}-master-0
-# Wait till instance started successfully
-until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
-    echo " ${VM_PREFIX}-master-0 still running"
-    sleep 3
-done
-
-sudo virsh start ${VM_PREFIX}-master-0
-# Wait till ssh connection available
-until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
-    echo " ${VM_PREFIX}-master-0 still booting"
-    sleep 2
-done
+shutdown_vm ${VM_PREFIX}
+start_vm ${VM_PREFIX}
 
 # Get the rhcos ostree Hash ID
 ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
@@ -404,12 +384,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
-sudo virsh shutdown ${VM_PREFIX}-master-0
-# Wait till instance shutdown gracefully
-until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
-    echo " ${VM_PREFIX}-master-0 still running"
-    sleep 3
-done
+shutdown_vm ${VM_PREFIX}
 
 # instead of .tar.xz we use .crcbundle
 crcBundleSuffix=crcbundle
