@@ -26,6 +26,7 @@ BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -356,9 +357,13 @@ EOF
 # Reload the NetworkManager to make DNS overlay effective
 sudo systemctl reload NetworkManager
 
-# Disable the network time sync and set the clock to past (for a day) on host
-sudo timedatectl set-ntp off
-sudo date -s '-1 day'
+
+if [[ ${CERT_ROTATION} == "enabled" ]]
+then
+    # Disable the network time sync and set the clock to past (for a day) on host
+    sudo timedatectl set-ntp off
+    sudo date -s '-1 day'
+fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
@@ -400,7 +405,10 @@ apply_auth_hack &
 
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
-renew_certificates
+if [[ ${CERT_ROTATION} == "enabled" ]]
+then
+    renew_certificates
+fi
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
