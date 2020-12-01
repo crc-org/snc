@@ -1,0 +1,72 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: clusterwiderolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crc-mutating
+  labels:
+    app: crc-mutating
+spec:
+  publishNotReadyAddresses: true
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    app: crc-mutating
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crc-mutating
+  labels:
+    app: crc-mutating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crc-mutating
+  template:
+    metadata:
+      name: crc-mutating
+      labels:
+        app: crc-mutating
+    spec:
+      initContainers:
+      - name: webhook-init
+        image: docker.io/meerakrishna/init-crc-mutating-webhook:16.0
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /etc/webhook/certs
+          name: webhook-certs
+        env:
+        - name: MUTATE_CONFIG
+          value: crc-mutating
+        - name: WEBHOOK_SERVICE
+          value: crc-mutating
+        - name: WEBHOOK_NAMESPACE
+          value:  default  
+      containers:
+        - name: crc-mutator
+          image: docker.io/meerakrishna/crc-mutating-webhook:11.0
+          volumeMounts:
+          - mountPath: /etc/webhook/certs
+            name: webhook-certs
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+      volumes:
+        - name: webhook-certs
+          emptyDir: {}

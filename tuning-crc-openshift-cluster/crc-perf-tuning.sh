@@ -64,7 +64,7 @@ echo '--------------------------------------------------------------------------
 #####
 
 echo 'Deploy MutatingWebhook for admission controller .....'
-${OC} apply -f https://raw.githubusercontent.com/spaparaju/k8s-mutate-webhook/master/deploy/webhook.yaml
+${OC} apply -f ./tuning-crc-openshift-cluster/mutating-k8s-webhook/deploy/webhook.yaml
 echo 'Wait for  MutatingWebhook to be available ....'
 
 sleep $SLEEP_TIME
