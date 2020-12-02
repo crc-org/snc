@@ -51,8 +51,3 @@
     name: cluster-monitoring-operator
     namespace: openshift-monitoring
     unmanaged: true
-  - kind: Deployment
-    group: apps/v1
-    name: thanos-querier
-    namespace: openshift-monitoring
-    unmanaged: true

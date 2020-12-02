@@ -68,11 +68,10 @@
     unmanaged: true
   - kind: Deployment
     group: apps/v1
-    name: prometheus-k8s
-    namespace: openshift-cloud-credential-operator
-    unmanaged: true
-  - kind: Deployment
-    group: apps/v1
     name: kube-apiserver-operator
     namespace: openshift-kube-apiserver-operator
     unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: cluster-monitoring-operator
+    namespace: openshift-monitoring
