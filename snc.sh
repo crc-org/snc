@@ -473,8 +473,8 @@ retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
 retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
 
 # Clean-up 'openshift-cluster-storage-operator' namespace
-delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
+#delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
+#retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
 
 # Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
 retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
@@ -505,48 +505,3 @@ export SLEEP_TIME
 export PERF_TUNE_DISK_LEVEL
 source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
 
-# Clean-up 'openshift-machine-api' namespace
-delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
-
-# Clean-up 'openshift-machine-config-operator' namespace
-delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
-
-# Clean-up 'openshift-insights' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
-
-# Clean-up 'openshift-cloud-credential-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
-
-# Clean-up 'openshift-cluster-storage-operator' namespace
-delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
-
-# Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
-
-# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
-# Since this CRD block namespace deletion forever.
-retry ${OC} delete apiservice v1beta1.metrics.k8s.io
-
-# Scale route deployment from 2 to 1
-retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
-
-# Scale etcd-quorum deployment from 3 to 1
-retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
-
-# Set default route for registry CRD from false to true.
-${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
-
-# Apply performance related changes to the CRC OpenShift components
-export JQ
-export YQ
-export OC
-export SSH_HOST
-export SSH_ARGS
-export SSH_CMD
-export SCP
-export API_SERVER
-export SLEEP_TIME
-source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
