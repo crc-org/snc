@@ -66,7 +66,7 @@ if ! which ${UNZIP}; then
 fi
 
 function retry {
-    local retries=5
+    local retries=10
     local count=0
     until "$@"; do
         exit=$?
@@ -81,6 +81,39 @@ function retry {
         fi
     done
     return 0
+}
+
+function get_vm_prefix {
+    local crc_vm_name=$1
+    # This random_string is created by installer and added to each resource type,
+    # in installer side also variable name is kept as `random_string`
+    # so to maintain consistancy, we are also using random_string here.
+    random_string=$(sudo virsh list --all | grep -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
+    if [ -z $random_string ]; then
+        echo "Could not find virtual machine created by snc.sh"
+        exit 1;
+    fi
+    echo ${crc_vm_name}-${random_string}
+}
+
+function shutdown_vm {
+    local vm_prefix=$1
+    sudo virsh shutdown ${vm_prefix}-master-0
+    # Wait till instance started successfully
+    until sudo virsh domstate ${vm_prefix}-master-0 | grep shut; do
+        echo " ${vm_prefix}-master-0 still running"
+        sleep 3
+    done
+}
+
+function start_vm {
+    local vm_prefix=$1
+    sudo virsh start ${vm_prefix}-master-0
+    # Wait till ssh connection available
+    until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
+        echo " ${vm_prefix}-master-0 still booting"
+        sleep 2
+    done
 }
 
 # Restart the libvirt service after update

@@ -25,16 +25,24 @@ INSTALL_DIR=crc-tmp-install-data
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
 SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
 SCP="scp ${SSH_ARGS}"
-SLEEP_TIME=90
+SLEEP_TIME=180
 API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
 ARCH=$(uname -m)
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+export PERF_TUNE_DISK_LEVEL=2
 
+
+yq_ARCH=${ARCH}
+# yq and install_config.yaml use amd64 as arch for x86_64
+if [ "${ARCH}" == "x86_64" ]; then
+    yq_ARCH="amd64"
+fi
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -164,7 +172,7 @@ function apply_auth_hack() {
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
-    echo {} | ${JQ} '.version = "1.0"' \
+    echo {} | ${JQ} '.version = "1.1"' \
             | ${JQ} '.type = "snc"' \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
@@ -239,43 +247,24 @@ function create_pvs() {
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
-    # Create the unsupported cert rotation config for a day (validity will increase by 30 times so it will become 30days)
-    ${OC} create -n openshift-config configmap unsupported-cert-rotation-config --from-literal='base=86400s'
+    local vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
+    shutdown_vm ${vm_prefix}
 
-    # Delete the pods to have cert rotation
-    ${OC} delete pods --all -A --force --grace-period=0
+    # Enable the network time sync and set the clock back to present on host
+    sudo date -s '1 day'
+    sudo timedatectl set-ntp on
 
-    # Wait till the api server again started
-     while ! ${OC} get nodes >/dev/null 2>&1; do
-         sleep 3
-     done
-     echo "API server is up"
+    start_vm ${vm_prefix}
 
-    # Force the rotation for secrets
-    ${OC} get secret -A -o json | ${JQ} -r '.items[] | select(.metadata.annotations."auth.openshift.io/certificate-not-after" | .!=null and fromdateiso8601<='$( date --date='+1year' +%s )') | "-n \(.metadata.namespace) \(.metadata.name)"' | \
-        xargs -n3 ${OC} patch secret -p='{"metadata": {"annotations": {"auth.openshift.io/certificate-not-after": null}}}'
+    # After cluster starts kube-apiserver-client-kubelet signer need to be approved
+    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
+    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
-    # Delete the current csr signer to get new request.
-    ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator || true
-    
-    echo "Waiting for 5 mins to make sure cluster is stable again"
-    sleep 300
-
-    # Retry 4 times to make sure kubelet certs are rotated correctly.
+    # Retry 5 times to make sure kubelet certs are rotated correctly.
     i=0
-    while [ $i -lt 4 ]; do
+    while [ $i -lt 5 ]; do
         if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-            # Remove the 24 hours certs and bootstrap kubeconfig
-            # this kubeconfig will be regenerated and new certs will be created in pki folder
-            # which will have 30 days validity.
-            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/pki
-            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo rm -fr /var/lib/kubelet/kubeconfig
-            ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl restart kubelet
-
 	    # Wait until bootstrap csr request is generated with 5 min timeout
-	    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
-	    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
-            
 	    echo "Retry loop $i, wait for 60sec before starting next loop"
             sleep 60
 	else
@@ -285,11 +274,9 @@ function renew_certificates() {
     done
 
     if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-        preflight_failure "Certs are not yet rotated to have 30 days validity"
+        echo "Certs are not yet rotated to have 30 days validity"
+	exit 1
     fi
-
-    # go back to normal certrotation setting (remove unsupported-cert-rotation-config)
-    ${OC} delete -n openshift-config configmap unsupported-cert-rotation-config
 }
 
 # deletes an operator and wait until the resources it manages are gone.
@@ -387,6 +374,14 @@ EOF
 # Reload the NetworkManager to make DNS overlay effective
 sudo systemctl reload NetworkManager
 
+
+if [[ ${CERT_ROTATION} == "enabled" ]]
+then
+    # Disable the network time sync and set the clock to past (for a day) on host
+    sudo timedatectl set-ntp off
+    sudo date -s '-1 day'
+fi
+
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].architecture ${yq_ARCH}
@@ -412,20 +407,29 @@ ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-m
 ${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value.volume[volumeSize] 33285996544
 # Add network resource to lower the mtu for CNV
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
+# Add patch to mask the chronyd service on master
+cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS} || exit 1
+# mask the chronyd service on the bootstrap node
+cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap.ign) > ${INSTALL_DIR}/bootstrap.ign
+
 apply_bootstrap_etcd_hack &
 apply_auth_hack &
 
-
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
-renew_certificates
+if [[ ${CERT_ROTATION} == "enabled" ]]
+then
+    renew_certificates
+fi
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
@@ -453,6 +457,53 @@ create_pvs "${CRC_PV_DIR}" 30
 retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
 retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
 retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
+
+# Clean-up 'openshift-machine-api' namespace
+delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
+
+# Clean-up 'openshift-machine-config-operator' namespace
+delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
+
+# Clean-up 'openshift-insights' namespace
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
+
+# Clean-up 'openshift-cloud-credential-operator' namespace
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
+
+# Clean-up 'openshift-cluster-storage-operator' namespace
+delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
+
+# Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
+retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
+
+# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
+# Since this CRD block namespace deletion forever.
+retry ${OC} delete apiservice v1beta1.metrics.k8s.io
+
+# Scale route deployment from 2 to 1
+retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
+
+# Scale etcd-quorum deployment from 3 to 1
+retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
+
+# Set default route for registry CRD from false to true.
+${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Apply performance related changes to the CRC OpenShift components
+export JQ
+export YQ
+export OC
+export SSH_HOST
+export SSH_ARGS
+export SSH_CMD
+export SCP
+export API_SERVER
+export SLEEP_TIME
+export PERF_TUNE_DISK_LEVEL
+source ./tuning-crc-openshift-cluster/crc-perf-tuning.sh
 
 # Clean-up 'openshift-machine-api' namespace
 delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"

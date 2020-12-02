@@ -251,28 +251,7 @@ if [[ $# -ne 1 ]]; then
    exit 1
 fi
 
-
-# This random_string is created by installer and added to each resource type,
-# in installer side also variable name is kept as `random_string`
-# so to maintain consistancy, we are also using random_string here.
-random_string=$(sudo virsh list --all | grep -oP "(?<=${CRC_VM_NAME}-).*(?=-master-0)")
-if [ -z $random_string ]; then
-    echo "Could not find virtual machine created by snc.sh"
-    exit 1;
-fi
-VM_PREFIX=${CRC_VM_NAME}-${random_string}
-
-# First check if cert rotation happened.
-# Initial certificate is only valid for 24 hours, after rotation, it's valid for 30 days.
-# We check if it's valid for more than 25 days rather than 30 days to give us some
-# leeway regarding when we run the check with respect to rotation time
-if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-    echo "Certs are not yet rotated to have 30 days validity"
-    # Only validate the cert expire time if SNC_VALIDATE_CERT is set to true
-    if [ "${SNC_VALIDATE_CERT:-true}" = true ]; then
-        exit 1;
-    fi
-fi
+VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 retry ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
@@ -298,8 +277,10 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
-# Stop the network time sync
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo timedatectl set-ntp off
+# Unmask the chronyd service
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl unmask chronyd
+# Disable the chronyd service
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable chronyd
 
 # Enable the io.podman.socket service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman.socket
@@ -357,19 +338,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig 
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
-sudo virsh shutdown ${VM_PREFIX}-master-0
-# Wait till instance started successfully
-until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
-    echo " ${VM_PREFIX}-master-0 still running"
-    sleep 3
-done
-
-sudo virsh start ${VM_PREFIX}-master-0
-# Wait till ssh connection available
-until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
-    echo " ${VM_PREFIX}-master-0 still booting"
-    sleep 2
-done
+shutdown_vm ${VM_PREFIX}
+start_vm ${VM_PREFIX}
 
 # Get the rhcos ostree Hash ID
 ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
@@ -402,12 +372,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --rotate'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
-sudo virsh shutdown ${VM_PREFIX}-master-0
-# Wait till instance shutdown gracefully
-until sudo virsh domstate ${VM_PREFIX}-master-0 | grep shut; do
-    echo " ${VM_PREFIX}-master-0 still running"
-    sleep 3
-done
+shutdown_vm ${VM_PREFIX}
 
 # instead of .tar.xz we use .crcbundle
 crcBundleSuffix=crcbundle
