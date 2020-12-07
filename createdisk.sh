@@ -7,8 +7,8 @@ export LANG=C
 
 source tools.sh
 
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
-SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
+SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 OC=./openshift-clients/linux/oc
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS, and set USE_LUKS
@@ -138,7 +138,7 @@ function update_json_description {
 
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
-        | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_rsa_crc"' \
+        | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_ecdsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
         | ${JQ} '.nodes[0].kind[0] = "master"' \
@@ -179,8 +179,8 @@ function copy_additional_files {
     cp $1/auth/kube* $destDir/
 
     # Copy the master public key
-    cp id_rsa_crc $destDir/
-    chmod 400 $destDir/id_rsa_crc
+    cp id_ecdsa_crc $destDir/
+    chmod 400 $destDir/id_ecdsa_crc
 
     # Copy oc client
     cp openshift-clients/linux/oc $destDir/
@@ -197,7 +197,7 @@ function generate_hyperkit_directory {
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
-    cp $srcDir/id_rsa_crc $destDir/
+    cp $srcDir/id_ecdsa_crc $destDir/
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
@@ -220,7 +220,7 @@ function generate_hyperv_directory {
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
-    cp $srcDir/id_rsa_crc $destDir/
+    cp $srcDir/id_ecdsa_crc $destDir/
 
     # Copy oc client
     cp openshift-clients/windows/oc.exe $destDir/
@@ -283,7 +283,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl unmask chronyd
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable chronyd
 
 # Enable the io.podman.socket service
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman.socket
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable io.podman.socket
 
 # Remove all the pods except openshift-sdn from the VM
 pods=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl pods -o json | jq '.items[] | select(.metadata.namespace != "openshift-sdn")' | jq -r .id)
