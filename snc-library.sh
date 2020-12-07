@@ -86,16 +86,6 @@ function replace_pull_secret() {
         set -x
 }
 
-function apply_bootstrap_etcd_hack() {
-        # This is needed for now due to etcd changes in 4.4:
-        # https://github.com/openshift/cluster-etcd-operator/pull/279
-        while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-            sleep 3
-        done
-        echo "API server is up, applying etcd hack"
-        ${OC} patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge
-}
-
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
