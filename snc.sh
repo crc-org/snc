@@ -34,17 +34,12 @@ if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
-    OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null || echo "")
+    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.6/release.txt | sed -n 's/^ *Version: *//p')"
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
-        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from local Git tags"
+        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
     else
-        OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.6/release.txt | sed -n 's/^ *Version: *//p')"
-        if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
-            echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
-        else
-            echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
-            exit 1
-        fi
+        echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
+        exit 1
     fi
 fi
 
