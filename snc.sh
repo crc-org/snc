@@ -18,7 +18,6 @@ if [[ ${OKD_VERSION} != "none" ]]
 then
     OPENSHIFT_VERSION=${OKD_VERSION}
     MIRROR=${MIRROR:-https://github.com/openshift/okd/releases/download}
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-quay.io/openshift/okd:${OPENSHIFT_VERSION}}
 fi
 
 INSTALL_DIR=crc-tmp-install-data
