@@ -57,14 +57,14 @@ Add the following lines in your `~/.ssh/config` file. You can then do `ssh maste
 Host master
     Hostname 192.168.126.11
     User core
-    IdentityFile <directory_to_cloned_repo>/id_rsa_crc
+    IdentityFile <directory_to_cloned_repo>/id_ecdsa_crc
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
 Host bootstrap
     Hostname 192.168.126.10
     User core
-    IdentityFile <directory_to_cloned_repo>/id_rsa_crc
+    IdentityFile <directory_to_cloned_repo>/id_ecdsa_crc
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 ```

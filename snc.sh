@@ -24,7 +24,7 @@ INSTALL_DIR=crc-tmp-install-data
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 
@@ -331,9 +331,9 @@ fi
 # Destroy an existing cluster and resources
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
-
-rm id_rsa_crc* || true
-ssh-keygen -N "" -f id_rsa_crc -C "core"
+# Create a 521bit ECDSA Key
+rm id_ecdsa_crc* || true
+ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 
 # Use dnsmasq as dns in network manager config
 if ! grep -iqR dns=dnsmasq /etc/NetworkManager/conf.d/ ; then
@@ -374,7 +374,7 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
 ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
+${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_ecdsa_crc.pub)"
 
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
