@@ -300,7 +300,11 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/co
 if [[ ${OKD_VERSION} != "none" ]]
 then
     # Install the hyperV and libvarlink-util rpms to VM
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons libvarlink-util'
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
 else
     # Download the hyperV daemons and libvarlink-util dependency on host
     mkdir $1/packages
