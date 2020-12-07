@@ -11,13 +11,15 @@ source snc-library.sh
 # kill all the child processes for this script when it exits
 trap 'kill -9 $(jobs -p) || true' EXIT
 
-# If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, MIRROR, and OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
-# Unless, those variables are explicitly set as well.
-OKD_VERSION=${OKD_VERSION:-none}
-if [[ ${OKD_VERSION} != "none" ]]
+OPENSHIFT_RELEASE_VERSION=4.6.8
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=empty
+export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+
+if [[ ${OPENSHIFT_RELEASE_VERSION} =~ "okd" ]]
 then
-    OPENSHIFT_VERSION=${OKD_VERSION}
     MIRROR=${MIRROR:-https://github.com/openshift/okd/releases/download}
+else
+    MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 fi
 
 INSTALL_DIR=crc-tmp-install-data
@@ -25,27 +27,11 @@ CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
-
-# If user defined the OPENSHIFT_VERSION environment variable then use it.
-# Otherwise use the tagged version if available
-if test -n "${OPENSHIFT_VERSION-}"; then
-    OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
-    echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
-else
-    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.6/release.txt | sed -n 's/^ *Version: *//p')"
-    if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
-        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
-    else
-        echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
-        exit 1
-    fi
-fi
 
 # Download the oc binary for all platforms
 mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
-if [[ ${OKD_VERSION} != "none" ]]
+if [[ ${OPENSHIFT_RELEASE_VERSION} =~ "okd" ]]
 then
     curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
     curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
@@ -67,16 +53,6 @@ elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
     echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
     exit 1
 fi
-
-if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
-    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
-elif test -n "${OPENSHIFT_VERSION-}"; then
-    echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
-    echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
-    echo "OPENSHIFT_VERSION: $OPENSHIFT_VERSION"
-fi
-echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
