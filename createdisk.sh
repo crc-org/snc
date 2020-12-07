@@ -184,7 +184,7 @@ tar cSf - --sort=name $libvirtDestDir | xz --threads=0 >$libvirtDestDir.$crcBund
 # the content of $libvirtDestDir
 hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
 mkdir $hyperkitDestDir
-generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1
+generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1 $kernel_release $kernel_cmd_line
 
 tar cSf - --sort=name $hyperkitDestDir | xz --threads=0 >$hyperkitDestDir.$crcBundleSuffix
 

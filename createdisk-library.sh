@@ -174,6 +174,8 @@ function generate_hyperkit_directory {
     local srcDir=$1
     local destDir=$2
     local tmpDir=$3
+    local kernel_release=$4
+    local kernel_cmd_line=$5
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
