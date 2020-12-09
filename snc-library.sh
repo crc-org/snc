@@ -200,7 +200,8 @@ function renew_certificates() {
     # Retry 5 times to make sure kubelet certs are rotated correctly.
     i=0
     while [ $i -lt 5 ]; do
-        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+        if ! (${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem && \
+           ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt); then
 	    # Wait until bootstrap csr request is generated with 5 min timeout
 	    echo "Retry loop $i, wait for 60sec before starting next loop"
             sleep 60
@@ -209,8 +210,9 @@ function renew_certificates() {
         fi
 	i=$[$i+1]
     done
+    if ! (${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem && \
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /etc/kubernetes/static-pod-resources/kube-apiserver-certs/configmaps/aggregator-client-ca/ca-bundle.crt); then
 
-    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
         echo "Certs are not yet rotated to have 30 days validity"
 	exit 1
     fi
