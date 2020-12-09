@@ -91,21 +91,21 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.
 
 if [[ ${OKD_VERSION} != "none" ]]
 then
-    # Install the hyperV and libvarlink-util rpms to VM
+    # Install the hyperV rpms to VM
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons libvarlink-util'
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons'
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
 else
-    # Download the hyperV daemons and libvarlink-util dependency on host
+    # Download the hyperV daemons dependency on host
     mkdir $1/packages
-    sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons libvarlink-util
+    sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons
 
     # SCP the downloaded rpms to VM
     ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 
-    # Install the hyperV and libvarlink-util rpms to VM
+    # Install the hyperV rpms to VM
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
 
     # Remove the packages from VM
