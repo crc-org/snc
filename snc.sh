@@ -145,6 +145,9 @@ ${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_ecdsa_
 # Create the manifests using the INSTALL_DIR
 OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
+# Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
+${YQ} merge -i ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
+
 # Add custom domain to cluster-ingress
 ${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
 # Add master memory to 12 GB and 6 cpus 
@@ -179,7 +182,6 @@ fi
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
-
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
@@ -192,16 +194,9 @@ create_pvs "${CRC_PV_DIR}" 30
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
-retry ${OC} patch clusterversion version --type json -p "$(cat cvo_override.yaml)"
-
-# Clean-up 'openshift-monitoring' namespace
-delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
-# Delete prometheus rule application webhook
-retry ${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
+# Objects declared in this file are still created by the CVO at startup.
+# The CVO won't modify these objects anymore with the following command. Hence, we can remove them afterwards.
+retry ${OC} patch clusterversion version --type json -p "$(cat cvo-overrides-after-first-run.yaml)"
 
 # Delete the pods which are there in Complete state
 retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
@@ -228,10 +223,6 @@ retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-s
 
 # Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
 retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
-
-# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
-# Since this CRD block namespace deletion forever.
-retry ${OC} delete apiservice v1beta1.metrics.k8s.io
 
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
