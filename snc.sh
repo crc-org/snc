@@ -210,8 +210,5 @@ retry ${OC} delete apiservice v1beta1.metrics.k8s.io
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
-# Scale etcd-quorum deployment from 3 to 1
-retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
-
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge

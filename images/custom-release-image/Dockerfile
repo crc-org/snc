@@ -5,6 +5,7 @@ RUN curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd
 
 RUN yq w -i ./release-manifests/0000_50_cluster-authentication-operator_02_config.cr.yaml 'spec.unsupportedConfigOverrides.useUnsupportedUnsafeNonHANonProductionUnstableOAuthServer' true
 RUN yq w -i ./release-manifests/0000_12_etcd-operator_01_operator.cr.yaml 'spec.unsupportedConfigOverrides.useUnsupportedUnsafeNonHANonProductionUnstableEtcd' true
+RUN yq w -i ./release-manifests/0000_12_etcd-operator_08_etcdquorumguard_deployment.yaml 'spec.replicas' 1
 
 RUN rm /usr/bin/yq
 
