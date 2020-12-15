@@ -86,6 +86,9 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl 
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
 
+# Remove audit logs
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
+
 if [[ ${OKD_VERSION} != "none" ]]
 then
     # Install the hyperV and libvarlink-util rpms to VM
