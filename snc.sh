@@ -25,7 +25,7 @@ CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/pre-release}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
@@ -34,7 +34,7 @@ if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
-    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.6/release.txt | sed -n 's/^ *Version: *//p')"
+    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/release.txt | sed -n 's/^ *Version: *//p')"
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
         echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
     else
@@ -47,13 +47,13 @@ fi
 mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
 if [[ ${OKD_VERSION} != "none" ]]
 then
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
+    curl -L "${MIRROR}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+    curl -L "${MIRROR}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+    curl -L "${MIRROR}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
 else
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
+    curl -L "${MIRROR}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
+    curl -L "${MIRROR}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
+    curl -L "${MIRROR}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
 fi
 ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
 OC=./openshift-clients/linux/oc
@@ -69,7 +69,7 @@ elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
 fi
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/release.txt" | sed -n 's/^Pull From: //p')"
 elif test -n "${OPENSHIFT_VERSION-}"; then
     echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
