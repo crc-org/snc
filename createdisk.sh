@@ -171,32 +171,32 @@ get_dest_dir
 destDirSuffix="${DEST_DIR}"
 
 libvirtDestDir="crc_libvirt_${destDirSuffix}"
-mkdir $libvirtDestDir
+mkdir "$libvirtDestDir"
 
-create_qemu_image $libvirtDestDir
+create_qemu_image "$libvirtDestDir"
 
-copy_additional_files $1 $libvirtDestDir
+copy_additional_files "$1" "$libvirtDestDir"
 
-tar cSf - --sort=name $libvirtDestDir | xz --threads=0 >$libvirtDestDir.$crcBundleSuffix
+tar cSf - --sort=name "$libvirtDestDir" | xz --threads=0 >"$libvirtDestDir.$crcBundleSuffix"
 
 # HyperKit image generation
 # This must be done after the generation of libvirt image as it reuse some of
 # the content of $libvirtDestDir
 hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
-mkdir $hyperkitDestDir
-generate_hyperkit_directory $libvirtDestDir $hyperkitDestDir $1 $kernel_release $kernel_cmd_line
+mkdir "$hyperkitDestDir"
+generate_hyperkit_directory "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 
-tar cSf - --sort=name $hyperkitDestDir | xz --threads=0 >$hyperkitDestDir.$crcBundleSuffix
+tar cSf - --sort=name "$hyperkitDestDir" | xz --threads=0 >"$hyperkitDestDir.$crcBundleSuffix"
 
 # HyperV image generation
 #
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 hypervDestDir="crc_hyperv_${destDirSuffix}"
-mkdir $hypervDestDir
-generate_hyperv_directory $libvirtDestDir $hypervDestDir
+mkdir "$hypervDestDir"
+generate_hyperv_directory "$libvirtDestDir" "$hypervDestDir"
 
-tar cSf - --sort=name $hypervDestDir | xz --threads=0 >$hypervDestDir.$crcBundleSuffix
+tar cSf - --sort=name "$hypervDestDir" | xz --threads=0 >"$hypervDestDir.$crcBundleSuffix"
 
 # Cleanup up vmlinux/initramfs files
-rm -fr $1/vmlinuz* $1/initramfs*
+rm -fr "$1/vmlinuz*" "$1/initramfs*"
