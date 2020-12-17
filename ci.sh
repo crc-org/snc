@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Force yq download
+export YQ=./yq
+
 ./snc.sh
 if [[ $? -ne 0 ]]; then
   exit 1
