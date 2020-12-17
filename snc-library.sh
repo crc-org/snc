@@ -82,7 +82,7 @@ function replace_pull_secret() {
         # get leaked in CI logs
         set +x
         local filename=$1
-        sed -i "s!@HIDDEN_PULL_SECRET@!$(cat $OPENSHIFT_PULL_SECRET_PATH)!" $filename
+        ${YQ} write --inplace $filename --style literal pullSecret "$(< $OPENSHIFT_PULL_SECRET_PATH)"
         set -x
 }
 
