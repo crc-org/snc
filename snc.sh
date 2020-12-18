@@ -179,7 +179,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HO
 
 create_json_description
 
-
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
 
@@ -201,19 +200,6 @@ retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-a
 # Clean-up 'openshift-machine-config-operator' namespace
 delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
 retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
-
-# Clean-up 'openshift-insights' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
-
-# Clean-up 'openshift-cloud-credential-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
-
-# Clean-up 'openshift-cluster-storage-operator' namespace
-delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
-
-# Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
 
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
