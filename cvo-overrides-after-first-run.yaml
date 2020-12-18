@@ -82,10 +82,25 @@
     namespace: ""
     unmanaged: true
   # only used in bootstrap phase
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: machine-api
+    namespace: ""
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: machine-config
+    namespace: ""
+    unmanaged: true
   - kind: Deployment
     group: apps/v1
     name: machine-config-operator
     namespace: openshift-machine-config-operator
+    unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: machine-api-operator
+    namespace: openshift-machine-api
     unmanaged: true
   # required to scale down etcd-quorum-guard
   - kind: Deployment
