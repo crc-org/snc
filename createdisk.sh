@@ -19,10 +19,9 @@ if [[ ${OKD_VERSION} != "none" ]]
 then
     OPENSHIFT_VERSION=${OKD_VERSION}
     BASE_OS=fedora-coreos
-    USE_LUKS=false
 fi
 BASE_OS=${BASE_OS:-rhcos}
-USE_LUKS=${USE_LUKS:-true}
+USE_LUKS=${USE_LUKS:-false}
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
 # BASE_DOMAIN: domain used for the cluster
