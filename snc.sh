@@ -9,7 +9,7 @@ source tools.sh
 source snc-library.sh
 
 # kill all the child processes for this script when it exits
-trap 'jobs=($(jobs -p)); ((${#jobs})) && kill "${jobs[@]}" || true; exit 0' TERM
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, MIRROR, and OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 # Unless, those variables are explicitly set as well.
