@@ -199,7 +199,7 @@ delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" 
 delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
 delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
 delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
+retry ${OC} delete statefulset,deployment,daemonset,route --all -n openshift-monitoring
 # Delete prometheus rule application webhook
 retry ${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
 
