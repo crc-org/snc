@@ -89,37 +89,14 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/co
 # Remove audit logs
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
-if [[ ${OKD_VERSION} != "none" ]]
-then
-    # Install the hyperV rpms to VM
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons'
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
-else
-    # Download the hyperV daemons dependency on host
-    mkdir $1/packages
-    sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons
+if [ "${ARCH}" != "ppc64le" ]; then
+        prepare_hyperV
 
-    # SCP the downloaded rpms to VM
-    ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
-
-    # Install the hyperV rpms to VM
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
-
-    # Remove the packages from VM
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
-
-    # Cleanup up packages
-    rm -fr $1/packages
-fi
-
-# Adding Hyper-V vsock support
-
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+        # Adding Hyper-V vsock support
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
     echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
+fi
 
 # Add gvisor-tap-vsock service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
@@ -187,24 +164,26 @@ copy_additional_files "$1" "$libvirtDestDir"
 
 tar cSf - --sort=name "$libvirtDestDir" | xz --threads=0 >"$libvirtDestDir.$crcBundleSuffix"
 
-# HyperKit image generation
-# This must be done after the generation of libvirt image as it reuse some of
-# the content of $libvirtDestDir
-hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
-mkdir "$hyperkitDestDir"
-generate_hyperkit_directory "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+if [ "${ARCH}" != "ppc64le" ]; then
+        # HyperKit image generation
+        # This must be done after the generation of libvirt image as it reuse some of
+        # the content of $libvirtDestDir
+        hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
+        mkdir "$hyperkitDestDir"
+        generate_hyperkit_directory "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 
-tar cSf - --sort=name "$hyperkitDestDir" | xz --threads=0 >"$hyperkitDestDir.$crcBundleSuffix"
+        tar cSf - --sort=name "$hyperkitDestDir" | xz --threads=0 >"$hyperkitDestDir.$crcBundleSuffix"
 
-# HyperV image generation
-#
-# This must be done after the generation of libvirt image as it reuses some of
-# the content of $libvirtDestDir
-hypervDestDir="crc_hyperv_${destDirSuffix}"
-mkdir "$hypervDestDir"
-generate_hyperv_directory "$libvirtDestDir" "$hypervDestDir"
+        # HyperV image generation
+        #
+        # This must be done after the generation of libvirt image as it reuses some of
+        # the content of $libvirtDestDir
+        hypervDestDir="crc_hyperv_${destDirSuffix}"
+        mkdir "$hypervDestDir"
+        generate_hyperv_directory "$libvirtDestDir" "$hypervDestDir"
 
-tar cSf - --sort=name "$hypervDestDir" | xz --threads=0 >"$hypervDestDir.$crcBundleSuffix"
+        tar cSf - --sort=name "$hypervDestDir" | xz --threads=0 >"$hypervDestDir.$crcBundleSuffix"
+fi
 
 # Cleanup up vmlinux/initramfs files
 rm -fr "$1/vmlinuz*" "$1/initramfs*"

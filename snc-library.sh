@@ -10,6 +10,29 @@ function preflight_failure() {
         fi
 }
 
+function download_oc_binary() {
+        mkdir -p openshift-clients/linux
+
+        if [ "${ARCH}" != "ppc64le" ]; then
+                mkdir openshift-clients/mac openshift-clients/windows
+        fi
+
+        if [[ ${OKD_VERSION} != "none" ]]; then
+                curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+                if [ "${ARCH}" != "ppc64le" ]; then
+                        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+                        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
+                fi
+        else
+                curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
+                if [ "${ARCH}" != "ppc64le" ]; then
+                        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
+                        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
+                        ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
+                fi
+        fi
+}
+
 function run_preflight_checks() {
         echo "Checking libvirt and DNS configuration"
 

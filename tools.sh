@@ -61,6 +61,7 @@ fi
 if ! which ${DIG}; then
     sudo yum -y install /usr/bin/dig
 fi
+# only windows oc binary needs to be unzipped
 if ! which ${UNZIP}; then
     sudo yum -y install /usr/bin/unzip
 fi
