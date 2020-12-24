@@ -196,7 +196,7 @@ function generate_hyperkit_directory {
         >$destDir/crc-bundle-info.json
 }
 
-function prepare_hyperV {
+function prepare_hyperV() {
 
         if [[ ${OKD_VERSION} != "none" ]]; then
                 # Install the hyperV and libvarlink-util rpms to VM

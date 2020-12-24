@@ -90,7 +90,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/co
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
 if [ "${ARCH}" != "ppc64le" ]; then
-        prepare_hyperV
+        prepare_hyperV "$1"
 
         # Adding Hyper-V vsock support
         ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
