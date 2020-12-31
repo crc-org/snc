@@ -29,4 +29,4 @@ export SNC_VALIDATE_CERT=false
 set +exuo pipefail
 
 # Destroy the cluster
-./openshift-install destroy cluster --dir crc-tmp-install-data
+./openshift-baremetal-install destroy cluster --dir crc-tmp-install-data
