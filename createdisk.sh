@@ -72,7 +72,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl unmask chronyd
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable chronyd
 
 # Enable the podman.socket service for API V2
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable podman.socket
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable podman.socket
 
 # Remove all the pods except openshift-sdn from the VM
 pods=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl pods -o json | jq '.items[] | select(.metadata.namespace != "openshift-sdn")' | jq -r .id)
