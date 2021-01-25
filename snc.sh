@@ -9,7 +9,7 @@ source tools.sh
 source snc-library.sh
 
 # kill all the child processes for this script when it exits
-trap 'jobs=($(jobs -p)); ((${#jobs})) && kill "${jobs[@]}" || true; exit 0' TERM
+trap 'jobs=($(jobs -p)); [ -n "${jobs-}" ] && ((${#jobs})) && kill "${jobs[@]}" || true; exit 0' EXIT
 
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, MIRROR, and OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 # Unless, those variables are explicitly set as well.
@@ -45,16 +45,9 @@ fi
 
 # Download the oc binary for all platforms
 mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
-if [[ ${OKD_VERSION} != "none" ]]
-then
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
-else
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
-fi
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
 ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
 OC=./openshift-clients/linux/oc
 
@@ -79,11 +72,9 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
-    echo "Extracting installer binary from OpenShift baremetal-installer image"
-    baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
-    chmod +x openshift-install
-    OPENSHIFT_INSTALL=./openshift-install
+    echo "Extracting OpenShift baremetal installer binary"
+    ${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-baremetal-install --to .
+    OPENSHIFT_INSTALL=./openshift-baremetal-install
 fi
 
 

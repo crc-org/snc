@@ -73,7 +73,7 @@ EOF
 
     ${GUESTFISH} --remote -- exit
 
-    ${QEMU_IMG} convert -p -f qcow2 -O qcow2 -o lazy_refcounts=on $baseDir/$srcFile $baseDir/$destFile
+    ${QEMU_IMG} convert -f qcow2 -O qcow2 -o lazy_refcounts=on $baseDir/$srcFile $baseDir/$destFile
     if [ $? -ne 0 ]; then
             echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
