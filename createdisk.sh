@@ -153,7 +153,11 @@ ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${BASE_OS}-${ostree_h
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo nmcli conn add type dummy ifname eth10 con-name internalEtcd ip4 ${INTERNAL_IP}/24  && sudo nmcli conn up internalEtcd"
 
 # Add internalIP as node IP for kubelet systemd unit file
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo sed -i.back '/kubelet /a\      --node-ip="${INTERNAL_IP}" \\\' /etc/systemd/system/kubelet.service"
+# More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    echo '[Service]' > /etc/systemd/system/kubelet.service.d/80-nodeip.conf
+    echo 'Environment=KUBELET_NODE_IP="${INTERNAL_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
+EOF
 
 # Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1729603
 # TODO: Should be removed once latest podman available or the fix is backported.
