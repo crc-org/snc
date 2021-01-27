@@ -24,7 +24,6 @@ done
 
 set -exuo pipefail
 # Run createdisk script
-export SNC_VALIDATE_CERT=false
 ./createdisk.sh crc-tmp-install-data
 set +exuo pipefail
 
