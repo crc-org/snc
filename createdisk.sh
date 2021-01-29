@@ -42,7 +42,7 @@ retry ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
 retry ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
 # Remove unused images from container storage
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl images -q | xargs -n 1 sudo crictl rmi 2>/dev/null || true'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 
 # Replace pull secret with a null json string '{}'
 retry ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
