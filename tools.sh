@@ -32,7 +32,7 @@ esac
 # Download yq/jq for manipulating in place yaml configs
 if ! "${YQ}" -V; then
     if [[ ! -e yq ]]; then
-        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_${yq_ARCH} -o yq
+        curl -L https://github.com/mikefarah/yq/releases/download/v4.5.1/yq_linux_${yq_ARCH} -o yq
         chmod +x yq
     fi
     YQ=./yq

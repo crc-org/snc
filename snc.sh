@@ -120,30 +120,30 @@ fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].architecture ${yq_ARCH}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml controlPlane.architecture ${yq_ARCH}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
+${YQ} eval --inplace ".compute[0].architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".controlPlane.architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".metadata.name = \"${CRC_VM_NAME}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace '.pullSecret = "@HIDDEN_PULL_SECRET@"' ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_ecdsa_crc.pub)"
+${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
 OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
 # Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
-${YQ} merge -i ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
+${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
 
 # Add custom domain to cluster-ingress
-${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
+${YQ} eval --inplace ".spec.domain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
 # Add master memory to 12 GB and 6 cpus 
 # This is only valid for openshift 4.3 onwards
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 14336
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
+${YQ} eval --inplace '.spec.providerSpec.value.domainMemory = 14336' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+${YQ} eval --inplace '.spec.providerSpec.value.domainVcpu = 6' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 # Add master disk size to 31 GiB
 # This is only valid for openshift 4.5 onwards
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value.volume[volumeSize] 33285996544
+${YQ} eval --inplace '.spec.providerSpec.value.volume.volumeSize = 33285996544' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 # Add network resource to lower the mtu for CNV
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
