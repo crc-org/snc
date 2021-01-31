@@ -98,7 +98,7 @@ function replace_pull_secret() {
         # get leaked in CI logs
         set +x
         local filename=$1
-        ${YQ} write --inplace $filename --style literal pullSecret "$(< $OPENSHIFT_PULL_SECRET_PATH)"
+	pull_secret="$(< $OPENSHIFT_PULL_SECRET_PATH)" ${YQ} eval --inplace '.pullSecret = strenv(pull_secret) | .pullSecret style="literal"' $filename
         set -x
 }
 
