@@ -62,7 +62,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
 # Remove system reserved block from kubelet config
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} cat /etc/kubernetes/kubelet.conf \
-  | ${YQ} delete - systemReserved \
+  | ${YQ} eval 'del(.systemReserved)' - \
   | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo tee /etc/kubernetes/kubelet.conf
 
 # Unmask the chronyd service
