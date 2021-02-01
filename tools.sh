@@ -11,6 +11,7 @@ XMLLINT=${XMLLINT:-xmllint}
 
 DIG=${DIG:-dig}
 UNZIP=${UNZIP:-unzip}
+ZSTD=${ZSTD:-zstd}
 
 ARCH=$(uname -m)
 
@@ -63,6 +64,9 @@ if ! which ${DIG}; then
 fi
 if ! which ${UNZIP}; then
     sudo yum -y install /usr/bin/unzip
+fi
+if ! which ${ZSTD}; then
+    sudo yum -y install /usr/bin/zstd
 fi
 
 function retry {
