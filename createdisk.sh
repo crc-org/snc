@@ -174,9 +174,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=
 # Shutdown the VM
 shutdown_vm ${VM_PREFIX}
 
-# instead of .tar.xz we use .crcbundle
-crcBundleSuffix=crcbundle
-
 # libvirt image generation
 get_dest_dir
 destDirSuffix="${DEST_DIR}"
@@ -185,10 +182,8 @@ libvirtDestDir="crc_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir"
-
 copy_additional_files "$1" "$libvirtDestDir"
-
-tar cSf - --sort=name "$libvirtDestDir" | xz --threads=0 >"$libvirtDestDir.$crcBundleSuffix"
+create_tarball "$libvirtDestDir"
 
 # HyperKit image generation
 # This must be done after the generation of libvirt image as it reuse some of
@@ -196,8 +191,7 @@ tar cSf - --sort=name "$libvirtDestDir" | xz --threads=0 >"$libvirtDestDir.$crcB
 hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
 mkdir "$hyperkitDestDir"
 generate_hyperkit_directory "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
-
-tar cSf - --sort=name "$hyperkitDestDir" | xz --threads=0 >"$hyperkitDestDir.$crcBundleSuffix"
+create_tarball "$hyperkitDestDir"
 
 # HyperV image generation
 #
@@ -206,8 +200,7 @@ tar cSf - --sort=name "$hyperkitDestDir" | xz --threads=0 >"$hyperkitDestDir.$cr
 hypervDestDir="crc_hyperv_${destDirSuffix}"
 mkdir "$hypervDestDir"
 generate_hyperv_directory "$libvirtDestDir" "$hypervDestDir"
-
-tar cSf - --sort=name "$hypervDestDir" | xz --threads=0 >"$hypervDestDir.$crcBundleSuffix"
+create_tarball "$hypervDestDir"
 
 # Cleanup up vmlinux/initramfs files
 rm -fr "$1/vmlinuz*" "$1/initramfs*"

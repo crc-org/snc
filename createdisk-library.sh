@@ -221,3 +221,9 @@ function generate_hyperv_directory {
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 }
+
+function create_tarball {
+    local dirName=$1
+
+    tar cSf - --sort=name "$dirName" | xz --threads=0 >"$dirName".crcbundle"
+}
