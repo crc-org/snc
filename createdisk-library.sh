@@ -189,6 +189,7 @@ function generate_hyperkit_directory {
 
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
@@ -213,6 +214,7 @@ function generate_hyperv_directory {
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
+        | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vhdx\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.vhdx\"" \
         | ${JQ} '.storage.diskImages[0].format = "vhdx"' \
