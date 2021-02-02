@@ -170,6 +170,38 @@ function copy_additional_files {
     eventually_add_pull_secret $destDir
 }
 
+function prepare_hyperV() {
+    if [[ ${OKD_VERSION} != "none" ]]; then
+        # Install the hyperV and libvarlink-util rpms to VM
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons libvarlink-util'
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+    else
+        # Download the hyperV daemons and libvarlink-util dependency on host
+        mkdir $1/packages
+        sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons
+
+        # SCP the downloaded rpms to VM
+        ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+
+        # Install the hyperV and libvarlink-util rpms to VM
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+
+        # Remove the packages from VM
+        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
+
+        # Cleanup up packages
+        rm -fr $1/packages
+    fi
+
+    # Adding Hyper-V vsock support
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+            echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
+EOF
+}
+
 function generate_hyperkit_bundle {
     local srcDir=$1
     local destDir=$2
