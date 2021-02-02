@@ -2,6 +2,7 @@
 set -exuo pipefail
 
 SHELLCHECK=${SHELLCHECK:-shellcheck}
+#TODO: address ppc64le support
 
 if ! "${SHELLCHECK}" -V; then
     if [[ ! -e SHELLCHECK ]]; then
