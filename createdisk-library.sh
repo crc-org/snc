@@ -172,7 +172,7 @@ function copy_additional_files {
 
 function prepare_hyperV() {
 
-    if [ "${ARCH}" != "ppc64le" ]; then
+    if [ "${ARCH}" == "ppc64le" ]; then
         echo "hyperv is not available on ppc64le"
         return
     fi
