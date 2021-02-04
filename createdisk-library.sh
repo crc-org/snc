@@ -227,5 +227,5 @@ function generate_hyperv_directory {
 function create_tarball {
     local dirName=$1
 
-    tar cSf - --sort=name "$dirName" | ${ZSTD} --no-progress --ultra -22 --threads=0 -o "$dirName".crcbundle
+    tar cSf - --sort=name "$dirName" | ${ZSTD} --no-progress ${CRC_ZSTD_EXTRA_FLAGS} --threads=0 -o "$dirName".crcbundle
 }
