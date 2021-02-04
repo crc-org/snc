@@ -12,6 +12,7 @@ XMLLINT=${XMLLINT:-xmllint}
 DIG=${DIG:-dig}
 UNZIP=${UNZIP:-unzip}
 ZSTD=${ZSTD:-zstd}
+CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
 
 ARCH=$(uname -m)
 
