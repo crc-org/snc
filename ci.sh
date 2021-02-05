@@ -24,6 +24,7 @@ done
 
 set -exuo pipefail
 # Run createdisk script
+export CRC_ZSTD_EXTRA_FLAGS="-10 --long"
 ./createdisk.sh crc-tmp-install-data
 set +exuo pipefail
 
