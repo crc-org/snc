@@ -186,21 +186,21 @@ copy_additional_files "$1" "$libvirtDestDir"
 create_tarball "$libvirtDestDir"
 
 # HyperKit image generation
-# This must be done after the generation of libvirt image as it reuse some of
+# This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
-hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
-mkdir "$hyperkitDestDir"
-generate_hyperkit_directory "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
-create_tarball "$hyperkitDestDir"
+if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
+    generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+fi
 
 # HyperV image generation
 #
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
-hypervDestDir="crc_hyperv_${destDirSuffix}"
-mkdir "$hypervDestDir"
-generate_hyperv_directory "$libvirtDestDir" "$hypervDestDir"
-create_tarball "$hypervDestDir"
+if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+    hypervDestDir="crc_hyperv_${destDirSuffix}"
+    generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
+fi
 
 # Cleanup up vmlinux/initramfs files
 rm -fr "$1/vmlinuz*" "$1/initramfs*"
