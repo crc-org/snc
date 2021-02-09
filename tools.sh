@@ -16,12 +16,18 @@ CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
 
 ARCH=$(uname -m)
 
-
-yq_ARCH=${ARCH}
-# yq and install_config.yaml use amd64 as arch for x86_64
-if [ "${ARCH}" == "x86_64" ]; then
-    yq_ARCH="amd64"
-fi
+case "${ARCH}" in
+    x86_64)
+        yq_ARCH="amd64"
+        SNC_GENERATE_MACOS_BUNDLE=1
+	SNC_GENERATE_WINDOWS_BUNDLE=1
+	;;
+    *)
+        yq_ARCH=${ARCH}
+        SNC_GENERATE_MACOS_BUNDLE=
+        SNC_GENERATE_WINDOWS_BUNDLE=
+	;;
+esac
 
 # Download yq/jq for manipulating in place yaml configs
 if ! "${YQ}" -V; then
@@ -55,6 +61,11 @@ if ! rpm -q libguestfs-xfs; then
     sudo yum install libguestfs-xfs
 fi
 
+if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ];then
+    if ! which ${UNZIP}; then
+        sudo yum -y install /usr/bin/unzip
+    fi
+fi
 
 if ! which ${XMLLINT}; then
     sudo yum -y install /usr/bin/xmllint
@@ -63,9 +74,7 @@ fi
 if ! which ${DIG}; then
     sudo yum -y install /usr/bin/dig
 fi
-if ! which ${UNZIP}; then
-    sudo yum -y install /usr/bin/unzip
-fi
+
 if ! which ${ZSTD}; then
     sudo yum -y install /usr/bin/zstd
 fi

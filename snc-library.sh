@@ -10,6 +10,22 @@ function preflight_failure() {
         fi
 }
 
+function download_oc() {
+    mkdir -p openshift-clients/linux
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+
+    if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+        mkdir -p openshift-clients/mac
+        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+    fi
+    if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+        mkdir -p openshift-clients/windows
+        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
+        ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
+    fi
+}
+
+
 function run_preflight_checks() {
         echo "Checking libvirt and DNS configuration"
 
