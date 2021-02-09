@@ -170,13 +170,14 @@ function copy_additional_files {
     eventually_add_pull_secret $destDir
 }
 
-function generate_hyperkit_directory {
+function generate_hyperkit_bundle {
     local srcDir=$1
     local destDir=$2
     local tmpDir=$3
     local kernel_release=$4
     local kernel_cmd_line=$5
 
+    mkdir "$destDir"
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
@@ -195,11 +196,15 @@ function generate_hyperkit_directory {
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
         | ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
+
+    create_tarball "$destDir"
 }
 
-function generate_hyperv_directory {
+function generate_hyperv_bundle {
     local srcDir=$1
     local destDir=$2
+
+    mkdir "$destDir"
 
     cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
@@ -222,6 +227,8 @@ function generate_hyperv_directory {
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
+
+    create_tarball "$destDir"
 }
 
 function create_tarball {
