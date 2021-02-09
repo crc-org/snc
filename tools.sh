@@ -16,6 +16,19 @@ CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
 
 ARCH=$(uname -m)
 
+# Set the environment type based off the kernel name. 
+# NOTE: the kernel type is not the same as $OSTYPE
+case "$(uname -s)" in
+    Darwin*|darwin*)
+        ENV_TYPE="MACOS";;
+    Linux)
+        ENV_TYPE="LINUX";;
+    CYGWIN*|MINGW32*|MSYS*|MINGW*)
+        ENV_TYPE="WINDOWS";;
+    *)
+        echo "SNC runs on Linux, Windows, or Mac OS."
+        return 1;;
+esac
 
 yq_ARCH=${ARCH}
 # yq and install_config.yaml use amd64 as arch for x86_64
@@ -55,6 +68,11 @@ if ! rpm -q libguestfs-xfs; then
     sudo yum install libguestfs-xfs
 fi
 
+if [ "${ENV_TYPE}" == "WINDOWS" ];then
+    if ! which ${UNZIP}; then
+        sudo yum -y install /usr/bin/unzip
+    fi
+fi
 
 if ! which ${XMLLINT}; then
     sudo yum -y install /usr/bin/xmllint
@@ -63,9 +81,7 @@ fi
 if ! which ${DIG}; then
     sudo yum -y install /usr/bin/dig
 fi
-if ! which ${UNZIP}; then
-    sudo yum -y install /usr/bin/unzip
-fi
+
 if ! which ${ZSTD}; then
     sudo yum -y install /usr/bin/zstd
 fi
