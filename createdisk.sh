@@ -39,7 +39,7 @@ VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 retry ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
-retry ${OC} --kubeconfig $1/auth/kubeconfig apply -f htpasswd_cr.yaml
+retry ${OC} --kubeconfig $1/auth/kubeconfig apply -f oauth_cr.yaml
 retry ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
 
 # Remove unused images from container storage
