@@ -3,6 +3,8 @@ kind: OAuth
 metadata:
   name: cluster
 spec:
+  tokenConfig:
+    accessTokenMaxAgeSeconds: 0
   identityProviders:
   - name: developer
     mappingMethod: claim 
