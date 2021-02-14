@@ -36,6 +36,8 @@ elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
     exit 1
 fi
 
+run_preflight_checks
+
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
 if test -n "${OPENSHIFT_VERSION-}"; then
@@ -54,8 +56,6 @@ fi
 # Download the oc binary for specific OS environment
 download_oc
 OC=./openshift-clients/linux/oc
-
-run_preflight_checks
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
