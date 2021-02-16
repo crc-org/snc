@@ -125,7 +125,6 @@ ${YQ} eval --inplace ".controlPlane.architecture = \"${yq_ARCH}\"" ${INSTALL_DIR
 ${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".metadata.name = \"${CRC_VM_NAME}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.yaml
-${YQ} eval --inplace '.pullSecret = "@HIDDEN_PULL_SECRET@"' ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
