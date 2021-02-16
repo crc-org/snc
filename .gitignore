@@ -1,7 +1,7 @@
 id_ecdsa_crc
 id_ecdsa_crc.pub
 crc-tmp-install-data
-openshift-install
+openshift-baremetal-install
 pull-secret
 oc
 yq
