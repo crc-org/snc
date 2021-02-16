@@ -74,15 +74,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable chronyd
 # Enable the podman.socket service for API V2
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable podman.socket
 
-# Remove all the pods except openshift-sdn from the VM
-pods=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo crictl pods -o json | jq '.items[] | select(.metadata.namespace != "openshift-sdn")' | jq -r .id)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo crictl stopp "${pods}" || true"
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "for i in {1..3}; do sudo crictl rmp "${pods}" && break || sleep 2; done || true"
-
-# Remove openshift-sdn pods also from the VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl stopp $(sudo crictl pods -q) || true'
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmp $(sudo crictl pods -q) || true'
-
 # Remove pull secret from the VM
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
 
