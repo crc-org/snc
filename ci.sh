@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Force yq download
-export YQ=./yq
-
 set -exuo pipefail
 ./shellcheck.sh
 ./snc.sh
