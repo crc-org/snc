@@ -28,14 +28,6 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 
-if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
-    echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
-    exit 1
-elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
-    echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
-    exit 1
-fi
-
 run_preflight_checks
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
