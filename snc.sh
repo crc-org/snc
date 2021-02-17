@@ -196,3 +196,6 @@ retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"
 
 # Delete the pods which are there in Complete state
 retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
+
+# Wait for the cluster again to become stable because of all the patches/changes
+wait_till_cluster_stable
