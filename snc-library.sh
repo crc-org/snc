@@ -246,10 +246,62 @@ function delete_operator() {
         local namespace=$2
         local pod_selector=$3
 
-	retry ${OC} get pods
+        retry ${OC} get pods
         pod=$(${OC} get pod -l ${pod_selector} -o jsonpath="{.items[0].metadata.name}" -n ${namespace})
 
         retry ${OC} delete ${delete_object} -n ${namespace}
         # Wait until the operator pod is deleted before trying to delete the resources it manages
         ${OC} wait --for=delete pod/${pod} --timeout=120s -n ${namespace} || ${OC} delete pod/${pod} --grace-period=0 --force -n ${namespace} || true
 }
+
+function all_operators_available() {
+    # Check the cluster operator output, status for available should be true for all operators
+    # The single line oc get co output should not contain any occurrences of `False`
+    ${OC} get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Available")].status}' | grep -v False
+}
+
+function no_operators_progressing() {
+    # Check the cluster operator output, status for progressing should be false for all operators
+    # The single line oc get co output should not contain any occurrences of `True`
+    ${OC} get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Progressing")].status}' | grep -v True
+}
+
+function no_operators_degraded() {
+    # Check the cluster operator output, status for available should be false for all operators
+    # The single line oc get co output should not contain any occurrences of `True`
+    ${OC} get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Degraded")].status}' | grep -v True
+}
+
+function wait_till_cluster_stable() {
+    sleep 1m
+
+    local retryCount=30
+    local numConsecutive=3
+    local count=0
+
+    # Remove all the failed Pods
+    ${OC} delete pods --field-selector=status.phase=Failed -A || true
+
+    local a=0
+    while [ $a -lt $retryCount ]; do
+       if all_operators_available && no_operators_progressing && no_operators_degraded; then
+           echo "All operators are available. Ensuring stability ..."
+           count=$((count + 1))
+       else
+           echo "Some operators are still not available"
+           count=0
+       fi
+       if [ $count -eq $numConsecutive ]; then
+           echo "Cluster has stabilized"
+           break
+       fi
+       sleep 30s
+       a=$((a + 1))
+    done
+
+    # Wait till all the pods are either running or complete state
+    while oc get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed; do
+       sleep 2
+    done
+}
+

@@ -219,3 +219,9 @@ retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Delete the pods which are there in Complete state
+retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
+
+# Wait for the cluster again to become stable because of all the patches/changes
+wait_till_cluster_stable
