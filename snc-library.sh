@@ -27,6 +27,14 @@ function download_oc() {
 
 
 function run_preflight_checks() {
+        if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
+            echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
+            exit 1
+        elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
+            echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
+            exit 1
+        fi
+
         echo "Checking libvirt and DNS configuration"
 
         LIBVIRT_URI=qemu+tcp://localhost/system
