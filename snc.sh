@@ -27,6 +27,7 @@ CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
+DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 
 run_preflight_checks
 
@@ -222,6 +223,17 @@ retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"
 
 # Delete the pods which are there in Complete state
 retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
+
+# Add a user developer:developer with htpasswd identity provider and give it sudoer role
+retry ${OC} create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
+retry ${OC} apply -f oauth_cr.yaml
+retry ${OC} create clusterrolebinding developer --clusterrole=sudoer --user=developer
+
+# Replace pull secret with a null json string '{}'
+retry ${OC} replace -f pull-secret.yaml
+
+# Remove the Cluster ID with a empty string.
+retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable

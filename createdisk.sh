@@ -10,8 +10,6 @@ source createdisk-library.sh
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-OC=./openshift-clients/linux/oc
-DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS, and set USE_LUKS
 # Unless, those variables are explicitly set as well.
 OKD_VERSION=${OKD_VERSION:-none}
@@ -37,19 +35,8 @@ fi
 
 VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 
-# Add a user developer:developer with htpasswd identity provider and give it sudoer role
-retry ${OC} --kubeconfig $1/auth/kubeconfig create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
-retry ${OC} --kubeconfig $1/auth/kubeconfig apply -f oauth_cr.yaml
-retry ${OC} --kubeconfig $1/auth/kubeconfig create clusterrolebinding developer --clusterrole=sudoer --user=developer
-
 # Remove unused images from container storage
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
-
-# Replace pull secret with a null json string '{}'
-retry ${OC} --kubeconfig $1/auth/kubeconfig replace -f pull-secret.yaml
-
-# Remove the Cluster ID with a empty string.
-retry ${OC} --kubeconfig $1/auth/kubeconfig patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
 # Get the IP of the VM
 INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
