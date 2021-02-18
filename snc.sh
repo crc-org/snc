@@ -195,9 +195,6 @@ retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
-# Delete the pods which are there in Complete state
-retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
-
 # Add a user developer:developer with htpasswd identity provider and give it sudoer role
 retry ${OC} create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
 retry ${OC} apply -f oauth_cr.yaml
@@ -211,3 +208,6 @@ retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type m
 
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
+
+# Delete the pods which are there in Complete state
+retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
