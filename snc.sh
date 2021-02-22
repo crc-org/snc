@@ -25,6 +25,7 @@ CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
+SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
@@ -205,6 +206,17 @@ retry ${OC} replace -f pull-secret.yaml
 
 # Remove the Cluster ID with a empty string.
 retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+
+# SCP the kubeconfig file to VM
+${SCP} ${KUBECONFIG} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
+
+# Export all manifests to the disk, modify them and use them in the CVO
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo mkdir /opt/release-manifests/
+CVO_POD_NAME=$(${OC} -n openshift-cluster-version get pods -o=name)
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo KUBECONFIG=/opt/kubeconfig oc rsync -n openshift-cluster-version ${CVO_POD_NAME}:/release-manifests/ /opt/release-manifests/
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "s/replicas: 2/replicas: 1/" /opt/release-manifests/0000_50_console-operator_07-downloads-deployment.yaml'
+${OC} -n openshift-cluster-version patch deploy cluster-version-operator --type=json -p=$(cat custom-release.json | jq -c .)
 
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
