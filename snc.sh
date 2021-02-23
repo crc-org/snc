@@ -75,7 +75,7 @@ else
 fi
 
 # Destroy an existing cluster and resources
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
 # Create a 521bit ECDSA Key
 rm id_ecdsa_crc* || true
@@ -122,7 +122,7 @@ replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
 
 # Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
 ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
@@ -151,7 +151,7 @@ cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' 
 apply_bootstrap_etcd_hack &
 apply_auth_hack &
 
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
 
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
@@ -159,7 +159,7 @@ then
 fi
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
