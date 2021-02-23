@@ -50,22 +50,22 @@ function sparsify {
             exit 1
     fi
 
-    guestfish --remote <<EOF
+    ${GUESTFISH} --remote <<EOF
 add-drive $baseDir/$srcFile
 run
 EOF
 
     if [[ ${USE_LUKS} == "true" ]]
     then
-        guestfish --remote <<EOF
+        ${GUESTFISH} --remote <<EOF
 luks-open $partition coreos-root
 mount /dev/mapper/coreos-root /
 EOF
     else
-        guestfish --remote mount $partition /
+        ${GUESTFISH} --remote mount $partition /
     fi
 
-    guestfish --remote zero-free-space /boot/
+    ${GUESTFISH} --remote zero-free-space /boot/
     if [ $? -ne 0 ]; then
             echo "Failed to sparsify $baseDir/$srcFile, aborting"
             exit 1
