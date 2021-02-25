@@ -110,7 +110,7 @@ function get_vm_prefix {
 
 function shutdown_vm {
     local vm_prefix=$1
-    sudo virsh shutdown ${vm_prefix}-master-0
+    retry sudo virsh shutdown ${vm_prefix}-master-0
     # Wait till instance started successfully
     until sudo virsh domstate ${vm_prefix}-master-0 | grep shut; do
         echo " ${vm_prefix}-master-0 still running"
@@ -120,7 +120,7 @@ function shutdown_vm {
 
 function start_vm {
     local vm_prefix=$1
-    sudo virsh start ${vm_prefix}-master-0
+    retry sudo virsh start ${vm_prefix}-master-0
     # Wait till ssh connection available
     until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
         echo " ${vm_prefix}-master-0 still booting"
