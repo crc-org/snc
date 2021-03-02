@@ -27,7 +27,7 @@ CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
-DEVELOPER_USER_PASS='developer:$2y$05$paX6Xc9AiLa6VT7qr2VvB.Qi.GJsaqS80TR3Kb78FEIlIL0YyBuyS'
+HTPASSWD_FILE='users.htpasswd'
 
 run_preflight_checks
 
@@ -195,10 +195,18 @@ retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd ||
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
-# Add a user developer:developer with htpasswd identity provider and give it sudoer role
-retry ${OC} create secret generic htpass-secret --from-literal=htpasswd=${DEVELOPER_USER_PASS} -n openshift-config
+# Generate the htpasswd file to have admin and developer user
+generate_htpasswd_file ${INSTALL_DIR} ${HTPASSWD_FILE}
+
+# Add a user developer with htpasswd identity provider and give it sudoer role
+# Add kubeadmin user with cluster-admin role
+retry ${OC} create secret generic htpass-secret --from-file=htpasswd=${HTPASSWD_FILE} -n openshift-config
 retry ${OC} apply -f oauth_cr.yaml
 retry ${OC} create clusterrolebinding developer --clusterrole=sudoer --user=developer
+retry ${OC} create clusterrolebinding kubeadmin --clusterrole=cluster-admin --user=kubeadmin
+
+# Remove temp kubeadmin user
+retry ${OC} delete secrets kubeadmin -n kube-system
 
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
