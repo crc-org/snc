@@ -13,6 +13,8 @@ UNZIP=${UNZIP:-unzip}
 ZSTD=${ZSTD:-zstd}
 CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
 
+HTPASSWD=${HTPASSWD:-htpasswd}
+
 ARCH=$(uname -m)
 
 case "${ARCH}" in
@@ -77,6 +79,10 @@ if ! which ${ZSTD}; then
     sudo yum -y install /usr/bin/zstd
 fi
 
+if ! which ${HTPASSWD}; then
+    sudo yum -y install /usr/bin/htpasswd
+fi
+
 function retry {
     local retries=10
     local count=0
@@ -126,6 +132,14 @@ function start_vm {
         echo " ${vm_prefix}-master-0 still booting"
         sleep 2
     done
+}
+
+function generate_htpasswd_file {
+   local auth_file_dir=$1
+   local pass_file=$2
+   random_password=$(cat $1/auth/kubeadmin-password)
+   ${HTPASSWD} -c -B -b ${pass_file} developer developer
+   ${HTPASSWD} -B -b ${pass_file} kubeadmin ${random_password}
 }
 
 # Restart the libvirt service after update
