@@ -101,24 +101,6 @@ kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cm
 # SCP the vmlinuz/initramfs from VM to Host in provided folder.
 ${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $1
 
-# Add a dummy network interface with internalIP
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat <<EOF | sudo tee /etc/systemd/system/dummy-network.service
-[Unit]
-Description=Create dummy network
-After=NetworkManager.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/nmcli conn add type dummy ifname eth10 autoconnect yes save yes con-name internalEtcd ip4 ${INTERNAL_IP}/24
-
-[Install]
-WantedBy=multi-user.target
-EOF"
-
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl daemon-reload
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable dummy-network.service
-
 # Add internalIP as node IP for kubelet systemd unit file
 # More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
