@@ -141,6 +141,8 @@ ${YQ} eval --inplace '.spec.providerSpec.value.volume.volumeSize = 33285996544' 
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
+# Add dummy network unit file
+cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
