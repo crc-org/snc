@@ -203,7 +203,6 @@ generate_htpasswd_file ${INSTALL_DIR} ${HTPASSWD_FILE}
 # Add kubeadmin user with cluster-admin role
 retry ${OC} create secret generic htpass-secret --from-file=htpasswd=${HTPASSWD_FILE} -n openshift-config
 retry ${OC} apply -f oauth_cr.yaml
-retry ${OC} create clusterrolebinding developer --clusterrole=sudoer --user=developer
 retry ${OC} create clusterrolebinding kubeadmin --clusterrole=cluster-admin --user=kubeadmin
 
 # Remove temp kubeadmin user
