@@ -154,7 +154,7 @@ cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' 
 apply_bootstrap_etcd_hack &
 apply_auth_hack &
 
-OPENSHIFT_INSTALL_EXPERIMENTAL_CLUSTER_PROFILE=single-node-developer ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
+OPENSHIFT_INSTALL_EXPERIMENTAL_CLUSTER_PROFILE=single-node-developer ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || ${OC} adm must-gather --dest-dir ${INSTALL_DIR}
 
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
