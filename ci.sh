@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-sudo yum install -y podman make golang
+sudo yum install -y podman make golang rsync
 
 cat > /tmp/ignoretests.txt << EOF
 [sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
