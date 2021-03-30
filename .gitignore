@@ -6,3 +6,4 @@ pull-secret
 oc
 yq
 openshift-clients/
+podman-remote/

@@ -92,6 +92,9 @@ function update_json_description {
     ocSize=$(du -b $destDir/oc | awk '{print $1}')
     ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
 
+    podmanSize=$(du -b $destDir/podman-remote | awk '{print $1}')
+    podmanSha256Sum=$(sha256sum $destDir/podman-remote | awk '{print $1}')
+
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_ecdsa_crc"' \
@@ -110,6 +113,10 @@ function update_json_description {
         | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
         | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[1].name = \"podman-remote\"" \
+        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "libvirt"' \
         >$destDir/crc-bundle-info.json
 }
@@ -140,6 +147,8 @@ function copy_additional_files {
 
     # Copy oc client
     cp openshift-clients/linux/oc $destDir/
+
+    cp podman-remote/linux/podman-remote $destDir/
 
     update_json_description $srcDir $destDir
 
@@ -196,8 +205,13 @@ function generate_hyperkit_bundle {
     # Copy oc client
     cp openshift-clients/mac/oc $destDir/
 
+    cp podman-remote/mac/podman $destDir/
+
     ocSize=$(du -b $destDir/oc | awk '{print $1}')
     ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
+
+    podmanSize=$(du -b $destDir/podman | awk '{print $1}')
+    podmanSha256Sum=$(sha256sum $destDir/podman | awk '{print $1}')
 
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
@@ -209,6 +223,10 @@ function generate_hyperkit_bundle {
         | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
         | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[1].name = \"podman\"" \
+        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
 
@@ -228,6 +246,8 @@ function generate_hyperv_bundle {
     # Copy oc client
     cp openshift-clients/windows/oc.exe $destDir/
 
+    cp podman-remote/windows/podman.exe $destDir/
+
     ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
 
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
@@ -235,6 +255,9 @@ function generate_hyperv_bundle {
 
     ocSize=$(du -b $destDir/oc.exe | awk '{print $1}')
     ocSha256Sum=$(sha256sum $destDir/oc.exe | awk '{print $1}')
+
+    podmanSize=$(du -b $destDir/podman.exe | awk '{print $1}')
+    podmanSha256Sum=$(sha256sum $destDir/podman.exe | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
@@ -247,6 +270,10 @@ function generate_hyperv_bundle {
         | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
         | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[1].name = \"podman.exe\"" \
+        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 
@@ -257,4 +284,24 @@ function create_tarball {
     local dirName=$1
 
     tar cSf - --sort=name "$dirName" | ${ZSTD} --no-progress ${CRC_ZSTD_EXTRA_FLAGS} --threads=0 -o "$dirName".crcbundle
+}
+
+function download_podman() {
+    local version=$1
+
+    mkdir -p podman-remote/linux
+    curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-static.tar.gz | tar -zx -C podman-remote/linux podman-remote-static
+    mv podman-remote/linux/podman-remote-static podman-remote/linux/podman-remote
+
+    if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+      mkdir -p podman-remote/mac
+      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin.zip -o podman-remote/mac/podman.zip
+      ${UNZIP} -o -d podman-remote/mac/ podman-remote/mac/podman.zip
+    fi
+
+    if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+      mkdir -p podman-remote/windows
+      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-windows.zip -o podman-remote/windows/podman.zip
+      ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
+    fi
 }
