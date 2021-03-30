@@ -113,6 +113,8 @@ EOF
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100-crio-bridge.conf'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
 
+podman_version=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'podman version -f json | jq -r .Client.Version')
+
 # Remove the journal logs.
 # Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
 # remove all the journal logs so separate commands are used here.
@@ -121,6 +123,9 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=
 
 # Shutdown the VM
 shutdown_vm ${VM_PREFIX}
+
+# Download podman clients
+download_podman $podman_version
 
 # libvirt image generation
 get_dest_dir
