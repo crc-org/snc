@@ -82,7 +82,7 @@
       {
         # Name of the file
 	"name": "oc"
-	# What kind of file this is, valid types are 'oc-executable'
+	# What kind of file this is, valid types are 'oc-executable', 'podman-executable'
 	"type": "oc-executable"
 	"size": "72728632"
 	"sha256sum": "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047"
