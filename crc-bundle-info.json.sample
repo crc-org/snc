@@ -2,7 +2,11 @@
   # Version of the bundle, used to denote format changes
   # Major is only increased changes incompatible with previous versions
   # Minor is increased for backwards-compatible changes
-  "version": "1.1",
+  #
+  # Version history:
+  # - 1.1: addition of 'name'
+  # - 1.2: addition of 'storage.fileList'
+  "version": "1.2",
   # Type of this bundle content
   # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
   "type": "snc",
@@ -69,6 +73,19 @@
         "format": "qcow2"
 	"size": "9129426944"
 	"sha256sum": "49766122a0834d62c1a24fb4e0de30cd7a39b8112083aa5e01fc26f16c15aed3"
+      }
+    ],
+    # Information about the other files present in the bundle
+    # In version 1.2, this only lists the files which are not mentioned
+    # anywhere else in this file
+    "fileList": [
+      {
+        # Name of the file
+	"name": "oc"
+	# What kind of file this is, valid types are 'oc-executable'
+	"type": "oc-executable"
+	"size": "72728632"
+	"sha256sum": "983f0883a6dffd601afa663d10161bfd8033fd6d45cf587a9cb22e9a681d6047"
       }
     ]
   },

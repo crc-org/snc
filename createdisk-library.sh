@@ -102,6 +102,9 @@ function update_json_description {
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
 
+    ocSize=$(du -b $destDir/oc | awk '{print $1}')
+    ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
+
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_ecdsa_crc"' \
@@ -116,6 +119,10 @@ function update_json_description {
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"oc\"" \
+        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "libvirt"' \
         >$destDir/crc-bundle-info.json
 }
@@ -202,12 +209,19 @@ function generate_hyperkit_bundle {
     # Copy oc client
     cp openshift-clients/mac/oc $destDir/
 
+    ocSize=$(du -b $destDir/oc | awk '{print $1}')
+    ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
+
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"oc\"" \
+        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
 
@@ -232,6 +246,9 @@ function generate_hyperv_bundle {
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
 
+    ocSize=$(du -b $destDir/oc.exe | awk '{print $1}')
+    ocSha256Sum=$(sha256sum $destDir/oc.exe | awk '{print $1}')
+
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vhdx\"" \
@@ -239,6 +256,10 @@ function generate_hyperv_bundle {
         | ${JQ} '.storage.diskImages[0].format = "vhdx"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"oc.exe\"" \
+        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 

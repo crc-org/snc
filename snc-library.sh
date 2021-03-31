@@ -133,7 +133,7 @@ function apply_auth_hack() {
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
-    echo {} | ${JQ} '.version = "1.1"' \
+    echo {} | ${JQ} '.version = "1.2"' \
             | ${JQ} '.type = "snc"' \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
