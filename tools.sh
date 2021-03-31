@@ -141,6 +141,3 @@ function generate_htpasswd_file {
    ${HTPASSWD} -c -B -b ${pass_file} developer developer
    ${HTPASSWD} -B -b ${pass_file} kubeadmin ${random_password}
 }
-
-# Restart the libvirt service after update
-sudo systemctl restart libvirtd
