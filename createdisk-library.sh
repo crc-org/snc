@@ -16,20 +16,6 @@ function get_dest_dir {
     fi
 }
 
-function create_crc_libvirt_sh {
-    local destDir=$1
-
-    hostInfo=$(sudo virsh net-dumpxml ${VM_PREFIX} | grep ${VM_PREFIX}-master-0 | sed "s/^[ \t]*//")
-    masterMac=$(sudo virsh dumpxml ${VM_PREFIX}-master-0 | grep "mac address" | sed "s/^[ \t]*//")
-
-    sed "s|ReplaceMeWithCorrectVmName|${CRC_VM_NAME}|g" crc_libvirt.template > $destDir/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectBaseDomain|${BASE_DOMAIN}|g" $destDir/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectHost|$hostInfo|g" $destDir/crc_libvirt.sh
-    sed -i "s|ReplaceMeWithCorrectMac|$masterMac|g" $destDir/crc_libvirt.sh
-
-    chmod +x $destDir/crc_libvirt.sh
-}
-
 function sparsify {
     local baseDir=$1
     local srcFile=$2
@@ -150,10 +136,6 @@ function eventually_add_pull_secret {
 function copy_additional_files {
     local srcDir=$1
     local destDir=$2
-
-    # Generate the libvirt sh file in source directory to test the disk image if required.
-    # Don't include this in the destDir so it will not be part of final disk tarball.
-    create_crc_libvirt_sh $srcDir
 
     # Copy the kubeconfig and kubeadm password file
     cp $1/auth/kube* $destDir/
