@@ -8,9 +8,6 @@ function get_dest_dir {
         DEST_DIR=$OPENSHIFT_VERSION
     else
         DEST_DIR=${PULL_NUMBER}
-        set +e
-        DEST_DIR=$(git describe --exact-match --tags HEAD)
-        set -e
         if [ -z ${DEST_DIR} ]; then
             DEST_DIR="$(date --iso-8601)"
         fi
