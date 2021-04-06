@@ -10,7 +10,7 @@ source createdisk-library.sh
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-# If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS, and set USE_LUKS
+# If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS
 # Unless, those variables are explicitly set as well.
 OKD_VERSION=${OKD_VERSION:-none}
 if [[ ${OKD_VERSION} != "none" ]]
@@ -19,7 +19,6 @@ then
     BASE_OS=fedora-coreos
 fi
 BASE_OS=${BASE_OS:-rhcos}
-USE_LUKS=${USE_LUKS:-false}
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
 # BASE_DOMAIN: domain used for the cluster
