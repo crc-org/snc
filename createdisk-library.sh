@@ -7,6 +7,7 @@ function get_dest_dir {
     if [ "${OPENSHIFT_VERSION-}" != "" ]; then
         DEST_DIR=$OPENSHIFT_VERSION
     else
+        DEST_DIR=${PULL_NUMBER}
         set +e
         DEST_DIR=$(git describe --exact-match --tags HEAD)
         set -e
