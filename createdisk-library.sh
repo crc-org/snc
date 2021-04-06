@@ -27,9 +27,6 @@ function sparsify {
     # https://bugzilla.redhat.com/show_bug.cgi?id=1837765
     export LIBGUESTFS_MEMSIZE=2048
     # Interact with guestfish directly
-    # Starting with 4.3, the root partition is an encryption-ready luks partition
-    # - virt-sparsify is not able to deal at all with this partition
-    # The following commands will do all of the above after mounting the luks partition
     eval $(echo nokey | ${GUESTFISH}  --keys-from-stdin --listen )
     if [ $? -ne 0 ]; then
             echo "${GUESTFISH} failed to start, aborting"
@@ -41,15 +38,7 @@ add-drive $baseDir/$srcFile
 run
 EOF
 
-    if [[ ${USE_LUKS} == "true" ]]
-    then
-        ${GUESTFISH} --remote <<EOF
-luks-open $partition coreos-root
-mount /dev/mapper/coreos-root /
-EOF
-    else
-        ${GUESTFISH} --remote mount $partition /
-    fi
+    ${GUESTFISH} --remote mount $partition /
 
     ${GUESTFISH} --remote zero-free-space /boot/
     if [ $? -ne 0 ]; then
