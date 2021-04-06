@@ -123,7 +123,7 @@ replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
 
 # Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
 ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
@@ -147,7 +147,7 @@ cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS} || exit 1
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 # mask the chronyd service on the bootstrap node
 cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap.ign) > ${INSTALL_DIR}/bootstrap.ign
 
