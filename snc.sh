@@ -214,6 +214,12 @@ retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type m
 retry ${OC} delete machineconfigs --all
 retry ${OC} delete machineconfigpools --all
 
+# Update the catalog source registryPoll interval
+retry ${OC} patch catalogsources -n openshift-marketplace certified-operators -p '{"spec":{"updateStrategy":{"registryPoll":{"interval":"7200h"}}}}' --type merge
+retry ${OC} patch catalogsources -n openshift-marketplace community-operators -p '{"spec":{"updateStrategy":{"registryPoll":{"interval":"7200h"}}}}' --type merge
+retry ${OC} patch catalogsources -n openshift-marketplace redhat-marketplace -p '{"spec":{"updateStrategy":{"registryPoll":{"interval":"7200h"}}}}' --type merge
+retry ${OC} patch catalogsources -n openshift-marketplace redhat-operators -p '{"spec":{"updateStrategy":{"registryPoll":{"interval":"7200h"}}}}' --type merge
+
 # SCP the kubeconfig file to VM
 ${SCP} ${KUBECONFIG} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
