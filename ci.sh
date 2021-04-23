@@ -5,13 +5,25 @@ set -exuo pipefail
 sudo yum install -y podman make golang rsync
 
 cat > /tmp/ignoretests.txt << EOF
-[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[sig-cli] Kubectl client Kubectl cluster-info should check if Kubernetes control plane services is included in cluster-info  [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
-[sig-scheduling] SchedulerPreemption [Serial] validates basic preemption works [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[sig-scheduling] SchedulerPreemption [Serial] validates lower priority pod preemption by critical pod [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[k8s.io] [sig-node] NoExecuteTaintManager Multiple Pods [Serial] evicts pods with minTolerationSeconds [Disruptive] [Conformance] [Suite:k8s]
-[k8s.io] [sig-node] NoExecuteTaintManager Single Pod [Serial] removing taint cancels eviction [Disruptive] [Conformance] [Suite:k8s]
+^"\[sig-arch\] Managed cluster should ensure control plane pods do not run in best-effort QoS \[Suite:openshift/conformance/parallel\]"
+^"\[Serial\] \[sig-auth\]\[Feature:OAuthServer\] \[RequestHeaders\] \[IdP\] test RequestHeaders IdP \[Suite:openshift/conformance/serial\]"
+^"\[sig-auth\]\[Feature:SCC\]\[Early\] should not have pod creation failures during install \[Suite:openshift/conformance/parallel\]"
+^"\[sig-auth\]\[Feature:OpenShiftAuthorization\]\[Serial\] authorization  TestAuthorizationResourceAccessReview should succeed \[Suite:openshift/conformance/serial\]"
+^"\[sig-cli\] oc adm must-gather runs successfully for audit logs \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cli\] oc adm must-gather runs successfully \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cli\] oc observe works as expected \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cluster-lifecycle\]\[Feature:Machines\]\[Serial\] Managed cluster should grow and decrease when scaling different machineSets simultaneously \[Suite:openshift/conformance/serial\]"
+^"\[sig-imageregistry\]\[Feature:Image\] oc tag should change image reference for internal images \[Suite:openshift/conformance/parallel\]"
+^"\[sig-arch\] \[Conformance\] FIPS TestFIPS \[Suite:openshift/conformance/parallel/minimal\]"
+^"\[sig-builds\]\[Feature:Builds\] Multi-stage image builds should succeed \[Suite:openshift/conformance/parallel\]"
+^"\[sig-apps\] Daemon set \[Serial\] should rollback without unnecessary restarts \[Conformance\] \[Suite:openshift/conformance/serial/minimal\] \[Suite:k8s\]"
+^"\[sig-instrumentation\]
+^"\[sig-network\]
+^"\[sig-node\]
+^"\[sig-scheduling\]
+^"\[sig-storage\]
 EOF
+
 
 ./shellcheck.sh
 ./snc.sh
@@ -51,7 +63,7 @@ crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret -b crc_libvirt_
 
 mkdir -p /tmp/artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
-openshift-tests run kubernetes/conformance --dry-run  | grep -F -v -f /tmp/ignoretests.txt  | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit -f -
+openshift-tests run openshift/conformance --dry-run  | grep -v -f /tmp/ignoretests.txt  | openshift-tests run --timeout 15m -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit -f -
 rc=$?
 echo "${rc}" > /tmp/test-return
 set -e
