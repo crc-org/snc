@@ -47,7 +47,7 @@ sudo mv out/linux-amd64/crc /usr/local/bin/
 popd
 
 crc setup
-crc start -p "${HOME}"/pull-secret -b crc_libvirt_*.crcbundle
+crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret -b crc_libvirt_*.crcbundle
 
 mkdir -p /tmp/artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
