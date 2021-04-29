@@ -236,6 +236,11 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/re
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*operator.yaml'
 retry ${OC} -n openshift-cluster-version patch deploy cluster-version-operator --type=json -p=$(cat custom-release.json | jq -c .)
 
+# Add exposed registry CA to VM
+retry ${OC} extract secret/router-ca --keys=tls.crt -n openshift-ingress-operator --confirm
+retry ${OC} create configmap registry-certs --from-file=default-route-openshift-image-registry.apps-crc.testing=tls.crt -n openshift-config
+retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTrustedCA": {"name": "registry-certs"}}}' --type merge
+
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
