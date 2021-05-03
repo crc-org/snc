@@ -204,6 +204,9 @@ retry ${OC} create clusterrolebinding kubeadmin --clusterrole=cluster-admin --us
 # Remove temp kubeadmin user
 retry ${OC} delete secrets kubeadmin -n kube-system
 
+# Add security message on the web console
+retry ${OC} create -f security-notice.yaml
+
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
 

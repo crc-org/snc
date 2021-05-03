@@ -1,0 +1,9 @@
+apiVersion: console.openshift.io/v1
+kind: ConsoleNotification
+metadata:
+  name: security-notice
+spec:
+  text: CodeReady Containers OpenShift cluster is for development and testing purposes. DON'T use it for production.
+  location: BannerTop
+  color: '#fff'
+  backgroundColor: darkred
