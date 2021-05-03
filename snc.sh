@@ -224,10 +224,6 @@ retry ${OC} replace -f pull-secret.yaml
 # Remove the Cluster ID with a empty string.
 retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
-# Remove machineconfigs(mc) and machineconfigpools(mcp)
-retry ${OC} delete machineconfigs --all
-retry ${OC} delete machineconfigpools --all
-
 # SCP the kubeconfig file to VM
 ${SCP} ${KUBECONFIG} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
