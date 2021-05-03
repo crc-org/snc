@@ -12,3 +12,6 @@ spec:
     htpasswd:
       fileData:
         name: htpass-secret 
+  templates:
+    login:
+      name: login-template
