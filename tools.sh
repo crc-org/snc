@@ -14,6 +14,7 @@ ZSTD=${ZSTD:-zstd}
 CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
 
 HTPASSWD=${HTPASSWD:-htpasswd}
+PATCH=${PATCH:-patch}
 
 ARCH=$(uname -m)
 
@@ -81,6 +82,10 @@ fi
 
 if ! which ${HTPASSWD}; then
     sudo yum -y install /usr/bin/htpasswd
+fi
+
+if ! which ${PATCH}; then
+    sudo yum -y install /usr/bin/patch
 fi
 
 function retry {
