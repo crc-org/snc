@@ -65,9 +65,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable chronyd
 # Enable the podman.socket service for API V2
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable podman.socket
 
-# Remove pull secret from the VM
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -f /var/lib/kubelet/config.json'
-
 # Remove audit logs
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
