@@ -83,6 +83,10 @@ EOF
 # Preload routes controller
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl pull quay.io/crcont/routes-controller:latest'
 
+# Change the ownership of authorized_keys file
+# https://bugzilla.redhat.com/show_bug.cgi?id=1956739
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo chown core.core ~/.ssh/authorized_keys'
+
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
 shutdown_vm ${VM_PREFIX}
