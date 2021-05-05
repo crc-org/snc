@@ -46,17 +46,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
 
-# Check if system reserved block exist in kubelet config.
-# This is used to detect a buggy situation when the kubelet config file is empty and
-# we remove the systemReserved field.
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} cat /etc/kubernetes/kubelet.conf \
-  | ${YQ} eval -e 'has("systemReserved")' -
-
-# Remove system reserved block from kubelet config
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} cat /etc/kubernetes/kubelet.conf \
-  | ${YQ} eval 'del(.systemReserved)' - \
-  | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo tee /etc/kubernetes/kubelet.conf
-
 # Unmask the chronyd service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl unmask chronyd
 # Disable the chronyd service
