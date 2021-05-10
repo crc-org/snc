@@ -26,7 +26,6 @@ destDir=dest
 mkdir -p "$srcDir"
 mkdir -p "$srcDir/auth"
 touch "$srcDir"/auth/kubeconfig
-touch "$srcDir"/auth/kubeadmin-password
 touch id_ecdsa_crc
 touch "$srcDir"/vmlinuz-0.0.0
 touch "$srcDir"/initramfs-0.0.0.img
