@@ -99,7 +99,6 @@ function update_json_description {
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_ecdsa_crc"' \
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
-        | ${JQ} '.clusterInfo.kubeadminPasswordFile = "kubeadmin-password"' \
         | ${JQ} '.nodes[0].kind[0] = "master"' \
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
         | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
@@ -138,8 +137,8 @@ function copy_additional_files {
     local srcDir=$1
     local destDir=$2
 
-    # Copy the kubeconfig and kubeadm password file
-    cp $1/auth/kube* $destDir/
+    # Copy the kubeconfig file
+    cp $1/auth/kubeconfig $destDir/
 
     # Copy the master public key
     cp id_ecdsa_crc $destDir/
@@ -195,7 +194,6 @@ function generate_hyperkit_bundle {
     local kernel_cmd_line=$5
 
     mkdir "$destDir"
-    cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
@@ -239,7 +237,6 @@ function generate_hyperv_bundle {
 
     mkdir "$destDir"
 
-    cp $srcDir/kubeadmin-password $destDir/
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
 
