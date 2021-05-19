@@ -22,6 +22,9 @@ fi
 
 INSTALL_DIR=crc-tmp-install-data
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
+SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
+SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-33285996544}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
@@ -130,13 +133,16 @@ ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overr
 
 # Add custom domain to cluster-ingress
 ${YQ} eval --inplace ".spec.domain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
-# Add master memory to 12 GB and 6 cpus 
+# Set master memory and cpus
 # This is only valid for openshift 4.3 onwards
-${YQ} eval --inplace '.spec.providerSpec.value.domainMemory = 14336' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
-${YQ} eval --inplace '.spec.providerSpec.value.domainVcpu = 6' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
-# Add master disk size to 31 GiB
+echo "Master memory: $SNC_CLUSTER_MEMORY"
+${YQ} eval --inplace ".spec.providerSpec.value.domainMemory = $SNC_CLUSTER_MEMORY" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+echo "Master CPUS: $SNC_CLUSTER_CPUS"
+${YQ} eval --inplace ".spec.providerSpec.value.domainVcpu = $SNC_CLUSTER_CPUS" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+# Set master disk size
 # This is only valid for openshift 4.5 onwards
-${YQ} eval --inplace '.spec.providerSpec.value.volume.volumeSize = 33285996544' ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+echo "Master disk size: $CRC_VM_DISK_SIZE"
+${YQ} eval --inplace ".spec.providerSpec.value.volume.volumeSize = $CRC_VM_DISK_SIZE" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 # Add network resource to lower the mtu for CNV
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
