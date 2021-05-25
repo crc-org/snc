@@ -2,7 +2,6 @@
 
 set -exuo pipefail
 
-sudo pkill -9 dnf
 sudo yum install -y podman make golang rsync
 
 cat > /tmp/ignoretests.txt << EOF
