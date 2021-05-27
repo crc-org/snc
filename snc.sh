@@ -247,6 +247,9 @@ retry ${OC} extract secret/router-ca --keys=tls.crt -n openshift-ingress-operato
 retry ${OC} create configmap registry-certs --from-file=default-route-openshift-image-registry.apps-crc.testing=tls.crt -n openshift-config
 retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTrustedCA": {"name": "registry-certs"}}}' --type merge
 
+# Remove the machine config for chronyd to make it active again
+retry ${OC} delete mc chronyd-mask
+
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
