@@ -70,11 +70,11 @@ function run_preflight_checks() {
                 return
         fi
 
-        # check that api.crc.testing either can't be resolved, or resolves to 192.168.126.1[01]
+        # check that api.${CRC_VM_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.1[01]
         local ping_status
-        ping_status="$(ping -c1 api.crc.testing | head -1 || true >/dev/null)"
-        if echo ${ping_status} | grep "PING api.crc.testing (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
-                preflight_failure "DNS setup seems wrong, api.crc.testing resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
+        ping_status="$(ping -c1 api.${CRC_VM_NAME}.${BASE_DOMAIN} | head -1 || true >/dev/null)"
+        if echo ${ping_status} | grep "PING api.${CRC_VM_NAME}.${BASE_DOMAIN} (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
+                preflight_failure "DNS setup seems wrong, api.${CRC_VM_NAME}.${BASE_DOMAIN} resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
                 return
         fi
 
