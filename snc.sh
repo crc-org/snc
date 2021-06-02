@@ -220,9 +220,6 @@ retry ${OC} delete secrets kubeadmin -n kube-system
 # Add security message on the web console
 retry ${OC} create -f security-notice.yaml
 
-# Replace pull secret with a null json string '{}'
-retry ${OC} replace -f pull-secret.yaml
-
 # Remove the Cluster ID with a empty string.
 retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
@@ -251,6 +248,12 @@ retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTru
 retry ${OC} delete mc chronyd-mask
 
 # Wait for the cluster again to become stable because of all the patches/changes
+wait_till_cluster_stable
+
+# Replace pull secret with a null json string '{}'
+retry ${OC} replace -f pull-secret.yaml
+
+# Wait for the cluster again to become stable because of remove of pull secret
 wait_till_cluster_stable
 
 # Delete the pods which are there in Complete state
