@@ -184,16 +184,6 @@ create_pvs "${CRC_PV_DIR}" 30
 # The CVO won't modify these objects anymore with the following command. Hence, we can remove them afterwards.
 retry ${OC} patch clusterversion version --type json -p "$(cat cvo-overrides-after-first-run.yaml)"
 
-# Clean-up 'openshift-machine-api' namespace
-delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
-retry ${OC} delete clusteroperator machine-api
-
-# Clean-up 'openshift-machine-config-operator' namespace
-delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
-retry ${OC} delete clusteroperator machine-config
-
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
