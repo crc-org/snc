@@ -165,7 +165,7 @@ function prepare_hyperV() {
     else
         # Download the hyperV daemons and libvarlink-util dependency on host
         mkdir $1/packages
-        sudo yum install -y --downloadonly --downloaddir $1/packages hyperv-daemons
+        sudo yum download --downloadonly --downloaddir $1/packages hyperv-daemons --resolve
 
         # SCP the downloaded rpms to VM
         ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
