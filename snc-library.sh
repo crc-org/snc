@@ -188,7 +188,8 @@ function create_pvs() {
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
-    local vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
+    local vm_prefix
+    vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
     shutdown_vm ${vm_prefix}
 
     # Enable the network time sync and set the clock back to present on host
