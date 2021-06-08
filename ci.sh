@@ -5,24 +5,41 @@ set -exuo pipefail
 sudo yum install -y podman make golang rsync
 
 cat > /tmp/ignoretests.txt << EOF
-^"\[sig-arch\] Managed cluster should ensure control plane pods do not run in best-effort QoS \[Suite:openshift/conformance/parallel\]"
-^"\[Serial\] \[sig-auth\]\[Feature:OAuthServer\] \[RequestHeaders\] \[IdP\] test RequestHeaders IdP \[Suite:openshift/conformance/serial\]"
-^"\[sig-auth\]\[Feature:SCC\]\[Early\] should not have pod creation failures during install \[Suite:openshift/conformance/parallel\]"
-^"\[sig-auth\]\[Feature:OpenShiftAuthorization\]\[Serial\] authorization  TestAuthorizationResourceAccessReview should succeed \[Suite:openshift/conformance/serial\]"
-^"\[sig-cli\] oc adm must-gather runs successfully for audit logs \[Suite:openshift/conformance/parallel\]"
-^"\[sig-cli\] oc adm must-gather runs successfully \[Suite:openshift/conformance/parallel\]"
-^"\[sig-cli\] oc observe works as expected \[Suite:openshift/conformance/parallel\]"
-^"\[sig-cluster-lifecycle\]\[Feature:Machines\]\[Serial\] Managed cluster should grow and decrease when scaling different machineSets simultaneously \[Suite:openshift/conformance/serial\]"
-^"\[sig-imageregistry\]\[Feature:Image\] oc tag should change image reference for internal images \[Suite:openshift/conformance/parallel\]"
-^"\[sig-arch\] \[Conformance\] FIPS TestFIPS \[Suite:openshift/conformance/parallel/minimal\]"
-^"\[sig-builds\]\[Feature:Builds\] Multi-stage image builds should succeed \[Suite:openshift/conformance/parallel\]"
+^"\[sig-builds\]\[Feature:Builds\] imagechangetriggers  imagechangetriggers should trigger builds of all types \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
 ^"\[sig-apps\] Daemon set \[Serial\] should rollback without unnecessary restarts \[Conformance\] \[Suite:openshift/conformance/serial/minimal\] \[Suite:k8s\]"
+^"\[sig-arch\] Managed cluster should set requests but not limits \[Suite:openshift/conformance/parallel\]"
+^"\[sig-auth\]\[Feature:OpenShiftAuthorization\]\[Serial\] authorization  TestAuthorizationResourceAccessReview should succeed \[Suite:openshift/conformance/serial\]"
+^"\[Serial\] \[sig-auth\]\[Feature:OAuthServer\] \[RequestHeaders\] \[IdP\] test RequestHeaders IdP \[Suite:openshift/conformance/serial\]"
+^"\[sig-cli\] oc adm must-gather runs successfully \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cli\] oc adm must-gather runs successfully for audit logs \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cli\] oc observe works as expected \[Suite:openshift/conformance/parallel\]"
+^"\[sig-autoscaling\] \[Feature:HPA\] Horizontal pod autoscaling (scale resource: CPU) ReplicationController light Should scale from 1 pod to 2 pods \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-etcd\] etcd leader changes are not excessive \[Late\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-cluster-lifecycle\]\[Feature:Machines\]\[Serial\] Managed cluster should grow and decrease when scaling different machineSets simultaneously \[Suite:openshift/conformance/serial\]"
+^"\[sig-node\] Managed cluster should report ready nodes the entire duration of the test run \[Late\] \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-imageregistry\]\[Serial\]\[Suite:openshift/registry/serial\] Image signature workflow can push a signed image to openshift registry and verify it \[Suite:openshift/conformance/serial\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should enable openshift-monitoring to pull metrics \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should expose a health check on the metrics port \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should expose prometheus metrics for a route \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should expose the profiling endpoints \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should respond with 503 to unrecognized hosts \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should serve routes that were created from an ingress \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[Feature:Router\] The HAProxy router should support reencrypt to services backed by a serving certificate automatically \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-network\]\[endpoints\] admission TestEndpointAdmission \[Suite:openshift/conformance/parallel\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Dynamic PV (block volmode)\] provisioning should provision storage with snapshot data source \[Feature:VolumeSnapshotDataSource\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Dynamic PV (default fs)\] provisioning should provision storage with snapshot data source \[Feature:VolumeSnapshotDataSource\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Dynamic Snapshot (delete policy)\] snapshottable\[Feature:VolumeSnapshotDataSource\] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Dynamic Snapshot (retain policy)\] snapshottable\[Feature:VolumeSnapshotDataSource\] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Pre-provisioned Snapshot (delete policy)\] snapshottable\[Feature:VolumeSnapshotDataSource\] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI Volumes \[Driver: csi-hostpath\] \[Testpattern: Pre-provisioned Snapshot (retain policy)\] snapshottable\[Feature:VolumeSnapshotDataSource\] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI mock volume CSI Volume Snapshots \[Feature:VolumeSnapshotDataSource\] volumesnapshotcontent and pvc in Bound state with deletion timestamp set should not get deleted while snapshot finalizer exists \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\] CSI mock volume CSI Volume Snapshots secrets \[Feature:VolumeSnapshotDataSource\] volume snapshot create/delete with secrets \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-storage\]\[Late\] Metrics should report short attach times \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
+^"\[sig-storage\]\[Late\] Metrics should report short mount times \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
 ^"\[sig-instrumentation\]
-^"\[sig-network\]
-^"\[sig-node\]
-^"\[sig-scheduling\]
-^"\[sig-storage\]
 EOF
+
+#^"\[sig-storage\]
 
 
 ./shellcheck.sh
