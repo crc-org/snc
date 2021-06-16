@@ -240,6 +240,13 @@ retry ${OC} delete mc chronyd-mask
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
+# Delete the pods from MCO forcefully as workaround of
+# https://bugzilla.redhat.com/show_bug.cgi?id=1965992
+retry ${OC} delete pods --all -n openshift-machine-config-operator --grace-period=0
+
+# Wait for the cluster to become stable again after removing the MCO pods
+wait_till_cluster_stable
+
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
 
