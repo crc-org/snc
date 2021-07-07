@@ -1,6 +1,5 @@
 #!/bin/bash
 
-YQ=${YQ:-yq}
 JQ=${JQ:-jq}
 
 QEMU_IMG=${QEMU_IMG:-qemu-img}
@@ -11,22 +10,32 @@ XMLLINT=${XMLLINT:-xmllint}
 
 DIG=${DIG:-dig}
 UNZIP=${UNZIP:-unzip}
+ZSTD=${ZSTD:-zstd}
+CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
+
+HTPASSWD=${HTPASSWD:-htpasswd}
+PATCH=${PATCH:-patch}
 
 ARCH=$(uname -m)
 
-
-yq_ARCH=${ARCH}
-# yq and install_config.yaml use amd64 as arch for x86_64
-if [ "${ARCH}" == "x86_64" ]; then
-    yq_ARCH="amd64"
-fi
+case "${ARCH}" in
+    x86_64)
+        yq_ARCH="amd64"
+        SNC_GENERATE_MACOS_BUNDLE=1
+	SNC_GENERATE_WINDOWS_BUNDLE=1
+	;;
+    *)
+        yq_ARCH=${ARCH}
+        SNC_GENERATE_MACOS_BUNDLE=
+        SNC_GENERATE_WINDOWS_BUNDLE=
+	;;
+esac
 
 # Download yq/jq for manipulating in place yaml configs
-if ! "${YQ}" -V; then
-    if [[ ! -e yq ]]; then
-        curl -L https://github.com/mikefarah/yq/releases/download/3.3.0/yq_linux_${yq_ARCH} -o yq
-        chmod +x yq
-    fi
+if test -z ${YQ-}; then
+    echo "Downloading yq binary to manipulate yaml files"
+    curl -L https://github.com/mikefarah/yq/releases/download/v4.5.1/yq_linux_${yq_ARCH} -o yq
+    chmod +x yq
     YQ=./yq
 fi
 
@@ -53,6 +62,11 @@ if ! rpm -q libguestfs-xfs; then
     sudo yum install libguestfs-xfs
 fi
 
+if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ];then
+    if ! which ${UNZIP}; then
+        sudo yum -y install /usr/bin/unzip
+    fi
+fi
 
 if ! which ${XMLLINT}; then
     sudo yum -y install /usr/bin/xmllint
@@ -61,8 +75,17 @@ fi
 if ! which ${DIG}; then
     sudo yum -y install /usr/bin/dig
 fi
-if ! which ${UNZIP}; then
-    sudo yum -y install /usr/bin/unzip
+
+if ! which ${ZSTD}; then
+    sudo yum -y install /usr/bin/zstd
+fi
+
+if ! which ${HTPASSWD}; then
+    sudo yum -y install /usr/bin/htpasswd
+fi
+
+if ! which ${PATCH}; then
+    sudo yum -y install /usr/bin/patch
 fi
 
 function retry {
@@ -98,7 +121,7 @@ function get_vm_prefix {
 
 function shutdown_vm {
     local vm_prefix=$1
-    sudo virsh shutdown ${vm_prefix}-master-0
+    retry sudo virsh shutdown ${vm_prefix}-master-0
     # Wait till instance started successfully
     until sudo virsh domstate ${vm_prefix}-master-0 | grep shut; do
         echo " ${vm_prefix}-master-0 still running"
@@ -108,7 +131,7 @@ function shutdown_vm {
 
 function start_vm {
     local vm_prefix=$1
-    sudo virsh start ${vm_prefix}-master-0
+    retry sudo virsh start ${vm_prefix}-master-0
     # Wait till ssh connection available
     until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
         echo " ${vm_prefix}-master-0 still booting"
@@ -116,5 +139,10 @@ function start_vm {
     done
 }
 
-# Restart the libvirt service after update
-sudo systemctl restart libvirtd
+function generate_htpasswd_file {
+   local auth_file_dir=$1
+   local pass_file=$2
+   random_password=$(cat $1/auth/kubeadmin-password)
+   ${HTPASSWD} -c -B -b ${pass_file} developer developer
+   ${HTPASSWD} -B -b ${pass_file} kubeadmin ${random_password}
+}

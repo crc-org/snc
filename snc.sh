@@ -6,9 +6,10 @@ export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
 source tools.sh
+source snc-library.sh
 
 # kill all the child processes for this script when it exits
-trap 'kill -9 $(jobs -p) || true' EXIT
+trap 'jobs=($(jobs -p)); [ -n "${jobs-}" ] && ((${#jobs})) && kill "${jobs[@]}" || true' EXIT
 
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, MIRROR, and OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 # Unless, those variables are explicitly set as well.
@@ -17,32 +18,23 @@ if [[ ${OKD_VERSION} != "none" ]]
 then
     OPENSHIFT_VERSION=${OKD_VERSION}
     MIRROR=${MIRROR:-https://github.com/openshift/okd/releases/download}
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-quay.io/openshift/okd:${OPENSHIFT_VERSION}}
 fi
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
 INSTALL_DIR=crc-tmp-install-data
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
+SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
+SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-33285996544}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
-SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
+SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
-SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_crc"
-SSH_HOST="core@api.${CRC_VM_NAME}.${BASE_DOMAIN}"
-SSH_CMD="ssh ${SSH_ARGS} ${SSH_HOST} --"
-SCP="scp ${SSH_ARGS}"
-SLEEP_TIME=180
-API_SERVER=https://${CRC_VM_NAME}.${BASE_DOMAIN}:6443
-ARCH=$(uname -m)
-export PERF_TUNE_DISK_LEVEL=2
+HTPASSWD_FILE='users.htpasswd'
 
-
-yq_ARCH=${ARCH}
-# yq and install_config.yaml use amd64 as arch for x86_64
-if [ "${ARCH}" == "x86_64" ]; then
-    yq_ARCH="amd64"
-fi
+run_preflight_checks
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -50,277 +42,21 @@ if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
-    OPENSHIFT_RELEASE_VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null || echo "")
+    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/latest-4.9/release.txt | sed -n 's/^ *Version: *//p')"
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
-        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from local Git tags"
+        echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
     else
-        OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.6/release.txt | sed -n 's/^ *Version: *//p')"
-        if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
-            echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
-        else
-            echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
-            exit 1
-        fi
+        echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
+        exit 1
     fi
 fi
 
-
-function preflight_failure() {
-        local msg=$1
-        echo "$msg"
-        if [ -z "${SNC_NON_FATAL_PREFLIGHT_CHECKS-}" ]; then
-                exit 1
-        fi
-}
-
-function run_preflight_checks() {
-        echo "Checking libvirt and DNS configuration"
-
-        LIBVIRT_URI=qemu+tcp://localhost/system
-
-        # check if libvirtd is listening on a TCP socket
-        if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
-                preflight_failure  "libvirtd is not listening for plain-text TCP connections, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
-        fi
-
-	if ! virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
-		echo "Default libvirt network is not available. Exiting now!"
-		exit 1
-	fi
-	echo "default network is available"
-
-	#Check if default libvirt network is Active
-	if [[ $(virsh -c ${LIBVIRT_URI}  net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
-		echo "Default network is not active. Exiting now!"
-		exit 1
-	fi
-	
-	#Just warn if architecture is not supported
-	case $ARCH in
-		x86_64|ppc64le|s390x)
-			echo "The host arch is ${ARCH}.";;
-		*)	
- 			echo "The host arch is ${ARCH}. This is not supported by SNC!";;
-	esac	
-
-        # check for availability of a hypervisor using kvm
-        if ! virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
-                preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
-                return
-        fi
-
-        # check that api.crc.testing either can't be resolved, or resolves to 192.168.126.1[01]
-        local ping_status
-        ping_status="$(ping -c1 api.crc.testing | head -1 || true >/dev/null)"
-        if echo ${ping_status} | grep "PING api.crc.testing (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
-                preflight_failure "DNS setup seems wrong, api.crc.testing resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
-                return
-        fi
-
-        # check if firewalld is configured to allow traffic from 192.168.126.0/24 to 192.168.122.1
-        # this check is very basic and expects the configuration to match
-        # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld
-        # Disabled for now as on stock RHEL8 installs, additional permissions are needed for
-        # firewall-cmd --list-services, so this test fails for unrelated reasons
-        #
-        #local zone
-        #if firewall-cmd -h >/dev/null; then
-        #        # With older libvirt, the 'libvirt' zone will not exist
-        #        if firewall-cmd --get-zones |grep '\<libvirt\>'; then
-        #                zone=libvirt
-        #        else
-        #                zone=dmz
-        #        fi
-        #        if ! firewall-cmd --zone=${zone} --list-services | grep '\<libvirt\>'; then
-        #                preflight_failure "firewalld is available, but it is not configured to allow 'libvirt' traffic in either the 'libvirt' or 'dmz' zone, please check https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld"
-        #                return
-        #        fi
-        #fi
-
-        echo "libvirt and DNS configuration successfully checked"
-}
-
-function replace_pull_secret() {
-        # Hide the output of 'cat $OPENSHIFT_PULL_SECRET_PATH' so that it doesn't
-        # get leaked in CI logs
-        set +x
-        local filename=$1
-        sed -i "s!@HIDDEN_PULL_SECRET@!$(cat $OPENSHIFT_PULL_SECRET_PATH)!" $filename
-        set -x
-}
-
-function apply_bootstrap_etcd_hack() {
-        # This is needed for now due to etcd changes in 4.4:
-        # https://github.com/openshift/cluster-etcd-operator/pull/279
-        while ! ${OC} get etcds cluster >/dev/null 2>&1; do
-            sleep 3
-        done
-        echo "API server is up, applying etcd hack"
-        ${OC} patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge
-}
-
-function apply_auth_hack() {
-        # This is needed for now due to recent change in auth:
-        # https://github.com/openshift/cluster-authentication-operator/pull/318
-        while ! ${OC} get authentications.operator.openshift.io cluster >/dev/null 2>&1; do
-            sleep 3
-        done
-        echo "Auth operator is now available, applying auth hack"
-        ${OC} patch authentications.operator.openshift.io cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableOAuthServer": true}}}' --type=merge
-}
-
-function create_json_description {
-    openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
-    sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
-    echo {} | ${JQ} '.version = "1.1"' \
-            | ${JQ} '.type = "snc"' \
-            | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
-            | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
-            | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
-            | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION}\"" \
-            | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
-            | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
-            | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
-}
-
-function generate_pv() {
-  local pvdir="${1}"
-  local name="${2}"
-cat <<EOF
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ${name}
-  labels:
-    volume: ${name}
-spec:
-  capacity:
-    storage: 100Gi
-  accessModes:
-    - ReadWriteOnce
-    - ReadWriteMany
-    - ReadOnlyMany
-  hostPath:
-    path: ${pvdir}
-  persistentVolumeReclaimPolicy: Recycle
-EOF
-}
-
-function setup_pv_dirs() {
-    local dir="${1}"
-    local count="${2}"
-
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
-    for pvsubdir in \$(seq -f "pv%04g" 1 ${count}); do
-        mkdir -p "${dir}/\${pvsubdir}"
-    done
-    if ! chcon -R -t svirt_sandbox_file_t "${dir}" &> /dev/null; then
-        echo "Failed to set SELinux context on ${dir}"
-    fi
-    chmod -R 770 ${dir}
-EOF
-}
-
-function create_pvs() {
-    local pvdir="${1}"
-    local count="${2}"
-
-    setup_pv_dirs "${pvdir}" "${count}"
-
-    for pvname in $(seq -f "pv%04g" 1 ${count}); do
-        if ! ${OC} get pv "${pvname}" &> /dev/null; then
-            generate_pv "${pvdir}/${pvname}" "${pvname}" | ${OC} create -f -
-        else
-            echo "persistentvolume ${pvname} already exists"
-        fi
-    done
-
-    # Apply registry pvc to bound with pv0001
-    ${OC} apply -f registry_pvc.yaml
-
-    # Add registry storage to pvc
-    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
-    # Remove emptyDir as storage for registry
-    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
-}
-
-# This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
-# in order to trigger regeneration of the initial 24h certs the installer created on the cluster
-function renew_certificates() {
-    local vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
-    shutdown_vm ${vm_prefix}
-
-    # Enable the network time sync and set the clock back to present on host
-    sudo date -s '1 day'
-    sudo timedatectl set-ntp on
-
-    start_vm ${vm_prefix}
-
-    # After cluster starts kube-apiserver-client-kubelet signer need to be approved
-    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
-    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
-
-    # Retry 5 times to make sure kubelet certs are rotated correctly.
-    i=0
-    while [ $i -lt 5 ]; do
-        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-	    # Wait until bootstrap csr request is generated with 5 min timeout
-	    echo "Retry loop $i, wait for 60sec before starting next loop"
-            sleep 60
-	else
-            break
-        fi
-	i=$[$i+1]
-    done
-
-    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-        echo "Certs are not yet rotated to have 30 days validity"
-	exit 1
-    fi
-}
-
-# deletes an operator and wait until the resources it manages are gone.
-function delete_operator() {
-        local delete_object=$1
-        local namespace=$2
-        local pod_selector=$3
-
-	retry ${OC} get pods
-        pod=$(${OC} get pod -l ${pod_selector} -o jsonpath="{.items[0].metadata.name}" -n ${namespace})
-
-        retry ${OC} delete ${delete_object} -n ${namespace}
-        # Wait until the operator pod is deleted before trying to delete the resources it manages
-        ${OC} wait --for=delete pod/${pod} --timeout=120s -n ${namespace} || ${OC} delete pod/${pod} --grace-period=0 --force -n ${namespace} || true
-}
-
-# Download the oc binary for all platforms
-mkdir -p openshift-clients/linux openshift-clients/mac openshift-clients/windows
-if [[ ${OKD_VERSION} != "none" ]]
-then
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
-else
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux.tar.gz" | tar -zx -C openshift-clients/linux oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows.zip" > openshift-clients/windows/oc.zip
-fi
-${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
+# Download the oc binary for specific OS environment
+download_oc
 OC=./openshift-clients/linux/oc
 
-run_preflight_checks
-
-if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
-    echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
-    exit 1
-elif [ ! -f ${OPENSHIFT_PULL_SECRET_PATH} ]; then
-    echo "Provided OPENSHIFT_PULL_SECRET_PATH (${OPENSHIFT_PULL_SECRET_PATH}) does not exists"
-    exit 1
-fi
-
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -l "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
-    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
 elif test -n "${OPENSHIFT_VERSION-}"; then
     echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
@@ -330,11 +66,9 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
-    echo "Extracting installer binary from OpenShift baremetal-installer image"
-    baremetal_installer_image=$(${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} info ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-installer)
-    ${OC} image -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${baremetal_installer_image} --confirm --path /usr/bin/openshift-install:.
-    chmod +x openshift-install
-    OPENSHIFT_INSTALL=./openshift-install
+    echo "Extracting OpenShift baremetal installer binary"
+    ${OC} adm release -a ${OPENSHIFT_PULL_SECRET_PATH} extract ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-baremetal-install --to .
+    OPENSHIFT_INSTALL=./openshift-baremetal-install
 fi
 
 
@@ -348,9 +82,9 @@ fi
 # Destroy an existing cluster and resources
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
-
-rm id_rsa_crc* || true
-ssh-keygen -N "" -f id_rsa_crc -C "core"
+# Create a 521bit ECDSA Key
+rm id_ecdsa_crc* || true
+ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 
 # Use dnsmasq as dns in network manager config
 if ! grep -iqR dns=dnsmasq /etc/NetworkManager/conf.d/ ; then
@@ -384,43 +118,49 @@ fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].architecture ${yq_ARCH}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml controlPlane.architecture ${yq_ARCH}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml baseDomain ${BASE_DOMAIN}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml metadata.name ${CRC_VM_NAME}
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml compute[0].replicas 0
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml pullSecret "@HIDDEN_PULL_SECRET@"
+${YQ} eval --inplace ".compute[0].architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".controlPlane.architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".metadata.name = \"${CRC_VM_NAME}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
-${YQ} write --inplace ${INSTALL_DIR}/install-config.yaml sshKey "$(cat id_rsa_crc.pub)"
+${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests || exit 1
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
+
+# Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
+${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
 
 # Add custom domain to cluster-ingress
-${YQ} write --inplace ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml spec[domain] apps-${CRC_VM_NAME}.${BASE_DOMAIN}
-# Add master memory to 12 GB and 6 cpus 
+${YQ} eval --inplace ".spec.domain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
+# Set master memory and cpus
 # This is only valid for openshift 4.3 onwards
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 16432
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 6
-# Add master disk size to 31 GiB
+echo "Master memory: $SNC_CLUSTER_MEMORY"
+${YQ} eval --inplace ".spec.providerSpec.value.domainMemory = $SNC_CLUSTER_MEMORY" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+echo "Master CPUS: $SNC_CLUSTER_CPUS"
+${YQ} eval --inplace ".spec.providerSpec.value.domainVcpu = $SNC_CLUSTER_CPUS" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
+# Set master disk size
 # This is only valid for openshift 4.5 onwards
-${YQ} write --inplace ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value.volume[volumeSize] 33285996544
+echo "Master disk size: $CRC_VM_DISK_SIZE"
+${YQ} eval --inplace ".spec.providerSpec.value.volume.volumeSize = $CRC_VM_DISK_SIZE" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 # Add network resource to lower the mtu for CNV
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
+# Add dummy network unit file
+cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
+# Add kubelet config resource to make change in kubelet
+DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-sizing-enabled-env.yaml.in > $INSTALL_DIR/openshift/99_master-node-sizing-enabled-env.yaml
 # Add codeReadyContainer as invoker to identify it with telemeter
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS} || exit 1
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 # mask the chronyd service on the bootstrap node
 cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap.ign) > ${INSTALL_DIR}/bootstrap.ign
 
-apply_bootstrap_etcd_hack &
-apply_auth_hack &
-
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to create the cluster, but that is expected.  We will block on a successful cluster via a future wait-for."
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || ${OC} adm must-gather --dest-dir ${INSTALL_DIR}
 
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
@@ -430,64 +170,89 @@ fi
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
-
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
 
 create_json_description
 
-
 # Create persistent volumes
 create_pvs "${CRC_PV_DIR}" 30
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
-
-# Clean-up 'openshift-monitoring' namespace
-#delete_operator "deployment/cluster-monitoring-operator" "openshift-monitoring" "app=cluster-monitoring-operator"
-#delete_operator "deployment/prometheus-operator" "openshift-monitoring" "app.kubernetes.io/name=prometheus-operator"
-#delete_operator "deployment/prometheus-adapter" "openshift-monitoring" "name=prometheus-adapter"
-#delete_operator "statefulset/alertmanager-main" "openshift-monitoring" "app=alertmanager"
-#${OC} delete statefulset,deployment,daemonset --all -n openshift-monitoring
-# Delete prometheus rule application webhook
-#${OC} delete validatingwebhookconfigurations prometheusrules.openshift.io
-
-# Delete the pods which are there in Complete state
-retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-apiserver
-retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-scheduler
-retry ${OC} delete pods -l 'app in (installer, pruner)' -n openshift-kube-controller-manager
-
-# Clean-up 'openshift-machine-api' namespace
-delete_operator "deployment/machine-api-operator" "openshift-machine-api" "k8s-app=machine-api-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-api
-
-# Clean-up 'openshift-machine-config-operator' namespace
-delete_operator "deployment/machine-config-operator" "openshift-machine-config-operator" "k8s-app=machine-config-operator"
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-machine-config-operator
-
-# Clean-up 'openshift-insights' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-insights
-
-# Clean-up 'openshift-cloud-credential-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cloud-credential-operator
-
-# Clean-up 'openshift-cluster-storage-operator' namespace
-#delete_operator "deployment.apps/csi-snapshot-controller-operator" "openshift-cluster-storage-operator" "app=csi-snapshot-controller-operator"
-#retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-cluster-storage-operator
-
-# Clean-up 'openshift-kube-storage-version-migrator-operator' namespace
-retry ${OC} delete statefulset,deployment,daemonset --all -n openshift-kube-storage-version-migrator-operator
-
-# Delete the v1beta1.metrics.k8s.io apiservice since we are already scale down cluster wide monitioring.
-# Since this CRD block namespace deletion forever.
-retry ${OC} delete apiservice v1beta1.metrics.k8s.io
+# Objects declared in this file are still created by the CVO at startup.
+# The CVO won't modify these objects anymore with the following command. Hence, we can remove them afterwards.
+retry ${OC} patch clusterversion version --type json -p "$(cat cvo-overrides-after-first-run.yaml)"
 
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
-# Scale etcd-quorum deployment from 3 to 1
-retry ${OC} scale --replicas=1 deployment etcd-quorum-guard -n openshift-etcd
+# Set default route for registry CRD from false to true.
+retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+# Add a tip in the login page
+retry ${OC} get secrets -n openshift-authentication v4-0-config-system-ocp-branding-template -o json | ${JQ} -r '.data["login.html"]'  | base64 -d > login.html
+${PATCH} login.html < login.html.patch
+retry ${OC} create secret generic login-template --from-file=login.html -n openshift-config
+
+# Generate the htpasswd file to have admin and developer user
+generate_htpasswd_file ${INSTALL_DIR} ${HTPASSWD_FILE}
+
+# Add a user developer with htpasswd identity provider and give it sudoer role
+# Add kubeadmin user with cluster-admin role
+retry ${OC} create secret generic htpass-secret --from-file=htpasswd=${HTPASSWD_FILE} -n openshift-config
+retry ${OC} apply -f oauth_cr.yaml
+retry ${OC} create clusterrolebinding kubeadmin --clusterrole=cluster-admin --user=kubeadmin
+
+# Remove temp kubeadmin user
+retry ${OC} delete secrets kubeadmin -n kube-system
+
+# Add security message on the web console
+retry ${OC} create -f security-notice.yaml
+
+# Remove the Cluster ID with a empty string.
+retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
+
+# SCP the kubeconfig file to VM
+${SCP} ${KUBECONFIG} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
+
+# Export all manifests to the disk, modify them and use them in the CVO
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /opt/release-manifests/'
+retry ${OC} -n openshift-cluster-version get pods -o=name
+CVO_POD_NAME=$(${OC} -n openshift-cluster-version get pods -o=name)
+retry ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo KUBECONFIG=/opt/kubeconfig oc rsync -n openshift-cluster-version ${CVO_POD_NAME}:/release-manifests/ /opt/release-manifests/"
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "s/replicas: 2/replicas: 1/" /opt/release-manifests/*deployment.yaml'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "s/replicas: 2/replicas: 1/" /opt/release-manifests/*clusterserviceversion.yaml'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*deployment.yaml'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*deploy.yaml'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*operator.yaml'
+retry ${OC} -n openshift-cluster-version patch deploy cluster-version-operator --type=json -p=$(cat custom-release.json | jq -c .)
+
+# Add exposed registry CA to VM
+retry ${OC} extract secret/router-ca --keys=tls.crt -n openshift-ingress-operator --confirm
+retry ${OC} create configmap registry-certs --from-file=default-route-openshift-image-registry.apps-crc.testing=tls.crt -n openshift-config
+retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTrustedCA": {"name": "registry-certs"}}}' --type merge
+
+# Remove the machine config for chronyd to make it active again
+retry ${OC} delete mc chronyd-mask
+
+# Wait for the cluster again to become stable because of all the patches/changes
+wait_till_cluster_stable
+
+# Replace pull secret with a null json string '{}'
+retry ${OC} replace -f pull-secret.yaml
+
+# Wait for the cluster again to become stable because of remove of pull secret
+wait_till_cluster_stable
+
+# Delete the pods which are there in Complete state
+retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
+
+# Delete outdated rendered master/worker machineconfigs and just keep the latest one
+${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname | grep rendered-master | head -n -1 | xargs -t ${OC} delete
+${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname | grep rendered-worker | head -n -1 | xargs -t ${OC} delete
 
 # Set default route for registry CRD from false to true.
 ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge

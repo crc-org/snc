@@ -3,10 +3,15 @@ kind: OAuth
 metadata:
   name: cluster
 spec:
+  tokenConfig:
+    accessTokenMaxAgeSeconds: 0
   identityProviders:
-  - name: htpasswd_provider 
+  - name: developer
     mappingMethod: claim 
     type: HTPasswd
     htpasswd:
       fileData:
         name: htpass-secret 
+  templates:
+    login:
+      name: login-template
