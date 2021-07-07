@@ -125,6 +125,9 @@ ${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.ya
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
+# Change the cluster profile. It is a way to select exactly the operators we need.
+export OPENSHIFT_INSTALL_EXPERIMENTAL_CLUSTER_PROFILE=single-node-developer
+
 # Create the manifests using the INSTALL_DIR
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
 
