@@ -36,7 +36,24 @@ cat > /tmp/ignoretests.txt << EOF
 ^"\[sig-storage\] CSI mock volume CSI Volume Snapshots secrets \[Feature:VolumeSnapshotDataSource\] volume snapshot create/delete with secrets \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
 ^"\[sig-storage\]\[Late\] Metrics should report short attach times \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
 ^"\[sig-storage\]\[Late\] Metrics should report short mount times \[Skipped:Disconnected\] \[Suite:openshift/conformance/parallel\]"
-^"\[sig-instrumentation\]
+^"\[sig-instrumentation\]"
+^"\[Serial\]\[sig-node\]\[Feature:TopologyManager\] Configured cluster with gu workload saturating NUMA nodes should reject pod requesting more cores than a single NUMA node have \[Suite:openshift/conformance/serial\]"
+^"\[Serial\]\[sig-node\]\[Feature:TopologyManager\] Configured cluster with gu workload should guarantee NUMA-aligned cpu cores in gu pods with multiple pods, each with multiple containers requesting 1 core, only one requesting 1 device \[Suite:openshift/conformance/serial\]"
+^"\[sig-auth\]\[Feature:LDAP\]\[Serial\] ldap group sync can sync groups from ldap \[Suite:openshift/conformance/serial\]"
+^"\[sig-auth\]\[Feature:UserAPI\] users can manipulate groups \[Suite:openshift/conformance/parallel\]"
+^"\[sig-imageregistry\]\[Feature:ImageTriggers\]\[Serial\] ImageStream API TestImageStreamMappingCreate \[Suite:openshift/conformance/serial\]"
+^"\[sig-network\] IngressClass \[Feature:Ingress\] should set default value on new IngressClass \[Serial\] \[Suite:openshift/conformance/serial\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should allow egress access on one named port \[Feature:NetworkPolicy\] \[Skipped:Network/OVNKubernetes\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should allow egress access to server in CIDR block \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should allow ingress access from namespace on one named port \[Feature:NetworkPolicy\] \[Skipped:Network/OVNKubernetes\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should allow ingress access on one named port \[Feature:NetworkPolicy\] \[Skipped:Network/OVNKubernetes\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should enforce egress policy allowing traffic to a server in a different namespace based on PodSelector and NamespaceSelector \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should enforce except clause while egress access to server in CIDR block \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should enforce multiple egress policies with egress allow-all policy taking precedence \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should enforce policy to allow traffic from pods within server namespace based on PodSelector \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should ensure an IP overlapping both IPBlock.CIDR and IPBlock.Except is allowed \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should support a 'default-deny-all' policy \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
+^"\[sig-network\] NetworkPolicy \[LinuxOnly\] NetworkPolicy between server and client should work with Ingress,Egress specified together \[Feature:NetworkPolicy\] \[Skipped:Network/OpenShiftSDN/Multitenant\] \[Skipped:Network/OpenShiftSDN\] \[Suite:openshift/conformance/parallel\] \[Suite:k8s\]"
 EOF
 
 #^"\[sig-storage\]
