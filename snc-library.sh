@@ -58,7 +58,7 @@ function run_preflight_checks() {
 
 	#Just warn if architecture is not supported
 	case $ARCH in
-		x86_64|ppc64le|s390x)
+		x86_64|ppc64le|s390x|aarch64)
 			echo "The host arch is ${ARCH}.";;
 		*)
  			echo "The host arch is ${ARCH}. This is not supported by SNC!";;
