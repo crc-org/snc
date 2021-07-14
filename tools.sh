@@ -22,7 +22,12 @@ case "${ARCH}" in
     x86_64)
         yq_ARCH="amd64"
         SNC_GENERATE_MACOS_BUNDLE=1
-	SNC_GENERATE_WINDOWS_BUNDLE=1
+        SNC_GENERATE_WINDOWS_BUNDLE=1
+	;;
+    aarch64)
+        yq_ARCH="arm64"
+        SNC_GENERATE_MACOS_BUNDLE=1
+        SNC_GENERATE_WINDOWS_BUNDLE=
 	;;
     *)
         yq_ARCH=${ARCH}
