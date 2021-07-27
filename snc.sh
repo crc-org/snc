@@ -222,8 +222,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /opt/release-manife
 retry ${OC} -n openshift-cluster-version get pods -o=name
 CVO_POD_NAME=$(${OC} -n openshift-cluster-version get pods -o=name)
 retry ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo KUBECONFIG=/opt/kubeconfig oc rsync -n openshift-cluster-version ${CVO_POD_NAME}:/release-manifests/ /opt/release-manifests/"
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "s/replicas: 2/replicas: 1/" /opt/release-manifests/*deployment.yaml'
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "s/replicas: 2/replicas: 1/" /opt/release-manifests/*clusterserviceversion.yaml'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*deployment.yaml'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*deploy.yaml'
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo sed -i "/memory: /d" /opt/release-manifests/*operator.yaml'
