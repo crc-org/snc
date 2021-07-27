@@ -5,17 +5,49 @@ set -exuo pipefail
 sudo yum install -y podman make golang rsync
 
 cat > /tmp/ignoretests.txt << EOF
-[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[sig-cli] Kubectl client Kubectl cluster-info should check if Kubernetes control plane services is included in cluster-info  [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
-[sig-scheduling] SchedulerPreemption [Serial] validates basic preemption works [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[sig-scheduling] SchedulerPreemption [Serial] validates lower priority pod preemption by critical pod [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[k8s.io] [sig-node] NoExecuteTaintManager Multiple Pods [Serial] evicts pods with minTolerationSeconds [Disruptive] [Conformance] [Suite:k8s]
-[k8s.io] [sig-node] NoExecuteTaintManager Single Pod [Serial] removing taint cancels eviction [Disruptive] [Conformance] [Suite:k8s]
-[sig-api-machinery] AdmissionWebhook [Privileged:ClusterAdmin] should mutate custom resource with pruning [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
-[sig-api-machinery] AdmissionWebhook [Privileged:ClusterAdmin] should mutate pod and apply defaults after mutation [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
-[sig-api-machinery] Aggregator Should be able to support the 1.17 Sample API Server using the current Aggregator [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
-[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance] [Skipped:SingleReplicaTopology] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]
-[sig-network] Proxy version v1 A set of valid responses are returned for both pod and service ProxyWithPath [Conformance] [Suite:openshift/conformance/parallel/minimal] [Suite:k8s]
+"[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance] [Suite:openshift/conformance/serial/minimal] [Suite:k8s]"
+"[sig-apps][Feature:DeploymentConfig] deploymentconfigs won't deploy RC with unresolved images when patched with empty image [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-apps][Feature:Jobs] Users should be able to create and run a job in a user project [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-arch] Managed cluster should set requests but not limits [Suite:openshift/conformance/parallel]"
+"[sig-auth][Feature:UserAPI] users can manipulate groups [Suite:openshift/conformance/parallel]"
+"[sig-builds][Feature:Builds] imagechangetriggers  imagechangetriggers should trigger builds of all types [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-cli] CLI can run inside of a busybox container [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-cli] oc adm must-gather runs successfully [Suite:openshift/conformance/parallel]"
+"[sig-cli] oc adm must-gather runs successfully for audit logs [Suite:openshift/conformance/parallel]"
+"[sig-cli] oc observe works as expected [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should have a AlertmanagerReceiversNotConfigured alert in firing state [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should provide named network metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should report telemetry if a cloud.openshift.com token is present [Late] [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation][Late] Alerts shouldn't exceed the 500 series limit of total series sent via telemetry from each cluster [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-network][Feature:Router] The HAProxy router should expose a health check on the metrics port [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-network][endpoints] admission TestEndpointAdmission [Suite:openshift/conformance/parallel]"
+"[sig-node] Managed cluster should report ready nodes the entire duration of the test run [Late] [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Dynamic PV (block volmode)] provisioning should provision storage with snapshot data source [Feature:VolumeSnapshotDataSource] [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Dynamic PV (default fs)] provisioning should provision storage with snapshot data source [Feature:VolumeSnapshotDataSource] [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Dynamic Snapshot (delete policy)] snapshottable[Feature:VolumeSnapshotDataSource] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Dynamic Snapshot (retain policy)] snapshottable[Feature:VolumeSnapshotDataSource] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Pre-provisioned Snapshot (delete policy)] snapshottable[Feature:VolumeSnapshotDataSource] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI Volumes [Driver: csi-hostpath] [Testpattern: Pre-provisioned Snapshot (retain policy)] snapshottable[Feature:VolumeSnapshotDataSource] volume snapshot controller  should check snapshot fields, check restore correctly works after modifying source data, check deletion [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage][Late] Metrics should report short attach times [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-storage][Late] Metrics should report short mount times [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-imageregistry][Serial][Suite:openshift/registry/serial] Image signature workflow can push a signed image to openshift registry and verify it [Suite:openshift/conformance/serial]"
+"[sig-network] NetworkPolicy [LinuxOnly] NetworkPolicy between server and client should allow egress access on one named port [Feature:NetworkPolicy] [Skipped:Network/OVNKubernetes] [Skipped:Network/OpenShiftSDN/Multitenant] [Skipped:Network/OpenShiftSDN] [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-network] NetworkPolicy [LinuxOnly] NetworkPolicy between server and client should allow ingress access from namespace on one named port [Feature:NetworkPolicy] [Skipped:Network/OVNKubernetes] [Skipped:Network/OpenShiftSDN/Multitenant] [Skipped:Network/OpenShiftSDN] [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-network] NetworkPolicy [LinuxOnly] NetworkPolicy between server and client should allow ingress access on one named port [Feature:NetworkPolicy] [Skipped:Network/OVNKubernetes] [Skipped:Network/OpenShiftSDN/Multitenant] [Skipped:Network/OpenShiftSDN] [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-imageregistry][Feature:ImageTriggers][Serial] ImageStream API TestImageStreamWithoutDockerImageConfig [Suite:openshift/conformance/serial]"
+"[sig-auth][Feature:LDAP][Serial] ldap group sync can sync groups from ldap [Suite:openshift/conformance/serial]"
+"[sig-autoscaling] [Feature:HPA] Horizontal pod autoscaling (scale resource: CPU) ReplicationController light Should scale from 1 pod to 2 pods [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-imageregistry][Feature:ImageTriggers][Serial] ImageStream admission TestImageStreamAdmitSpecUpdate [Suite:openshift/conformance/serial]"
+"[sig-instrumentation] Prometheus when installed on the cluster should have important platform topology metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should have non-Pod host cAdvisor metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should provide ingress metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster should start and expose a secured proxy and unsecured metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-instrumentation] Prometheus when installed on the cluster shouldn't have failing rules evaluation [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-network][Feature:Router] The HAProxy router should enable openshift-monitoring to pull metrics [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-network][Feature:Router] The HAProxy router should expose prometheus metrics for a route [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-network][Feature:Router] The HAProxy router should expose the profiling endpoints [Skipped:Disconnected] [Suite:openshift/conformance/parallel]"
+"[sig-storage] CSI mock volume CSI Volume Snapshots [Feature:VolumeSnapshotDataSource] volumesnapshotcontent and pvc in Bound state with deletion timestamp set should not get deleted while snapshot finalizer exists [Suite:openshift/conformance/parallel] [Suite:k8s]"
+"[sig-storage] CSI mock volume CSI Volume Snapshots secrets [Feature:VolumeSnapshotDataSource] volume snapshot create/delete with secrets [Suite:openshift/conformance/parallel] [Suite:k8s]"
 EOF
 
 ./shellcheck.sh
@@ -56,7 +88,7 @@ crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret -b crc_libvirt_
 
 mkdir -p /tmp/artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
-openshift-tests run kubernetes/conformance --dry-run  | grep -F -v -f /tmp/ignoretests.txt  | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit -f -
+openshift-tests run experimental/reliability/minimal --dry-run  | grep -F -v -f /tmp/ignoretests.txt  | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit -f -
 rc=$?
 echo "${rc}" > /tmp/test-return
 set -e
