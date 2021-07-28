@@ -191,7 +191,8 @@ retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-op
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
 # Add a tip in the login page
-retry ${OC} get secrets -n openshift-authentication v4-0-config-system-ocp-branding-template -o json | ${JQ} -r '.data["login.html"]'  | base64 -d > login.html
+secret_template=$(retry ${OC} get secrets -n openshift-authentication v4-0-config-system-ocp-branding-template -o json)
+${JQ} -r '.data["login.html"]' <(echo "${secret_template}") | base64 -d > login.html
 ${PATCH} login.html < login.html.patch
 retry ${OC} create secret generic login-template --from-file=login.html -n openshift-config
 
