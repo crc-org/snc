@@ -170,19 +170,21 @@ function create_pvs() {
 
     for pvname in $(seq -f "pv%04g" 1 ${count}); do
         if ! ${OC} get pv "${pvname}" &> /dev/null; then
-            generate_pv "${pvdir}/${pvname}" "${pvname}" | ${OC} create -f -
+            generate_pv "${pvdir}/${pvname}" "${pvname}" > tmp_pv.yaml
+            retry ${OC} create -f tmp_pv.yaml
+	    rm -fr tmp_pv.yaml
         else
             echo "persistentvolume ${pvname} already exists"
         fi
     done
 
     # Apply registry pvc to bound with pv0001
-    ${OC} apply -f registry_pvc.yaml
+    retry ${OC} apply -f registry_pvc.yaml
 
     # Add registry storage to pvc
-    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
+    retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
     # Remove emptyDir as storage for registry
-    ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
+    retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
 }
 
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
