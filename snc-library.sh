@@ -281,7 +281,7 @@ function wait_till_cluster_stable() {
     done
 
     # Wait till all the pods are either running or complete state
-    while oc get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed; do
+    while ${OC} get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed; do
        sleep 2
     done
 }
