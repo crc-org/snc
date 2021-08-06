@@ -76,17 +76,20 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo chown core.core ~/.ssh/au
 shutdown_vm ${VM_PREFIX}
 start_vm ${VM_PREFIX}
 
-# Get the rhcos ostree Hash ID
-ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
+# Only used for hyperkit bundle generation
+if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    # Get the rhcos ostree Hash ID
+    ostree_hash=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
 
-# Get the rhcos kernel release
-kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
+    # Get the rhcos kernel release
+    kernel_release=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'uname -r')
 
-# Get the kernel command line arguments
-kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
+    # Get the kernel command line arguments
+    kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
 
-# SCP the vmlinuz/initramfs from VM to Host in provided folder.
-${SCP} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $1
+    # SCP the vmlinuz/initramfs from VM to Host in provided folder.
+    ${SCP} -r core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $1
+fi
 
 # Add internalIP as node IP for kubelet systemd unit file
 # More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
