@@ -80,3 +80,13 @@ spec:
     name: csi-snapshot-controller
     namespace: ""
     unmanaged: true
+  - kind: Deployment
+    group: apps/v1
+    name: cluster-cloud-controller-manager-operator
+    namespace: openshift-cloud-controller-manager-operator
+    unmanaged: true
+  - kind: ClusterOperator
+    group: config.openshift.io/v1
+    name: cloud-controller-manager
+    namespace: ""
+    unmanaged: true
