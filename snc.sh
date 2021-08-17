@@ -239,11 +239,15 @@ retry ${OC} delete mc chronyd-mask
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
+mc_before_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
+mc_after_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 
-# Wait for the cluster again to become stable because of remove of pull secret
-wait_till_cluster_stable
+while [ "${mc_before_removing_pullsecret}" == "${mc_after_removing_pullsecret}" ]; do
+	echo "Machine config is still not rendered"
+	mc_after_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
+done
 
 # Delete the pods which are there in Complete state
 retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
