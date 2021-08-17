@@ -255,6 +255,10 @@ function no_operators_degraded() {
     ${OC} get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Degraded")].status}' | grep -v True
 }
 
+function all_pods_are_running_completed() {
+    ! ${OC} get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed
+}
+
 function wait_till_cluster_stable() {
     sleep 1m
 
@@ -283,8 +287,6 @@ function wait_till_cluster_stable() {
     done
 
     # Wait till all the pods are either running or complete state
-    while ${OC} get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed; do
-       sleep 2
-    done
+    retry all_pods_are_running_completed
 }
 
