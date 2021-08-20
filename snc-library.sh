@@ -267,7 +267,7 @@ function wait_till_cluster_stable() {
     local count=0
 
     # Remove all the failed Pods
-    ${OC} delete pods --field-selector=status.phase=Failed -A || true
+    retry ${OC} delete pods --field-selector=status.phase=Failed -A
 
     local a=0
     while [ $a -lt $retryCount ]; do
