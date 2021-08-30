@@ -256,7 +256,8 @@ function no_operators_degraded() {
 }
 
 function all_pods_are_running_completed() {
-    ! ${OC} get pod --no-headers --all-namespaces | grep -v Running | grep -v Completed
+    local ignoreNamespace=$1
+    ! ${OC} get pod --no-headers --all-namespaces --field-selector=metadata.namespace!="${ignoreNamespace}" | grep -v Running | grep -v Completed
 }
 
 function wait_till_cluster_stable() {
@@ -265,6 +266,7 @@ function wait_till_cluster_stable() {
     local retryCount=30
     local numConsecutive=3
     local count=0
+    local ignoreNamespace=${1:-"none"}
 
     # Remove all the failed Pods
     retry ${OC} delete pods --field-selector=status.phase=Failed -A
@@ -287,6 +289,6 @@ function wait_till_cluster_stable() {
     done
 
     # Wait till all the pods are either running or complete state
-    retry all_pods_are_running_completed
+    retry all_pods_are_running_completed "${ignoreNamespace}"
 }
 
