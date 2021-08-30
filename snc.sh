@@ -249,6 +249,8 @@ while [ "${mc_before_removing_pullsecret}" == "${mc_after_removing_pullsecret}" 
 	mc_after_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 done
 
+wait_till_cluster_stable openshift-marketplace
+
 # Delete the pods which are there in Complete state
 retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
 
