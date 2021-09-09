@@ -56,10 +56,13 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     prepare_hyperV "$1"
 fi
 
-# Add gvisor-tap-vsock service
+# Add gvisor-tap-vsock and crc-dnsmasq service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
   podman create --name=gvisor-tap-vsock --privileged --net=host -it quay.io/crcont/gvisor-tap-vsock:v4
   podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
+  touch /var/srv/dnsmasq.conf
+  podman create --ip 10.88.0.8 --name crc-dnsmasq -v /var/srv/dnsmasq.conf:/etc/dnsmasq.conf -p 53:53/udp --privileged quay.io/crcont/dnsmasq:latest
+  podman generate systemd --restart-policy=no crc-dnsmasq > /etc/systemd/system/crc-dnsmasq.service
   systemctl daemon-reload
   systemctl enable gvisor-tap-vsock.service
 EOF
