@@ -296,7 +296,7 @@ function download_podman() {
       curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin.zip -o podman-remote/mac/podman.zip
       ${UNZIP} -o -d podman-remote/mac/ podman-remote/mac/podman.zip
       mv podman-remote/mac/podman-${version}/podman  podman-remote/mac
-      chmod +x podman/mac/podman
+      chmod +x podman-remote/mac/podman
     fi
 
     if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
