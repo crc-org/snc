@@ -39,9 +39,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Get the IP of the VM
 INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
 
-# Disable kubelet service and pull dnsmasq image from quay.io/crcon/dnsmasq
+# Disable kubelet service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo podman pull quay.io/crcont/dnsmasq:latest
 
 # Stop the kubelet service so it will not reprovision the pods
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl stop kubelet
@@ -56,7 +55,7 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     prepare_hyperV "$1"
 fi
 
-# Add gvisor-tap-vsock and crc-dnsmasq service
+# Add gvisor-tap-vsock and crc-dnsmasq services
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
   podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:3231aba53905468c22e394493a0debc1a6cc6392
   podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
