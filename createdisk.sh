@@ -66,6 +66,8 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
   systemctl enable gvisor-tap-vsock.service
 EOF
 
+sudo ${SCP} crio-wipe.service /etc/systemd/system/
+
 # Preload routes controller
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl pull quay.io/crcont/routes-controller:latest'
 

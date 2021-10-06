@@ -1,0 +1,12 @@
+[Unit]
+Description=Dummy crio-wipe service
+Before=crio.service
+RequiresMountsFor=/var/lib/containers
+
+[Service]
+ExecStart=/bin/true
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
+
