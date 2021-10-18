@@ -37,7 +37,7 @@ VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 
 # Get the IP of the VM
-INTERNAL_IP=$(${DIG} +short api.${CRC_VM_NAME}.${BASE_DOMAIN})
+INTERNAL_IP=$(sudo virsh domifaddr ${VM_PREFIX}-master-0 | tail -2 | head -1 | awk '{print $4}' | cut -d/ -f1)
 
 # Disable kubelet service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
