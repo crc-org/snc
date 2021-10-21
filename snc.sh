@@ -47,6 +47,8 @@ mv ${CRC_INSTALL_DIR}/fedora-coreos-*-qemu.x86_64.qcow2 ${CRC_INSTALL_DIR}/fedor
 # Update the selinux context for ign conig and ${CRC_INSTALL_DIR}
 chcon --verbose ${current_selinux_context} ${CRC_INSTALL_DIR}
 chcon --verbose unconfined_u:object_r:svirt_home_t:s0 ${CRC_INSTALL_DIR}/fcos-config.ign
+sudo setfacl -m u:qemu:rx $HOME
+sudo systemctl restart libvirtd
 
 create_json_description
 
