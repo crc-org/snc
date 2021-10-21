@@ -4,10 +4,10 @@ set -exuo pipefail
 
 
 function get_dest_dir {
-    if [ "${OPENSHIFT_VERSION-}" != "" ]; then
-        DEST_DIR=$OPENSHIFT_VERSION
+    if [ "${PODMAN_VERSION-}" != "" ]; then
+        DEST_DIR=$PODMAN_VERSION
     else
-        DEST_DIR=${PULL_NUMBER}
+	DEST_DIR=${PULL_NUMBER}
         if [ -z ${DEST_DIR} ]; then
             DEST_DIR="$(date --iso-8601)"
         fi
@@ -56,21 +56,17 @@ EOF
 }
 
 function create_qemu_image {
-    local destDir=$1
+    local sourceDir=$1
+    local destDir=$2
 
-    if [ -f /var/lib/libvirt/images/${VM_PREFIX}-master-0 ]; then
-      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
-      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
-    else
-      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-master-0 $destDir
-      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-base $destDir
-    fi
+    sudo cp /var/lib/libvirt/images/${CRC_VM_NAME}.qcow2 $destDir
+    sudo cp ${sourceDir}/fedora-coreos-qemu.x86_64.qcow2 $destDir
 
     sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
-    ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
+    ${QEMU_IMG} rebase -b fedora-coreos-qemu.x86_64.qcow2 $destDir/${CRC_VM_NAME}.qcow2
+    ${QEMU_IMG} commit $destDir/${CRC_VM_NAME}.qcow2
 
-    sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
+    sparsify $destDir fedora-coreos-qemu.x86_64.qcow2 ${CRC_VM_NAME}.qcow2
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
@@ -79,7 +75,7 @@ function create_qemu_image {
         exit 1;
     fi
 
-    rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
+    rm -fr $destDir/fedora-coreos-qemu.x86_64.qcow2
 }
 
 function update_json_description {
@@ -89,29 +85,20 @@ function update_json_description {
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
 
-    ocSize=$(du -b $destDir/oc | awk '{print $1}')
-    ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
-
     podmanSize=$(du -b $destDir/podman-remote | awk '{print $1}')
     podmanSha256Sum=$(sha256sum $destDir/podman-remote | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
         | ${JQ} '.clusterInfo.sshPrivateKeyFile = "id_ecdsa_crc"' \
-        | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.nodes[0].kind[0] = "master"' \
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
-        | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
+        | ${JQ} ".nodes[0].hostname = \"${CRC_VM_NAME}\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
-        | ${JQ} ".nodes[0].internalIP = \"${INTERNAL_IP}\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
-        | ${JQ} ".storage.fileList[0].name = \"oc\"" \
-        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
-        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
-        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} ".storage.fileList[1].name = \"podman-remote\"" \
         | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
         | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
@@ -120,68 +107,32 @@ function update_json_description {
         >$destDir/crc-bundle-info.json
 }
 
-function eventually_add_pull_secret {
-    local destDir=$1
-
-    if [ "${BUNDLED_PULL_SECRET_PATH-}" != "" ]
-    then
-      cat "$BUNDLED_PULL_SECRET_PATH" > "$destDir/default-pull-secret"
-      cat $destDir/crc-bundle-info.json \
-          | ${JQ} '.clusterInfo.openshiftPullSecret = "default-pull-secret"' \
-          >$destDir/crc-bundle-info.json.tmp
-      mv $destDir/crc-bundle-info.json.tmp $destDir/crc-bundle-info.json
-    fi
-}
-
 function copy_additional_files {
     local srcDir=$1
     local destDir=$2
-
-    # Copy the kubeconfig file
-    cp $1/auth/kubeconfig $destDir/
 
     # Copy the master public key
     cp id_ecdsa_crc $destDir/
     chmod 400 $destDir/id_ecdsa_crc
 
-    # Copy oc client
-    cp openshift-clients/linux/oc $destDir/
-
     cp podman-remote/linux/podman-remote $destDir/
 
     update_json_description $srcDir $destDir
-
-    eventually_add_pull_secret $destDir
 }
 
 function prepare_hyperV() {
-    if [[ ${OKD_VERSION} != "none" ]]; then
-        # Install the hyperV and libvarlink-util rpms to VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons libvarlink-util'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
-    else
-        # Download the hyperV daemons and libvarlink-util dependency on host
-        mkdir $1/packages
-        sudo yum download --downloadonly --downloaddir $1/packages hyperv-daemons --resolve
-
-        # SCP the downloaded rpms to VM
-        ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
-
-        # Install the hyperV and libvarlink-util rpms to VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
-
-        # Remove the packages from VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
-
-        # Cleanup up packages
-        rm -fr $1/packages
-    fi
+    local vm_ip=$1
+    # Install the hyperV rpms to VM
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons'
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --base'
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --repomd'
 
     # Adding Hyper-V vsock support
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
             echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 }
@@ -194,19 +145,13 @@ function generate_hyperkit_bundle {
     local kernel_cmd_line=$5
 
     mkdir "$destDir"
-    cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
-    # Copy oc client
-    cp openshift-clients/mac/oc $destDir/
 
     cp podman-remote/mac/podman $destDir/
-
-    ocSize=$(du -b $destDir/oc | awk '{print $1}')
-    ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
 
     podmanSize=$(du -b $destDir/podman | awk '{print $1}')
     podmanSha256Sum=$(sha256sum $destDir/podman | awk '{print $1}')
@@ -217,10 +162,6 @@ function generate_hyperkit_bundle {
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
-        | ${JQ} ".storage.fileList[0].name = \"oc\"" \
-        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
-        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
-        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} ".storage.fileList[1].name = \"podman\"" \
         | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
         | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
@@ -237,21 +178,15 @@ function generate_hyperv_bundle {
 
     mkdir "$destDir"
 
-    cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
 
-    # Copy oc client
-    cp openshift-clients/windows/oc.exe $destDir/
-
+    # Copy podman client
     cp podman-remote/windows/podman.exe $destDir/
 
     ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
 
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
-
-    ocSize=$(du -b $destDir/oc.exe | awk '{print $1}')
-    ocSha256Sum=$(sha256sum $destDir/oc.exe | awk '{print $1}')
 
     podmanSize=$(du -b $destDir/podman.exe | awk '{print $1}')
     podmanSha256Sum=$(sha256sum $destDir/podman.exe | awk '{print $1}')
@@ -263,10 +198,6 @@ function generate_hyperv_bundle {
         | ${JQ} '.storage.diskImages[0].format = "vhdx"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
-        | ${JQ} ".storage.fileList[0].name = \"oc.exe\"" \
-        | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
-        | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \
-        | ${JQ} ".storage.fileList[0].sha256sum = \"${ocSha256Sum}\"" \
         | ${JQ} ".storage.fileList[1].name = \"podman.exe\"" \
         | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
         | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \

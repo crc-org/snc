@@ -8,13 +8,11 @@ GUESTFISH=${GUESTFISH:-guestfish}
 
 XMLLINT=${XMLLINT:-xmllint}
 
-DIG=${DIG:-dig}
 UNZIP=${UNZIP:-unzip}
 ZSTD=${ZSTD:-zstd}
 CRC_ZSTD_EXTRA_FLAGS=${CRC_ZSTD_EXTRA_FLAGS:-"--ultra -22"}
-
-HTPASSWD=${HTPASSWD:-htpasswd}
-PATCH=${PATCH:-patch}
+PODMAN=${PODMAN:-podman}
+VIRT_INSTALL=${VIRT_INSTALL:-virt-install}
 
 ARCH=$(uname -m)
 
@@ -77,20 +75,16 @@ if ! which ${XMLLINT}; then
     sudo yum -y install /usr/bin/xmllint
 fi
 
-if ! which ${DIG}; then
-    sudo yum -y install /usr/bin/dig
-fi
-
 if ! which ${ZSTD}; then
     sudo yum -y install /usr/bin/zstd
 fi
 
-if ! which ${HTPASSWD}; then
-    sudo yum -y install /usr/bin/htpasswd
+if ! which ${PODMAN}; then
+    sudo yum -y install /usr/bin/podman
 fi
 
-if ! which ${PATCH}; then
-    sudo yum -y install /usr/bin/patch
+if ! which ${VIRT_INSTALL}; then
+    sudo yum -y install /usr/bin/virt-install
 fi
 
 function retry {
@@ -111,43 +105,23 @@ function retry {
     return 0
 }
 
-function get_vm_prefix {
-    local crc_vm_name=$1
-    # This random_string is created by installer and added to each resource type,
-    # in installer side also variable name is kept as `random_string`
-    # so to maintain consistancy, we are also using random_string here.
-    random_string=$(sudo virsh list --all | grep -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
-    if [ -z $random_string ]; then
-        echo "Could not find virtual machine created by snc.sh"
-        exit 1;
-    fi
-    echo ${crc_vm_name}-${random_string}
-}
-
 function shutdown_vm {
-    local vm_prefix=$1
-    retry sudo virsh shutdown ${vm_prefix}-master-0
+    local vm_name=$1
+    retry sudo virsh shutdown ${vm_name}
     # Wait till instance started successfully
-    until sudo virsh domstate ${vm_prefix}-master-0 | grep shut; do
-        echo " ${vm_prefix}-master-0 still running"
+    until sudo virsh domstate ${vm_name} | grep shut; do
+        echo " ${vm_name} still running"
         sleep 3
     done
 }
 
 function start_vm {
-    local vm_prefix=$1
-    retry sudo virsh start ${vm_prefix}-master-0
+    local vm_name=$1
+    local vm_ip=$2
+    retry sudo virsh start ${vm_name}
     # Wait till ssh connection available
-    until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
-        echo " ${vm_prefix}-master-0 still booting"
+    until ${SSH} core@${vm_ip} -- "exit 0" >/dev/null 2>&1; do
+        echo " ${vm_name} still booting"
         sleep 2
     done
-}
-
-function generate_htpasswd_file {
-   local auth_file_dir=$1
-   local pass_file=$2
-   random_password=$(cat $1/auth/kubeadmin-password)
-   ${HTPASSWD} -c -B -b ${pass_file} developer developer
-   ${HTPASSWD} -B -b ${pass_file} kubeadmin ${random_password}
 }
