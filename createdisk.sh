@@ -73,7 +73,7 @@ ${SSH} core@${VM_IP} -- 'sudo journalctl --vacuum-time=1s'
 shutdown_vm ${CRC_VM_NAME}
 
 # Download podman clients
-#download_podman $podman_version
+download_podman $podman_version
 
 # libvirt image generation
 get_dest_dir
