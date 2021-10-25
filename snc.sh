@@ -21,7 +21,7 @@ sudo virsh destroy ${CRC_VM_NAME} || true
 sudo virsh undefine ${CRC_VM_NAME} || true
 sudo rm -fr /var/lib/libvirt/images/crc-podman.qcow2
 
-CRC_INSTALL_DIR=crc-tmp-dir
+CRC_INSTALL_DIR=crc-tmp-install-data
 rm -fr ${CRC_INSTALL_DIR}
 mkdir ${CRC_INSTALL_DIR}
 current_selinux_context=$(ls -Z | grep ${CRC_INSTALL_DIR} | cut -f1 -d" ")

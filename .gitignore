@@ -1,7 +1,6 @@
 id_ecdsa_crc
 id_ecdsa_crc.pub
 crc-tmp-install-data
-crc-tmp-dir
 99_master-node-sizing-enabled-env.yaml
 openshift-baremetal-install
 pull-secret

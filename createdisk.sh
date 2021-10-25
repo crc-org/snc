@@ -15,7 +15,7 @@ CRC_VM_NAME=${CRC_VM_NAME:-crc-podman}
 BASE_OS=fedora-coreos
 
 if [[ $# -ne 1 ]]; then
-   echo "You need to provide crc-tmp-dir"
+   echo "You need to provide crc-tmp-install-data"
    exit 1
 fi
 
