@@ -3,7 +3,6 @@
 set -exuo pipefail
 
 sudo yum install -y podman make golang rsync
-export PODMAN_VERSION=3.3.1 
 
 ./shellcheck.sh
 ./snc.sh
