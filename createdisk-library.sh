@@ -2,18 +2,6 @@
 
 set -exuo pipefail
 
-
-function get_dest_dir {
-    if [ "${PODMAN_VERSION-}" != "" ]; then
-        DEST_DIR=$PODMAN_VERSION
-    else
-	DEST_DIR=${PULL_NUMBER}
-        if [ -z ${DEST_DIR} ]; then
-            DEST_DIR="$(date --iso-8601)"
-        fi
-    fi
-}
-
 function sparsify {
     local baseDir=$1
     local srcFile=$2

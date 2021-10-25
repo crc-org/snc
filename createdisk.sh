@@ -76,8 +76,7 @@ shutdown_vm ${CRC_VM_NAME}
 download_podman $podman_version
 
 # libvirt image generation
-get_dest_dir
-destDirSuffix="${DEST_DIR}"
+destDirSuffix="${podman_version}"
 
 libvirtDestDir="crc_podman_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
