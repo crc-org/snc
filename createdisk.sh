@@ -82,7 +82,7 @@ libvirtDestDir="crc_podman_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$1" "$libvirtDestDir"
-copy_additional_files "$1" "$libvirtDestDir"
+copy_additional_files "$1" "$libvirtDestDir" "$podman_version"
 create_tarball "$libvirtDestDir"
 
 # HyperKit image generation

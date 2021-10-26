@@ -69,6 +69,7 @@ function create_qemu_image {
 function update_json_description {
     local srcDir=$1
     local destDir=$2
+    local podmanVersion=$3
 
     diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
     diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
@@ -82,6 +83,7 @@ function update_json_description {
         | ${JQ} '.nodes[0].kind[0] = "master"' \
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
         | ${JQ} ".nodes[0].hostname = \"${CRC_VM_NAME}\"" \
+        | ${JQ} ".nodes[0].podmanVersion = \"${podmanVersion}\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
@@ -98,6 +100,7 @@ function update_json_description {
 function copy_additional_files {
     local srcDir=$1
     local destDir=$2
+    local podmanVersion=$3
 
     # Copy the master public key
     cp id_ecdsa_crc $destDir/
@@ -105,7 +108,7 @@ function copy_additional_files {
 
     cp podman-remote/linux/podman-remote $destDir/
 
-    update_json_description $srcDir $destDir
+    update_json_description $srcDir $destDir $podmanVersion
 }
 
 function prepare_hyperV() {
