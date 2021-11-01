@@ -9,3 +9,15 @@ systemd:
   units:
    - name: podman.socket
      enabled: true
+storage:
+  links:
+    - path: /home/core/.config/systemd/user/default.target.wants/podman.socket
+      user:
+        name: core
+      group:
+        name: core
+      target: /usr/lib/systemd/user/podman.socket
+      hard: false
+  files:
+    - path: /var/lib/systemd/linger/core
+      mode: 0644
