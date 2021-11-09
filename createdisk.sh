@@ -25,9 +25,7 @@ VM_IP=$(arp -an | grep $(sudo virsh dumpxml ${CRC_VM_NAME} | grep '<mac' | grep 
 # Remove audit logs
 ${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
-if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-    prepare_hyperV ${VM_IP}
-fi
+install_additional_packages ${VM_IP}
 
 # Add gvisor-tap-vsock
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
