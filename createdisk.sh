@@ -44,6 +44,9 @@ ${SSH} core@${VM_IP} -- 'touch ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/autho
 shutdown_vm ${CRC_VM_NAME}
 start_vm ${CRC_VM_NAME} ${VM_IP}
 
+# Enable cockpit socket
+${SSH} core@${VM_IP} -- 'sudo systemctl enable cockpit.socket'
+
 # Only used for hyperkit bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     # Get the rhcos ostree Hash ID
