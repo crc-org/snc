@@ -115,6 +115,7 @@ function install_additional_packages() {
     local vm_ip=$1
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install --allow-inactive cockpit-bridge cockpit-ws cockpit-podman'
     if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
         prepare_hyperV ${vm_ip}
     fi
