@@ -2,8 +2,6 @@
 
 set -exuo pipefail
 
-sudo yum install -y podman make golang rsync
-
 ./shellcheck.sh
 ./snc.sh
 ./createdisk.sh crc-tmp-install-data
