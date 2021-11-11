@@ -21,3 +21,26 @@ storage:
   files:
     - path: /var/lib/systemd/linger/core
       mode: 0644
+    - path: /usr/local/share/cockpit/shell/manifest.json
+      mode: 0644
+      contents:
+        inline: |
+         {
+             "requires": {
+                 "cockpit": "137"
+             },
+             "tools": {
+                 "index": {
+                     "label": "system"
+                 }
+             }
+         }
+    - path: /usr/local/share/cockpit/shell/index.html
+      mode: 0644
+      contents:
+        inline: |
+         <html>
+           <body>
+              <meta http-equiv="refresh" content="0; url=/cockpit/@localhost/podman/index.html#">
+           </body>
+         </html>
