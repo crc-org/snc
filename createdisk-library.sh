@@ -63,6 +63,9 @@ function create_qemu_image {
         exit 1;
     fi
 
+    # Update the qcow2 image permission from 0600 to 0644
+    chmod 0644 ${destDir}/${CRC_VM_NAME}.qcow2
+
     rm -fr $destDir/fedora-coreos-qemu.x86_64.qcow2
 }
 
