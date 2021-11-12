@@ -89,10 +89,10 @@ function update_json_description {
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
-        | ${JQ} ".storage.fileList[1].name = \"podman-remote\"" \
-        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
-        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
-        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"podman-remote\"" \
+        | ${JQ} '.storage.fileList[0].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "libvirt"' \
         >$destDir/crc-bundle-info.json
 }
@@ -160,10 +160,10 @@ function generate_hyperkit_bundle {
         | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
         | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
         | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
-        | ${JQ} ".storage.fileList[1].name = \"podman\"" \
-        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
-        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
-        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"podman\"" \
+        | ${JQ} '.storage.fileList[0].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperkit"' \
         >$destDir/crc-bundle-info.json
 
@@ -196,10 +196,10 @@ function generate_hyperv_bundle {
         | ${JQ} '.storage.diskImages[0].format = "vhdx"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
-        | ${JQ} ".storage.fileList[1].name = \"podman.exe\"" \
-        | ${JQ} '.storage.fileList[1].type = "podman-executable"' \
-        | ${JQ} ".storage.fileList[1].size = \"${podmanSize}\"" \
-        | ${JQ} ".storage.fileList[1].sha256sum = \"${podmanSha256Sum}\"" \
+        | ${JQ} ".storage.fileList[0].name = \"podman.exe\"" \
+        | ${JQ} '.storage.fileList[0].type = "podman-executable"' \
+        | ${JQ} ".storage.fileList[0].size = \"${podmanSize}\"" \
+        | ${JQ} ".storage.fileList[0].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 
