@@ -169,10 +169,6 @@ fi
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
-# Remove the openshift-authenticator CSR to force a certificate regeneration
-# BZ: https://bugzilla.redhat.com/show_bug.cgi?id=1978193
-retry ${OC} delete csr system:openshift:openshift-authenticator
-
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
