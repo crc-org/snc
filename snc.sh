@@ -56,7 +56,7 @@ create_json_description
 sudo ${VIRT_INSTALL} --name=${CRC_VM_NAME} --vcpus=2 --ram=2048 \
 	--import --network=bridge=virbr0 --graphics=none \
 	--qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=${PWD}/${CRC_INSTALL_DIR}/fcos-config.ign" \
-	--disk=size=10,backing_store=${PWD}/${CRC_INSTALL_DIR}/fedora-coreos-qemu.x86_64.qcow2 \
+	--disk=size=31,backing_store=${PWD}/${CRC_INSTALL_DIR}/fedora-coreos-qemu.x86_64.qcow2 \
 	--os-variant=fedora-coreos-stable \
 	--noautoconsole --quiet
 sleep 120
