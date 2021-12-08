@@ -10,6 +10,34 @@ systemd:
    - name: podman.socket
      enabled: true
 storage:
+  # Ignition has a bug/feature? where if you make a series of dirs
+  # in one swoop, then the leading dirs are creates as root.
+  directories:
+    - path: /home/core/.config
+      user:
+        name: core
+      group:
+        name: core
+    - path: /home/core/.config/containers
+      user:
+        name: core
+      group:
+        name: core
+    - path: /home/core/.config/systemd
+      user:
+        name: core
+      group:
+        name: core
+    - path: /home/core/.config/systemd/user
+      user:
+        name: core
+      group:
+        name: core
+    - path: /home/core/.config/systemd/user/default.target.wants
+      user:
+        name: core
+      group:
+        name: core
   links:
     - path: /home/core/.config/systemd/user/default.target.wants/podman.socket
       user:
