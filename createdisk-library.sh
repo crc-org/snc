@@ -51,7 +51,7 @@ function create_qemu_image {
     sudo cp ${sourceDir}/fedora-coreos-qemu.x86_64.qcow2 $destDir
 
     sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -b fedora-coreos-qemu.x86_64.qcow2 $destDir/${CRC_VM_NAME}.qcow2
+    ${QEMU_IMG} rebase -F qcow2 -b fedora-coreos-qemu.x86_64.qcow2 $destDir/${CRC_VM_NAME}.qcow2
     ${QEMU_IMG} commit $destDir/${CRC_VM_NAME}.qcow2
 
     sparsify $destDir fedora-coreos-qemu.x86_64.qcow2 ${CRC_VM_NAME}.qcow2
