@@ -72,3 +72,22 @@ storage:
               <meta http-equiv="refresh" content="0; url=/cockpit/@localhost/podman/index.html#">
            </body>
          </html>
+      # Set containers.conf up for core user to use cni networks by default instead slirp
+    - path: /home/core/.config/containers/containers.conf
+      mode: 0744
+      user:
+        name: core
+      group:
+        name: core
+      contents:
+        inline: |
+         [containers]
+         netns="bridge"
+         rootless_networking="cni"
+      # Set machine_enabled to true to indicate we're in VM
+    - path: /etc/containers/containers.conf
+      mode: 0644
+      contents:
+        inline: |
+          [engine]
+          machine_enabled=true
