@@ -1,92 +1,92 @@
 spec:
   overrides:
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cluster-monitoring-operator
     namespace: openshift-monitoring
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: monitoring
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: kube-storage-version-migrator-operator
     namespace: openshift-kube-storage-version-migrator-operator
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: kube-storage-version-migrator
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: insights-operator
     namespace: openshift-insights
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: insights
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cloud-credential-operator
     namespace: openshift-cloud-credential-operator
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: cloud-credential
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cluster-storage-operator
     namespace: openshift-cluster-storage-operator
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: storage
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cluster-baremetal-operator
     namespace: openshift-machine-api
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: baremetal
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cluster-autoscaler-operator
     namespace: openshift-machine-api
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: cluster-autoscaler
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: csi-snapshot-controller-operator
     namespace: openshift-cluster-storage-operator
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: csi-snapshot-controller
     namespace: ""
     unmanaged: true
   - kind: Deployment
-    group: apps/v1
+    group: apps
     name: cluster-cloud-controller-manager-operator
     namespace: openshift-cloud-controller-manager-operator
     unmanaged: true
   - kind: ClusterOperator
-    group: config.openshift.io/v1
+    group: config.openshift.io
     name: cloud-controller-manager
     namespace: ""
     unmanaged: true
