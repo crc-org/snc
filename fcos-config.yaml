@@ -91,3 +91,16 @@ storage:
         inline: |
           [engine]
           machine_enabled=true
+    - path: /etc/NetworkManager/dispatcher.d/pre-up.d/gvisor-tap-vsock-tap-device.sh
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/sh
+
+          if [[ "$1" != "tap0" ]]; then
+              exit 0
+          fi
+          if [[ "$2" != "pre-up" ]]; then
+              exit 0
+          fi
+          nmcli device modify "$1" ipv4.method auto
