@@ -46,7 +46,34 @@ storage:
         name: core
       target: /usr/lib/systemd/user/podman.socket
       hard: false
+    - path: /home/core/.config/systemd/user/default.target.wants/cockpit-core-user.service
+      user:
+        name: core
+      group:
+        name: core
+      target: /home/core/.config/systemd/user/cockpit-core-user.service
+      hard: false
   files:
+      # Add systemd unit to access cockpit with local session using
+      # cockpit-bridge and adding bearer token to config
+    - path: /home/core/.config/systemd/user/cockpit-core-user.service
+      mode: 0600
+      user:
+        name: core
+      group:
+        name: core
+      contents:
+        inline: |
+          [Unit]
+          Description=Cockpit-ws for Core user
+
+          [Service]
+          Environment="XDG_RUNTIME_DIR=/run/user/1000"
+          ExecStart=/usr/libexec/cockpit-ws --no-tls --local-session=/usr/bin/cockpit-bridge
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
     - path: /var/lib/systemd/linger/core
       mode: 0644
     - path: /usr/local/share/cockpit/shell/manifest.json
@@ -104,3 +131,48 @@ storage:
               exit 0
           fi
           nmcli device modify "$1" ipv4.method auto
+    - path: /usr/local/bin/verify-bearer-token
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/sh
+          # This file is part of CRC
+          # Note: this is a POC and should not be used in production
+          #
+          # Copyright (C) 2021 Red Hat, Inc.
+          set -eux
+          HOST="$1"
+          echo "Bearer auth attempt from $HOST" >&2
+          # FIXME: should be random
+          COOKIE=c1
+
+          # FIXME: compute frame length (in particular for different cookie length)
+          printf '61\n\n{ "command": "authorize", "cookie": "'$COOKIE'", "challenge": "*" }'
+          read framelen
+          read channel
+          [ "$channel" = "" ]
+          read -n $((framelen - 1)) response
+          echo "got response '$response'" >&2
+
+          # looks like '{"command":"authorize","cookie":"c1","response":"Bearer 123foo"}'
+          if [ "$(echo "$response" | jq -r .cookie)" != "$COOKIE" ]; then
+              # FIXME: send proper "problem" JSON
+              echo "bad cookie" >&2
+              exit 1
+          fi
+
+          if [ "$(echo "$response" | jq -r .response)" != "Bearer Y29yZQ==" ]; then
+              # FIXME: send proper "problem" JSON
+              echo "bad password" >&2
+              exit 1
+          fi
+
+          export XDG_RUNTIME_DIR=/run/user/$(id -u)
+          exec cockpit-bridge
+    - path: /etc/cockpit/cockpit.conf
+      mode: 0644
+      contents:
+        inline: |
+          [bearer]
+          command = /usr/local/bin/verify-bearer-token
+          timeout = 300
