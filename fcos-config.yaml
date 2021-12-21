@@ -176,3 +176,8 @@ storage:
           [bearer]
           command = /usr/local/bin/verify-bearer-token
           timeout = 300
+    - path: /etc/hostname
+      mode: 0644
+      contents:
+        inline: |
+          podman.crc.testing
