@@ -25,6 +25,9 @@ VM_IP=$(arp -an | grep $(sudo virsh dumpxml ${CRC_VM_NAME} | grep '<mac' | grep 
 # Remove audit logs
 ${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
+# Remove moby-engine package
+${SSH} core@${VM_IP} -- 'sudo rpm-ostree override remove moby-engine'
+
 install_additional_packages ${VM_IP}
 
 # Add gvisor-tap-vsock
@@ -39,7 +42,7 @@ EOF
 # https://bugzilla.redhat.com/show_bug.cgi?id=1956739
 ${SSH} core@${VM_IP} -- 'touch ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/authorized_keys'
 
-# Shutdown and Start the VM after installing the hyperV daemon packages.
+# Shutdown and Start the VM after modifying the set of installed packages
 # This is required to get the latest ostree layer which have those installed packages.
 shutdown_vm ${CRC_VM_NAME}
 start_vm ${CRC_VM_NAME} ${VM_IP}
