@@ -9,6 +9,8 @@ systemd:
   units:
    - name: podman.socket
      enabled: true
+   - name: zincati.service
+     mask: true
 storage:
   # Ignition has a bug/feature? where if you make a series of dirs
   # in one swoop, then the leading dirs are creates as root.
