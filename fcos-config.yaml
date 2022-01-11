@@ -70,8 +70,7 @@ storage:
           Description=Cockpit-ws for Core user
 
           [Service]
-          Environment="XDG_RUNTIME_DIR=/run/user/1000"
-          ExecStart=/usr/libexec/cockpit-ws --no-tls --local-session=/usr/bin/cockpit-bridge
+          ExecStart=/usr/libexec/cockpit-ws --no-tls
           Restart=on-failure
 
           [Install]
@@ -147,6 +146,7 @@ storage:
           echo "Bearer auth attempt from $HOST" >&2
           # FIXME: should be random
           COOKIE=c1
+          BEARER="$(cat /home/core/cockpit-bearer-token)"
 
           # FIXME: compute frame length (in particular for different cookie length)
           printf '61\n\n{ "command": "authorize", "cookie": "'$COOKIE'", "challenge": "*" }'
@@ -163,13 +163,12 @@ storage:
               exit 1
           fi
 
-          if [ "$(echo "$response" | jq -r .response)" != "Bearer Y29yZQ==" ]; then
+          if [ "$(echo "$response" | jq -r .response)" != "Bearer $BEARER" ]; then
               # FIXME: send proper "problem" JSON
               echo "bad password" >&2
               exit 1
           fi
 
-          export XDG_RUNTIME_DIR=/run/user/$(id -u)
           exec cockpit-bridge
     - path: /etc/cockpit/cockpit.conf
       mode: 0644
