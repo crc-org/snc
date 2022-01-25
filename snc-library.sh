@@ -201,7 +201,7 @@ function renew_certificates() {
     start_vm ${vm_prefix}
 
     # After cluster starts kube-apiserver-client-kubelet signer need to be approved
-    timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
+    timeout 500 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
     ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
     # Retry 5 times to make sure kubelet certs are rotated correctly.
