@@ -18,7 +18,7 @@ SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa
 run_preflight_checks
 
 sudo virsh destroy ${CRC_VM_NAME} || true
-sudo virsh undefine ${CRC_VM_NAME} || true
+sudo virsh undefine --nvram ${CRC_VM_NAME} || true
 sudo rm -fr /var/lib/libvirt/images/crc-podman.qcow2
 
 CRC_INSTALL_DIR=crc-tmp-install-data
