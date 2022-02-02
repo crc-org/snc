@@ -48,13 +48,13 @@ function create_qemu_image {
     local destDir=$2
 
     sudo cp /var/lib/libvirt/images/${CRC_VM_NAME}.qcow2 $destDir
-    sudo cp ${sourceDir}/fedora-coreos-qemu.x86_64.qcow2 $destDir
+    sudo cp ${sourceDir}/fedora-coreos-qemu.${ARCH}.qcow2 $destDir
 
     sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -F qcow2 -b fedora-coreos-qemu.x86_64.qcow2 $destDir/${CRC_VM_NAME}.qcow2
+    ${QEMU_IMG} rebase -F qcow2 -b fedora-coreos-qemu.${ARCH}.qcow2 $destDir/${CRC_VM_NAME}.qcow2
     ${QEMU_IMG} commit $destDir/${CRC_VM_NAME}.qcow2
 
-    sparsify $destDir fedora-coreos-qemu.x86_64.qcow2 ${CRC_VM_NAME}.qcow2
+    sparsify $destDir fedora-coreos-qemu.${ARCH}.qcow2 ${CRC_VM_NAME}.qcow2
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
     ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
@@ -66,7 +66,7 @@ function create_qemu_image {
     # Update the qcow2 image permission from 0600 to 0644
     chmod 0644 ${destDir}/${CRC_VM_NAME}.qcow2
 
-    rm -fr $destDir/fedora-coreos-qemu.x86_64.qcow2
+    rm -fr $destDir/fedora-coreos-qemu.${ARCH}.qcow2
 }
 
 function update_json_description {
