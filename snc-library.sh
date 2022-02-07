@@ -113,8 +113,9 @@ function replace_pull_secret() {
 function create_json_description {
     openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
-    echo {} | ${JQ} '.version = "1.2"' \
+    echo {} | ${JQ} '.version = "1.4"' \
             | ${JQ} '.type = "snc"' \
+            | ${JQ} ".arch = \"${yq_ARCH}\"" \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
