@@ -7,12 +7,15 @@
   # - 1.1: addition of 'name'
   # - 1.2: addition of 'storage.fileList'
   # - 1.3: remove of 'clusterInfo.kubeadminPasswordFile'
-  "version": "1.3",
+  # - 1.4: addition of 'arch'
+  "version": "1.4",
   # Type of this bundle content
   # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
   "type": "snc",
   # Name of the bundle
   "name": "crc_libvirt_4.6.1",
+  # Bundle arch (This follows https://gist.github.com/lizkes/975ab2d1b5f9d5fdee5d3fa665bcfde6 with amd64/arm64 being used at the moment)
+  "arch": "amd64",
   "buildInfo": {
     # Time this bundle was built
     "buildTime": "2019-04-23T14:55:32+00:00",
