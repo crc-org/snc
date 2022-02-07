@@ -42,6 +42,7 @@ function create_json_description {
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
     echo {} | ${JQ} '.version = "1.4"' \
             | ${JQ} '.type = "podman"' \
+            | ${JQ} '.arch = "${yq_ARCH}"' \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" >${CRC_INSTALL_DIR}/crc-bundle-info.json
