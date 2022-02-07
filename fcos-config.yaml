@@ -182,3 +182,9 @@ storage:
       contents:
         inline: |
           podman.crc.testing
+    - path: /etc/containers/registries.conf.d/999-podman-machine.conf
+      mode: 0644
+      contents:
+        inline: |
+          unqualified-search-registries=["docker.io"]
+
