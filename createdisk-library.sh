@@ -280,7 +280,7 @@ function generate_hyperv_bundle {
 function create_tarball {
     local dirName=$1
 
-    tar cSf - --sort=name "$dirName" | ${ZSTD} --no-progress ${CRC_ZSTD_EXTRA_FLAGS} --threads=0 -o "$dirName".crcbundle
+    tar cSf - --sort=name "$dirName" | ${ZSTD} --no-progress ${CRC_ZSTD_EXTRA_FLAGS} --threads=0 -o "${dirName}_${yq_ARCH}".crcbundle
 }
 
 function download_podman() {
