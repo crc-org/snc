@@ -10,7 +10,8 @@
   # - 1.4: addition of 'arch'
   "version": "1.4",
   # Type of this bundle content
-  # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
+  # Currently the only valid types are 'snc' (which stands for 'single-node-cluster') and 'podman'
+  # Applications deriving custom bundles from 'snc' and 'podman' must set type to 'snc_custom' or 'podman_custom'
   "type": "snc",
   # Name of the bundle
   "name": "crc_libvirt_4.6.1",
