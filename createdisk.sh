@@ -56,7 +56,7 @@ ${SSH} core@${VM_IP} -- 'sudo rpm-ostree cleanup -r'
 shutdown_vm ${CRC_VM_NAME}
 start_vm ${CRC_VM_NAME} ${VM_IP}
 
-# Only used for hyperkit bundle generation
+# Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     # Get the rhcos ostree Hash ID
     ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
@@ -101,6 +101,14 @@ create_tarball "$libvirtDestDir"
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     hyperkitDestDir="crc_podman_hyperkit_${destDirSuffix}"
     generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+fi
+
+# vfkit image generation
+# This must be done after the generation of libvirt image as it reuses some of
+# the content of $libvirtDestDir
+if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 fi
 
 # HyperV image generation
