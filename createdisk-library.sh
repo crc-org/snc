@@ -202,6 +202,19 @@ function generate_hyperkit_bundle {
     create_tarball "$destDir"
 }
 
+function generate_vfkit_bundle {
+    local srcDir=$1
+    local destDir=$2
+
+    mkdir "$destDir"
+    generate_macos_bundle "vfkit" $@
+
+    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
+    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.img" "raw"
+
+    create_tarball "$destDir"
+}
+
 function generate_macos_bundle {
     local bundleType=$1
     local srcDir=$2
