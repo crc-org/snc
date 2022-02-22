@@ -141,13 +141,27 @@ EOF
 function generate_hyperkit_bundle {
     local srcDir=$1
     local destDir=$2
-    local tmpDir=$3
-    local kernel_release=$4
-    local kernel_cmd_line=$5
 
     mkdir "$destDir"
-    cp $srcDir/id_ecdsa_crc $destDir/
+    generate_macos_bundle "hyperkit" $@
+
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
+    # not needed, we'll reuse the data added when generating the libvirt bundle
+    #add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.qcow2" "qcow2"
+
+    create_tarball "$destDir"
+}
+
+function generate_macos_bundle {
+    local bundleType=$1
+    local srcDir=$2
+    local destDir=$3
+    local tmpDir=$4
+    local kernel_release=$5
+    local kernel_cmd_line=$6
+
+    mkdir -p "$destDir"
+    cp $srcDir/id_ecdsa_crc $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
@@ -167,10 +181,26 @@ function generate_hyperkit_bundle {
         | ${JQ} '.storage.fileList[0].type = "podman-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${podmanSize}\"" \
         | ${JQ} ".storage.fileList[0].sha256sum = \"${podmanSha256Sum}\"" \
-        | ${JQ} '.driverInfo.name = "hyperkit"' \
+        | ${JQ} ".driverInfo.name = \"${bundleType}\"" \
         >$destDir/crc-bundle-info.json
+}
 
-    create_tarball "$destDir"
+function add_disk_info_to_json_description {
+    local destDir=$1
+    local imageFilename=$2
+    local imageFormat=$3
+
+    diskSize=$(du -b $destDir/$imageFilename | awk '{print $1}')
+    diskSha256Sum=$(sha256sum $destDir/$imageFilename | awk '{print $1}')
+
+
+    cat $destDir/crc-bundle-info.json \
+        | ${JQ} ".nodes[0].diskImage = \"${imageFilename}\"" \
+        | ${JQ} ".storage.diskImages[0].name = \"${imageFilename}\"" \
+        | ${JQ} ".storage.diskImages[0].format = \"${imageFormat}\"" \
+        | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
+        | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" >$destDir/crc-bundle-info.json.tmp
+    mv $destDir/crc-bundle-info.json.tmp $destDir/crc-bundle-info.json
 }
 
 function generate_hyperv_bundle {
@@ -184,27 +214,20 @@ function generate_hyperv_bundle {
     # Copy podman client
     cp podman-remote/windows/podman.exe $destDir/
 
-    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
-
-    diskSize=$(du -b $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
-    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.vhdx | awk '{print $1}')
-
     podmanSize=$(du -b $destDir/podman.exe | awk '{print $1}')
     podmanSha256Sum=$(sha256sum $destDir/podman.exe | awk '{print $1}')
 
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
-        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.vhdx\"" \
-        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.vhdx\"" \
-        | ${JQ} '.storage.diskImages[0].format = "vhdx"' \
-        | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
-        | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
         | ${JQ} ".storage.fileList[0].name = \"podman.exe\"" \
         | ${JQ} '.storage.fileList[0].type = "podman-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${podmanSize}\"" \
         | ${JQ} ".storage.fileList[0].sha256sum = \"${podmanSha256Sum}\"" \
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
+
+    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
+    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.vhdx" vhdx
 
     create_tarball "$destDir"
 }
