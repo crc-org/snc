@@ -193,7 +193,7 @@ function generate_hyperkit_bundle {
     mkdir "$destDir"
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
-    generate_macos_bundle "hyperkit" $@
+    generate_macos_bundle "hyperkit" "$@"
 
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
     # not needed, we'll reuse the data added when generating the libvirt bundle
@@ -207,7 +207,7 @@ function generate_vfkit_bundle {
     local destDir=$2
 
     mkdir "$destDir"
-    generate_macos_bundle "vfkit" $@
+    generate_macos_bundle "vfkit" "$@"
 
     ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
     add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.img" "raw"
