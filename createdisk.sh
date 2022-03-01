@@ -127,7 +127,7 @@ download_podman $podman_version
 get_dest_dir
 destDirSuffix="${DEST_DIR}"
 
-libvirtDestDir="crc_libvirt_${destDirSuffix}"
+libvirtDestDir="crc_libvirt_${destDirSuffix}_${yq_ARCH}"
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir"
@@ -138,7 +138,7 @@ create_tarball "$libvirtDestDir"
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
+    hyperkitDestDir="crc_hyperkit_${destDirSuffix}_${yq_ARCH}"
     generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 fi
 
@@ -146,7 +146,7 @@ fi
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
+    vfkitDestDir="crc_vfkit_${destDirSuffix}_${yq_ARCH}"
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 fi
 
@@ -155,7 +155,7 @@ fi
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-    hypervDestDir="crc_hyperv_${destDirSuffix}"
+    hypervDestDir="crc_hyperv_${destDirSuffix}_${yq_ARCH}"
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
 fi
 
