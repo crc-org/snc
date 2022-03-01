@@ -205,11 +205,11 @@ function renew_certificates() {
     timeout 300 bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
     ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
-    # Retry 5 times to make sure kubelet certs are rotated correctly.
+    # Retry 10 times to make sure kubelet certs are rotated correctly.
     i=0
-    while [ $i -lt 5 ]; do
+    while [ $i -lt 10 ]; do
         if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-	    # Wait until bootstrap csr request is generated with 5 min timeout
+	    # Wait until bootstrap csr request is generated with 10 min timeout
 	    echo "Retry loop $i, wait for 60sec before starting next loop"
             sleep 60
 	else
