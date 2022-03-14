@@ -12,6 +12,7 @@ function get_dest_dir {
             DEST_DIR="$(date --iso-8601)"
         fi
     fi
+    DEST_DIR="${DEST_DIR}_${yq_ARCH}"
 }
 
 function sparsify {
