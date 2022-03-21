@@ -222,6 +222,14 @@ function generate_macos_bundle {
     # Copy oc client
     cp openshift-clients/mac/oc $destDir/
 
+    # aarch64 only supports uncompressed kernels, see
+    # https://github.com/code-ready/vfkit/commit/4aaa4fbdc76f9fc0ccec2b9fda25c5235664e7d6
+    # for more details
+    if [ "${ARCH}" == "aarch64" ]; then
+      mv $destDir/vmlinuz-${kernel_release} $destDir/vmlinuz-${kernel_release}.gz
+      gunzip $destDir/vmlinuz-${kernel_release}.gz
+    fi
+
     cp podman-remote/mac/podman $destDir/
 
     ocSize=$(du -b $destDir/oc | awk '{print $1}')
