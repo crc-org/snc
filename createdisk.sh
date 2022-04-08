@@ -126,7 +126,8 @@ destDirSuffix="${DEST_DIR}"
 libvirtDestDir="crc_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
 
-create_qemu_image "$libvirtDestDir"
+create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_PREFIX}-master-0"
+mv "${libvirtDestDir}/${VM_PREFIX}-master-0" "${libvirtDestDir}/${CRC_VM_NAME}.qcow2"
 copy_additional_files "$1" "$libvirtDestDir"
 create_tarball "$libvirtDestDir"
 

@@ -58,29 +58,31 @@ EOF
 
 function create_qemu_image {
     local destDir=$1
+    local base=$2
+    local overlay=$3
 
-    if [ -f /var/lib/libvirt/images/${VM_PREFIX}-master-0 ]; then
-      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-master-0 $destDir
-      sudo cp /var/lib/libvirt/images/${VM_PREFIX}-base $destDir
+    if [ -f /var/lib/libvirt/images/${overlay} ]; then
+      sudo cp /var/lib/libvirt/images/${overlay} ${destDir}
+      sudo cp /var/lib/libvirt/images/${base} ${destDir}
     else
-      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-master-0 $destDir
-      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${VM_PREFIX}-base $destDir
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${overlay} ${destDir}
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${base} ${destDir}
     fi
 
-    sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
-    ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
+    sudo chown $USER:$USER -R ${destDir}
+    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${base} ${destDir}/${overlay}
+    ${QEMU_IMG} commit ${destDir}/${overlay}
 
-    sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
+    sparsify ${destDir} ${base} ${overlay}
 
     # Before using the created qcow2, check if it has lazy_refcounts set to true.
-    ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
+    ${QEMU_IMG} info ${destDir}/${overlay} | grep "lazy refcounts: true" 2>&1 >/dev/null
     if [ $? -ne 0 ]; then
         echo "${CRC_VM_NAME}.qcow2 doesn't have lazy_refcounts enabled. This is going to cause disk image corruption when using with hyperkit"
         exit 1;
     fi
 
-    rm -fr $destDir/${VM_PREFIX}-master-0 $destDir/${VM_PREFIX}-base
+    rm -fr ${destDir}/${base}
 }
 
 function update_json_description {
