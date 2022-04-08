@@ -45,20 +45,26 @@ EOF
 
 function create_qemu_image {
     local destDir=$1
+    local base=$2
+    local overlay=$3
 
-    sudo cp /var/lib/libvirt/images/${CRC_VM_NAME}.qcow2 $destDir
-    sudo cp /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2 $destDir
+    if [ -f /var/lib/libvirt/images/${overlay} ]; then
+      sudo cp /var/lib/libvirt/images/${overlay} ${destDir}
+      sudo cp /var/lib/libvirt/images/${base} ${destDir}
+    else
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${overlay} ${destDir}
+      sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${base} ${destDir}
+    fi
 
-    sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b fedora-coreos-qemu.${ARCH}.qcow2 $destDir/${CRC_VM_NAME}.qcow2
-    ${QEMU_IMG} commit $destDir/${CRC_VM_NAME}.qcow2
+    sudo chown $USER:$USER -R ${destDir}
+    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${base} ${destDir}/${overlay}
+    ${QEMU_IMG} commit ${destDir}/${overlay}
 
-    sparsify $destDir fedora-coreos-qemu.${ARCH}.qcow2 ${CRC_VM_NAME}.qcow2
+    sparsify ${destDir} ${base} ${overlay}
 
-    # Update the qcow2 image permission from 0600 to 0644
-    chmod 0644 ${destDir}/${CRC_VM_NAME}.qcow2
+    chmod 0644 ${destDir}/${overlay}
 
-    rm -fr $destDir/fedora-coreos-qemu.${ARCH}.qcow2
+    rm -fr ${destDir}/${base}
 }
 
 function update_json_description {
