@@ -87,7 +87,7 @@ destDirSuffix="${podman_version}"
 libvirtDestDir="crc_podman_libvirt_${destDirSuffix}_${yq_ARCH}"
 mkdir "$libvirtDestDir"
 
-create_qemu_image "$INSTALL_DIR" "$libvirtDestDir"
+create_qemu_image "$libvirtDestDir"
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "$podman_version"
 create_tarball "$libvirtDestDir"
 

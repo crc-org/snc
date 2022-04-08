@@ -42,7 +42,7 @@ ${PODMAN} run --pull=always --rm -i quay.io/coreos/ignition-validate:release - <
 
 # Download the latest fedora coreos latest qcow2
 ${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}:/data:Z -w /data quay.io/coreos/coreos-installer:release download -a ${ARCH} -s stable -p qemu -f qcow2.xz --decompress
-mv ${CRC_INSTALL_DIR}/fedora-coreos-*-qemu.${ARCH}.qcow2 ${CRC_INSTALL_DIR}/fedora-coreos-qemu.${ARCH}.qcow2
+sudo mv ${CRC_INSTALL_DIR}/fedora-coreos-*-qemu.${ARCH}.qcow2 /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2
 
 # Update the selinux context for ign config and ${CRC_INSTALL_DIR}
 chcon --verbose ${current_selinux_context} ${CRC_INSTALL_DIR}
@@ -56,7 +56,7 @@ create_json_description
 sudo ${VIRT_INSTALL} --name=${CRC_VM_NAME} --vcpus=2 --ram=2048 --arch=${ARCH}\
 	--import --graphics=none \
 	--qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=${PWD}/${CRC_INSTALL_DIR}/fcos-config.ign" \
-	--disk=size=31,backing_store=${PWD}/${CRC_INSTALL_DIR}/fedora-coreos-qemu.${ARCH}.qcow2 \
+	--disk=size=31,backing_store=/var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2 \
 	--os-variant=fedora-coreos-stable \
 	--noautoconsole --quiet
 sleep 120

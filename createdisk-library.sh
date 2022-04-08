@@ -44,11 +44,10 @@ EOF
 }
 
 function create_qemu_image {
-    local sourceDir=$1
-    local destDir=$2
+    local destDir=$1
 
     sudo cp /var/lib/libvirt/images/${CRC_VM_NAME}.qcow2 $destDir
-    sudo cp ${sourceDir}/fedora-coreos-qemu.${ARCH}.qcow2 $destDir
+    sudo cp /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2 $destDir
 
     sudo chown $USER:$USER -R $destDir
     ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b fedora-coreos-qemu.${ARCH}.qcow2 $destDir/${CRC_VM_NAME}.qcow2
