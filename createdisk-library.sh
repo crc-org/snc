@@ -191,9 +191,6 @@ function generate_hyperkit_bundle {
     local srcDir=$1
     local destDir=$2
 
-    mkdir "$destDir"
-    cp $srcDir/kubeconfig $destDir/
-    cp $srcDir/id_ecdsa_crc $destDir/
     generate_macos_bundle "hyperkit" "$@"
 
     cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
@@ -207,7 +204,6 @@ function generate_vfkit_bundle {
     local srcDir=$1
     local destDir=$2
 
-    mkdir "$destDir"
     generate_macos_bundle "vfkit" "$@"
 
     ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
@@ -224,6 +220,9 @@ function generate_macos_bundle {
     local kernel_release=$5
     local kernel_cmd_line=$6
 
+    mkdir "$destDir"
+    cp $srcDir/kubeconfig $destDir/
+    cp $srcDir/id_ecdsa_crc $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
     cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
