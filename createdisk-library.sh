@@ -155,7 +155,7 @@ function copy_additional_files {
 function install_additional_packages() {
     local vm_ip=$1
     shift
-    if [[ ${OKD_VERSION} != "none" ]]; then
+    if [[ ${BASE_OS} = "fedora-coreos" ]]; then
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
         ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
