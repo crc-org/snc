@@ -52,7 +52,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl enable podman.so
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-    prepare_hyperV
+    prepare_hyperV api.${CRC_VM_NAME}.${BASE_DOMAIN}
 fi
 
 # Add gvisor-tap-vsock and crc-dnsmasq services

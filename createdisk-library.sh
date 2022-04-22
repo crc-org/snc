@@ -152,35 +152,42 @@ function copy_additional_files {
     eventually_add_pull_secret $destDir
 }
 
-function prepare_hyperV() {
+function install_additional_packages() {
+    local vm_ip=$1
+    shift
     if [[ ${OKD_VERSION} != "none" ]]; then
-        # Install the hyperV rpms to VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
     else
         # Download the hyperV daemons dependency on host
         local pkgDir=$(mktemp -d tmp-rpmXXX)
         mkdir -p ${pkgDir}/packages
-        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages hyperv-daemons --resolve
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages "$*" --resolve
 
         # SCP the downloaded rpms to VM
-        ${SCP} -r ${pkgDir}/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core
+        ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
 
-        # Install the hyperV rpms to VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+        # Install these rpms to VM
+        ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
 
         # Remove the packages from VM
-        ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
+        ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
 
         # Cleanup up packages
         rm -fr ${pkgDir}
     fi
+}
+
+function prepare_hyperV() {
+    local vm_ip=$1
+
+    install_additional_packages ${vm_ip} hyperv-daemons
 
     # Adding Hyper-V vsock support
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
+    ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
             echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 }
