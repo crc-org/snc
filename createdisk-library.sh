@@ -115,11 +115,30 @@ function copy_additional_files {
 function install_additional_packages() {
     local vm_ip=$1
     shift
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+    if [[ ${BASE_OS} = "fedora-coreos" ]]; then
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+        ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+    else
+        # Download the hyperV daemons dependency on host
+        local pkgDir=$(mktemp -d tmp-rpmXXX)
+        mkdir -p ${pkgDir}/packages
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages "$*" --resolve
+
+        # SCP the downloaded rpms to VM
+        ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
+
+        # Install these rpms to VM
+        ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+
+        # Remove the packages from VM
+        ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
+
+        # Cleanup up packages
+        rm -fr ${pkgDir}
+    fi
 }
 
 function prepare_cockpit() {
