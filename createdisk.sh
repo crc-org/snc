@@ -43,8 +43,8 @@ ${SSH} core@${VM_IP} -- 'touch ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/autho
 shutdown_vm ${CRC_VM_NAME}
 start_vm ${CRC_VM_NAME} ${VM_IP}
 
-# Remove the base deployment from rpm-ostree
-${SSH} core@${VM_IP} -- 'sudo rpm-ostree cleanup -r'
+# Remove miscellaneous unneeded data from rpm-ostree
+${SSH} core@${VM_IP} -- 'sudo rpm-ostree cleanup --rollback --base --repomd'
 # Shutdown and Start the VM after removing base deployment tree
 # This is required because kernel commandline changed, namely
 # ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches 
