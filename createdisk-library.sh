@@ -114,19 +114,24 @@ function copy_additional_files {
 
 function install_additional_packages() {
     local vm_ip=$1
+    shift
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install --allow-inactive cockpit-bridge cockpit-ws cockpit-podman'
-    if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-        prepare_hyperV ${vm_ip}
-    fi
+    ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
 }
 
+function prepare_cockpit() {
+    local vm_ip=$1
+
+    install_additional_packages ${vm_ip} cockpit-bridge cockpit-ws cockpit-podman
+}
+
 function prepare_hyperV() {
     local vm_ip=$1
-    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install --allow-inactive hyperv-daemons'
+
+    install_additional_packages ${vm_ip} hyperv-daemons
 
     # Adding Hyper-V vsock support
     ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF

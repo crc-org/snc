@@ -24,7 +24,8 @@ ${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 # Remove moby-engine package
 ${SSH} core@${VM_IP} -- 'sudo rpm-ostree override remove moby-engine'
 
-install_additional_packages ${VM_IP}
+prepare_cockpit ${VM_IP}
+prepare_hyperV ${VM_IP}
 
 # Add gvisor-tap-vsock
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
