@@ -122,8 +122,6 @@ function install_additional_packages() {
     fi
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
     ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --base'
-    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --repomd'
 }
 
 function prepare_hyperV() {
