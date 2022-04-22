@@ -35,10 +35,6 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   systemctl enable gvisor-tap-vsock.service
 EOF
 
-# Change the ownership of authorized_keys file
-# https://bugzilla.redhat.com/show_bug.cgi?id=1956739
-${SSH} core@${VM_IP} -- 'touch ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/authorized_keys'
-
 # Shutdown and Start the VM after modifying the set of installed packages
 # This is required to get the latest ostree layer which have those installed packages.
 shutdown_vm ${CRC_VM_NAME}
