@@ -68,7 +68,7 @@ function create_qemu_image {
     fi
 
     sudo chown $USER:$USER -R $destDir
-    ${QEMU_IMG} rebase -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
+    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${VM_PREFIX}-base $destDir/${VM_PREFIX}-master-0
     ${QEMU_IMG} commit $destDir/${VM_PREFIX}-master-0
 
     sparsify $destDir ${VM_PREFIX}-base ${CRC_VM_NAME}.qcow2
