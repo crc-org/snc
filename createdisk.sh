@@ -117,7 +117,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo journalctl --vacuum-time=
 shutdown_vm ${VM_PREFIX}
 
 # Download podman clients
-download_podman $podman_version
+download_podman $podman_version ${yq_ARCH}
 
 # libvirt image generation
 get_dest_dir_suffix "${OPENSHIFT_VERSION}"
