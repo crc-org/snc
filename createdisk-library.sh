@@ -332,7 +332,7 @@ function download_podman() {
       mkdir -p podman-remote/mac
       curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin.zip -o podman-remote/mac/podman.zip
       ${UNZIP} -o -d podman-remote/mac/ podman-remote/mac/podman.zip
-      mv podman-remote/mac/podman-${version}/podman  podman-remote/mac
+      mv podman-remote/mac/podman-${version}/usr/bin/podman  podman-remote/mac
       chmod +x podman-remote/mac/podman
     fi
 
@@ -340,7 +340,7 @@ function download_podman() {
       mkdir -p podman-remote/windows
       curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-windows.zip -o podman-remote/windows/podman.zip
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
-      mv podman-remote/windows/podman-${version}/podman.exe  podman-remote/windows
+      mv podman-remote/windows/podman-${version}/usr/bin/podman.exe  podman-remote/windows
     fi
 }
 
