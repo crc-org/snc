@@ -65,7 +65,7 @@ if ! rpm -q libguestfs-xfs; then
     sudo yum install libguestfs-xfs
 fi
 
-if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ];then
+if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" -o -n "${SNC_GENERATE_MACOS_BUNDLE}" ];then
     if ! which ${UNZIP}; then
         sudo yum -y install /usr/bin/unzip
     fi
