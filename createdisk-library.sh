@@ -322,6 +322,7 @@ function create_tarball {
 
 function download_podman() {
     local version=$1
+    local arch=$2
 
     mkdir -p podman-remote/linux
     curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-static.tar.gz | tar -zx -C podman-remote/linux podman-remote-static
@@ -330,7 +331,7 @@ function download_podman() {
 
     if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
       mkdir -p podman-remote/mac
-      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin.zip -o podman-remote/mac/podman.zip
+      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin_${arch}.zip -o podman-remote/mac/podman.zip
       ${UNZIP} -o -d podman-remote/mac/ podman-remote/mac/podman.zip
       mv podman-remote/mac/podman-${version}/usr/bin/podman  podman-remote/mac
       chmod +x podman-remote/mac/podman
@@ -338,7 +339,7 @@ function download_podman() {
 
     if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
       mkdir -p podman-remote/windows
-      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-windows.zip -o podman-remote/windows/podman.zip
+      curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-windows_${arch}.zip -o podman-remote/windows/podman.zip
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
       mv podman-remote/windows/podman-${version}/usr/bin/podman.exe  podman-remote/windows
     fi
