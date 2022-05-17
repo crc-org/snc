@@ -12,15 +12,15 @@ function preflight_failure() {
 
 function run_preflight_checks() {
 	if ! sudo virsh net-info default &> /dev/null; then
-		echo "Default libvirt network is not available. Exiting now!"
-		exit 1
+		echo "Installing libvirt default network configuration"
+		sudo dnf install -y libvirt-daemon-config-network || exit 1
 	fi
-	echo "default network is available"
+	echo "default libvirt network is available"
 
 	#Check if default libvirt network is Active
 	if [[ $(sudo virsh net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
-		echo "Default network is not active. Exiting now!"
-		exit 1
+		echo "Default network is not active, starting it"
+		sudo virsh net-start default || exit 1
 	fi
 
 	#Just warn if architecture is not supported
