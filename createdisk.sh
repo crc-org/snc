@@ -28,7 +28,7 @@ install_additional_packages ${VM_IP}
 
 # Add gvisor-tap-vsock
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:3231aba53905468c22e394493a0debc1a6cc6392
+  podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
   podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
   systemctl daemon-reload
   systemctl enable gvisor-tap-vsock.service
