@@ -11,6 +11,8 @@ source createdisk-library.sh
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 
+INSTALL_DIR=${1:-crc-tmp-install-data}
+
 # If the user set OKD_VERSION in the environment, then use it to set BASE_OS
 OKD_VERSION=${OKD_VERSION:-none}
 destDirPrefix="crc"
@@ -20,7 +22,7 @@ then
     destDirPrefix="crc_okd"
 fi
 BASE_OS=${BASE_OS:-rhcos}
-OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $1/crc-bundle-info.json)
+OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
 # BASE_DOMAIN: domain used for the cluster
@@ -28,10 +30,6 @@ OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $1/crc-bundle-info.js
 CRC_VM_NAME=${CRC_VM_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 
-if [[ $# -ne 1 ]]; then
-   echo "You need to provide the running cluster directory to copy kubeconfig"
-   exit 1
-fi
 
 VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 
@@ -100,7 +98,7 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "mkdir /tmp/kernel && sudo cp -r /boot/ostree/${BASE_OS}-${ostree_hash}/*${kernel_release}* /tmp/kernel && sudo chmod 644 /tmp/kernel/initramfs*"
 
     # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-    ${SCP} -r core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/tmp/kernel/* $1
+    ${SCP} -r core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/tmp/kernel/* $INSTALL_DIR
 
     ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo rm -fr /tmp/kernel"
 fi
@@ -135,7 +133,7 @@ mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_PREFIX}-master-0"
 mv "${libvirtDestDir}/${VM_PREFIX}-master-0" "${libvirtDestDir}/${CRC_VM_NAME}.qcow2"
-copy_additional_files "$1" "$libvirtDestDir"
+copy_additional_files "$INSTALL_DIR" "$libvirtDestDir"
 create_tarball "$libvirtDestDir"
 
 # vfkit image generation
@@ -143,7 +141,7 @@ create_tarball "$libvirtDestDir"
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
-    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 fi
 
 # HyperV image generation
@@ -156,4 +154,4 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
 fi
 
 # Cleanup up vmlinux/initramfs files
-rm -fr "$1/vmlinuz*" "$1/initramfs*"
+rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
