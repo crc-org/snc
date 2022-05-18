@@ -14,10 +14,7 @@ SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o Identiti
 CRC_VM_NAME=${CRC_VM_NAME:-crc-podman}
 BASE_OS=fedora-coreos
 
-if [[ $# -ne 1 ]]; then
-   echo "You need to provide crc-tmp-install-data"
-   exit 1
-fi
+INSTALL_DIR=${1:-crc-tmp-install-data}
 
 
 VM_IP=$(arp -an | grep $(sudo virsh dumpxml ${CRC_VM_NAME} | grep '<mac' | grep -o '\([0-9a-f][0-9a-f]:\)\+[0-9a-f][0-9a-f]') | grep -o '\([0-9]\{1,3\}\.\)\+[0-9]\{1,3\}')
@@ -68,7 +65,7 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
 
     # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-    ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $1
+    ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $INSTALL_DIR
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
@@ -91,8 +88,8 @@ destDirSuffix="${podman_version}"
 libvirtDestDir="crc_podman_libvirt_${destDirSuffix}_${yq_ARCH}"
 mkdir "$libvirtDestDir"
 
-create_qemu_image "$1" "$libvirtDestDir"
-copy_additional_files "$1" "$libvirtDestDir" "$podman_version"
+create_qemu_image "$INSTALL_DIR" "$libvirtDestDir"
+copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "$podman_version"
 create_tarball "$libvirtDestDir"
 
 # HyperKit image generation
@@ -100,7 +97,7 @@ create_tarball "$libvirtDestDir"
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     hyperkitDestDir="crc_podman_hyperkit_${destDirSuffix}_${yq_ARCH}"
-    generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+    generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 fi
 
 # vfkit image generation
@@ -108,7 +105,7 @@ fi
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     vfkitDestDir="crc_podman_vfkit_${destDirSuffix}_${yq_ARCH}"
-    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 fi
 
 # HyperV image generation
@@ -121,4 +118,4 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
 fi
 
 # Cleanup up vmlinux/initramfs files
-rm -fr "$1/vmlinuz*" "$1/initramfs*"
+rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
