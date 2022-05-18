@@ -44,7 +44,7 @@ ${PODMAN} run --pull=always --rm -i quay.io/coreos/ignition-validate:release - <
 ${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}:/data:Z -w /data quay.io/coreos/coreos-installer:release download -s stable -p qemu -f qcow2.xz --decompress
 mv ${CRC_INSTALL_DIR}/fedora-coreos-*-qemu.x86_64.qcow2 ${CRC_INSTALL_DIR}/fedora-coreos-qemu.x86_64.qcow2
 
-# Update the selinux context for ign conig and ${CRC_INSTALL_DIR}
+# Update the selinux context for ign config and ${CRC_INSTALL_DIR}
 chcon --verbose ${current_selinux_context} ${CRC_INSTALL_DIR}
 chcon --verbose unconfined_u:object_r:svirt_home_t:s0 ${CRC_INSTALL_DIR}/fcos-config.ign
 sudo setfacl -m u:qemu:rx $HOME
