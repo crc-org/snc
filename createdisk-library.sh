@@ -165,11 +165,12 @@ function prepare_hyperV() {
         ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
     else
         # Download the hyperV daemons dependency on host
-        mkdir $1/packages
-        sudo yum download --downloadonly --downloaddir $1/packages hyperv-daemons --resolve
+        local pkgDir=$(mktemp -d tmp-rpmXXX)
+        mkdir -p ${pkgDir}/packages
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages hyperv-daemons --resolve
 
         # SCP the downloaded rpms to VM
-        ${SCP} -r $1/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
+        ${SCP} -r ${pkgDir}/packages core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core
 
         # Install the hyperV rpms to VM
         ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
@@ -178,7 +179,7 @@ function prepare_hyperV() {
         ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- rm -fr /home/core/packages
 
         # Cleanup up packages
-        rm -fr $1/packages
+        rm -fr ${pkgDir}
     fi
 
     # Adding Hyper-V vsock support
