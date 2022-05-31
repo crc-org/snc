@@ -181,6 +181,12 @@ function install_additional_packages() {
     fi
 }
 
+function prepare_cockpit() {
+    local vm_ip=$1
+
+    install_additional_packages ${vm_ip} cockpit-bridge cockpit-ws cockpit-podman
+}
+
 function prepare_hyperV() {
     local vm_ip=$1
 
