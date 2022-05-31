@@ -218,7 +218,7 @@ function generate_macos_bundle {
     local kernel_release=$5
     local kernel_cmd_line=$6
 
-    mkdir "$destDir"
+    mkdir -p "$destDir"
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
     cp $tmpDir/vmlinuz-${kernel_release} $destDir/
