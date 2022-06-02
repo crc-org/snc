@@ -138,20 +138,6 @@ function prepare_hyperV() {
 EOF
 }
 
-function generate_hyperkit_bundle {
-    local srcDir=$1
-    local destDir=$2
-
-    mkdir "$destDir"
-    generate_macos_bundle "hyperkit" "$@"
-
-    cp $srcDir/${CRC_VM_NAME}.qcow2 $destDir/
-    # not needed, we'll reuse the data added when generating the libvirt bundle
-    #add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.qcow2" "qcow2"
-
-    create_tarball "$destDir"
-}
-
 function generate_vfkit_bundle {
     local srcDir=$1
     local destDir=$2
