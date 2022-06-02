@@ -91,14 +91,6 @@ create_qemu_image "$INSTALL_DIR" "$libvirtDestDir"
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "$podman_version"
 create_tarball "$libvirtDestDir"
 
-# HyperKit image generation
-# This must be done after the generation of libvirt image as it reuses some of
-# the content of $libvirtDestDir
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    hyperkitDestDir="crc_podman_hyperkit_${destDirSuffix}_${yq_ARCH}"
-    generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
-fi
-
 # vfkit image generation
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
