@@ -130,14 +130,6 @@ create_qemu_image "$libvirtDestDir"
 copy_additional_files "$1" "$libvirtDestDir"
 create_tarball "$libvirtDestDir"
 
-# HyperKit image generation
-# This must be done after the generation of libvirt image as it reuses some of
-# the content of $libvirtDestDir
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    hyperkitDestDir="crc_hyperkit_${destDirSuffix}"
-    generate_hyperkit_bundle "$libvirtDestDir" "$hyperkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
-fi
-
 # vfkit image generation
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
