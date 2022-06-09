@@ -2,17 +2,12 @@
 
 set -exuo pipefail
 
-
-function get_dest_dir {
-    if [ "${OPENSHIFT_VERSION-}" != "" ]; then
-        DEST_DIR=$OPENSHIFT_VERSION
-    else
-        DEST_DIR=${PULL_NUMBER}
-        if [ -z ${DEST_DIR} ]; then
-            DEST_DIR="$(date --iso-8601)"
-        fi
+function get_dest_dir_suffix {
+    local version=$1
+    DEST_DIR_SUFFIX="${version}_${yq_ARCH}"
+    if [ -n "${PULL_NUMBER-}" ]; then
+         DEST_DIR_SUFFIX="$DEST_DIR_SUFFIX.pr${PULL_NUMBER}"
     fi
-    DEST_DIR="${DEST_DIR}_${yq_ARCH}"
 }
 
 function sparsify {

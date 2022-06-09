@@ -19,6 +19,7 @@ then
     BASE_OS=fedora-coreos
 fi
 BASE_OS=${BASE_OS:-rhcos}
+OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $1/crc-bundle-info.json)
 
 # CRC_VM_NAME: short VM name to use in crc_libvirt.sh
 # BASE_DOMAIN: domain used for the cluster
@@ -120,8 +121,8 @@ shutdown_vm ${VM_PREFIX}
 download_podman $podman_version
 
 # libvirt image generation
-get_dest_dir
-destDirSuffix="${DEST_DIR}"
+get_dest_dir_suffix "${OPENSHIFT_VERSION}"
+destDirSuffix="${DEST_DIR_SUFFIX}"
 
 libvirtDestDir="crc_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
