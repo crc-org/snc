@@ -10,12 +10,11 @@ source createdisk-library.sh
 
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-# If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, set BASE_OS
-# Unless, those variables are explicitly set as well.
+
+# If the user set OKD_VERSION in the environment, then use it to set BASE_OS
 OKD_VERSION=${OKD_VERSION:-none}
 if [[ ${OKD_VERSION} != "none" ]]
 then
-    OPENSHIFT_VERSION=${OKD_VERSION}
     BASE_OS=fedora-coreos
 fi
 BASE_OS=${BASE_OS:-rhcos}
