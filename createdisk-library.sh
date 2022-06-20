@@ -75,6 +75,8 @@ function create_qemu_image {
 
     sparsify ${destDir} ${base} ${overlay}
 
+    chmod 0644 ${destDir}/${overlay}
+
     rm -fr ${destDir}/${base}
 }
 
