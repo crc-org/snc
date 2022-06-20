@@ -56,13 +56,6 @@ function create_qemu_image {
 
     sparsify $destDir fedora-coreos-qemu.${ARCH}.qcow2 ${CRC_VM_NAME}.qcow2
 
-    # Before using the created qcow2, check if it has lazy_refcounts set to true.
-    ${QEMU_IMG} info ${destDir}/${CRC_VM_NAME}.qcow2 | grep "lazy refcounts: true" 2>&1 >/dev/null
-    if [ $? -ne 0 ]; then
-        echo "${CRC_VM_NAME}.qcow2 doesn't have lazy_refcounts enabled. This is going to cause disk image corruption when using with hyperkit"
-        exit 1;
-    fi
-
     # Update the qcow2 image permission from 0600 to 0644
     chmod 0644 ${destDir}/${CRC_VM_NAME}.qcow2
 
