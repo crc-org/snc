@@ -79,9 +79,10 @@ shutdown_vm ${CRC_VM_NAME}
 download_podman $podman_version ${yq_ARCH}
 
 # libvirt image generation
-destDirSuffix="${podman_version}"
+get_dest_dir_suffix "${podman_version}"
+destDirSuffix="${DEST_DIR_SUFFIX}"
 
-libvirtDestDir="crc_podman_libvirt_${destDirSuffix}_${yq_ARCH}"
+libvirtDestDir="crc_podman_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir" "fedora-coreos-qemu.${ARCH}.qcow2" "${CRC_VM_NAME}.qcow2"
@@ -92,7 +93,7 @@ create_tarball "$libvirtDestDir"
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}_${yq_ARCH}"
+    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 fi
 
@@ -101,7 +102,7 @@ fi
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-    hypervDestDir="crc_podman_hyperv_${destDirSuffix}_${yq_ARCH}"
+    hypervDestDir="crc_podman_hyperv_${destDirSuffix}"
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
 fi
 
