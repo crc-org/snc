@@ -316,7 +316,7 @@ function download_podman() {
     local arch=$2
 
     mkdir -p podman-remote/linux
-    curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-static.tar.gz | tar -zx -C podman-remote/linux podman-remote-static
+    curl -L https://github.com/containers/podman/releases/download/v4.1.1/podman-remote-static.tar.gz | tar -zx -C podman-remote/linux podman-remote-static
     mv podman-remote/linux/podman-remote-static podman-remote/linux/podman-remote
     chmod +x podman-remote/linux/podman-remote
 
