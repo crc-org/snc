@@ -5,6 +5,7 @@ JQ=${JQ:-jq}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
+VIRSH=${VIRSH:-virsh}
 
 XMLLINT=${XMLLINT:-xmllint}
 
@@ -55,6 +56,10 @@ fi
 
 if ! which ${GUESTFISH}; then
     sudo yum -y install /usr/bin/guestfish
+fi
+
+if ! which ${VIRSH}; then
+    sudo yum -y install /usr/bin/virsh
 fi
 
 if ! which ${QEMU_IMG}; then
