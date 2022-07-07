@@ -48,6 +48,16 @@ export BUNDLED_PULL_SECRET_PATH="/tmp/pull_secret.json"
 ./createdisk.sh crc-tmp-install-data
 ```
 
+## Creating container image for bundles
+
+After running snc.sh/createdisk.sh, the generated bundles can be uploaded to a container registry using this command:
+
+```
+./gen-bundle-image.sh <version> <openshift/okd/podman>
+```
+
+Note: a GPG key is needed to sign the bundles before they are wrapped in a container image.
+
 ## Troubleshooting
 
 OpenShift installer will create 2 VMs. It is sometimes useful to ssh inside the VMs.
