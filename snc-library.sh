@@ -283,6 +283,7 @@ function wait_till_cluster_stable() {
        fi
        if [ $count -eq $numConsecutive ]; then
            echo "Cluster has stabilized"
+           retry ${OC} delete pods --field-selector=status.phase=Failed -A
            break
        fi
        sleep 30s
