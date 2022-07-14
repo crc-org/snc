@@ -2,6 +2,8 @@
 
 set -exuo pipefail
 
+GPG_SECRET_KEY_PASSPHRASE_PATH=${GPG_SECRET_KEY_PASSPHRASE:-gpg_key_pass}
+
 function set_bundle_variables {
    local version=$1
    local preset=$2
@@ -61,11 +63,11 @@ function sign_bundle_files {
   local preset=$1
   rm -fr *.sig
   if [[ ${preset} = "podman" ]]; then
-     gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file gpg_key_pass --armor --output ${vfkit_bundle_arm64}.sig --detach-sig ${vfkit_bundle_arm64}
+     gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle_arm64}.sig --detach-sig ${vfkit_bundle_arm64}
   fi
-  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file gpg_key_pass --armor --output ${vfkit_bundle}.sig --detach-sig ${vfkit_bundle}
-  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file gpg_key_pass --armor --output ${hyperv_bundle}.sig --detach-sig ${hyperv_bundle}
-  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file gpg_key_pass --armor --output ${libvirt_bundle}.sig --detach-sig ${libvirt_bundle}
+  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle}.sig --detach-sig ${vfkit_bundle}
+  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${hyperv_bundle}.sig --detach-sig ${hyperv_bundle}
+  gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${libvirt_bundle}.sig --detach-sig ${libvirt_bundle}
 }
 
 if [[ $# -ne 2 ]]; then
