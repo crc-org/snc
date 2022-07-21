@@ -23,7 +23,6 @@ networking:
     hostPrefix: 23
   machineNetwork:
   - cidr: 192.168.126.0/24
-  networkType: OVNKubernetes
   serviceNetwork:
   - 10.217.4.0/23
 platform:
