@@ -24,6 +24,11 @@ ${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
 # Remove moby-engine package
 ${SSH} core@${VM_IP} -- 'sudo rpm-ostree override remove moby-engine'
 
+# Add binfmt for using other platform
+${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+  rpm-ostree install qemu-user-binfmt qemu-user-static-aarch64 qemu-user-static-x86_64
+EOF
+
 prepare_cockpit ${VM_IP}
 prepare_hyperV ${VM_IP}
 
