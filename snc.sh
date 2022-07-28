@@ -14,10 +14,12 @@ trap 'jobs=($(jobs -p)); [ -n "${jobs-}" ] && ((${#jobs})) && kill "${jobs[@]}" 
 # If the user set OKD_VERSION in the environment, then use it to override OPENSHIFT_VERSION, MIRROR, and OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 # Unless, those variables are explicitly set as well.
 OKD_VERSION=${OKD_VERSION:-none}
+BUNDLE_TYPE="snc"
 if [[ ${OKD_VERSION} != "none" ]]
 then
     OPENSHIFT_VERSION=${OKD_VERSION}
     MIRROR=${MIRROR:-https://github.com/openshift/okd/releases/download}
+    BUNDLE_TYPE="okd"
 fi
 
 INSTALL_DIR=crc-tmp-install-data
