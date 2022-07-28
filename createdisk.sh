@@ -13,9 +13,11 @@ SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa
 
 # If the user set OKD_VERSION in the environment, then use it to set BASE_OS
 OKD_VERSION=${OKD_VERSION:-none}
+destDirPrefix="crc"
 if [[ ${OKD_VERSION} != "none" ]]
 then
     BASE_OS=fedora-coreos
+    destDirPrefix="crc_okd"
 fi
 BASE_OS=${BASE_OS:-rhcos}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $1/crc-bundle-info.json)
@@ -123,7 +125,7 @@ download_podman $podman_version ${yq_ARCH}
 get_dest_dir_suffix "${OPENSHIFT_VERSION}"
 destDirSuffix="${DEST_DIR_SUFFIX}"
 
-libvirtDestDir="crc_libvirt_${destDirSuffix}"
+libvirtDestDir="${destDirPrefix}_libvirt_${destDirSuffix}"
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_PREFIX}-master-0"
@@ -135,7 +137,7 @@ create_tarball "$libvirtDestDir"
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    vfkitDestDir="crc_vfkit_${destDirSuffix}"
+    vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$1" "$kernel_release" "$kernel_cmd_line"
 fi
 
@@ -144,7 +146,7 @@ fi
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
-    hypervDestDir="crc_hyperv_${destDirSuffix}"
+    hypervDestDir="${destDirPrefix}_hyperv_${destDirSuffix}"
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
 fi
 
