@@ -88,8 +88,13 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     # Get the kernel command line arguments
     kernel_cmd_line=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'cat /proc/cmdline')
 
+    # Get the vmlinux/initramfs to /tmp/kernel and change permission for initramfs
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "mkdir /tmp/kernel && sudo cp -r /boot/ostree/${BASE_OS}-${ostree_hash}/*${kernel_release}* /tmp/kernel && sudo chmod 644 /tmp/kernel/initramfs*"
+
     # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-    ${SCP} -r core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $1
+    ${SCP} -r core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/tmp/kernel/* $1
+
+    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo rm -fr /tmp/kernel"
 fi
 
 # Add internalIP as node IP for kubelet systemd unit file
