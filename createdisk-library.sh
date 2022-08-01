@@ -15,6 +15,7 @@ function sparsify {
     local srcFile=$2
     local destFile=$3
 
+    export LIBGUESTFS_BACKEND=direct
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
 
