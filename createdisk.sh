@@ -74,6 +74,10 @@ cat crio-wipe.service | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} "sudo tee 
 # Preload routes controller
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl pull quay.io/crcont/routes-controller:latest'
 
+if [ "${ARCH}" == "aarch64" ]; then
+   swap_kernel api.${CRC_VM_NAME}.${BASE_DOMAIN}
+fi
+
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
 shutdown_vm ${VM_PREFIX}
