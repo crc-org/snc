@@ -199,7 +199,7 @@ function prepare_cockpit() {
 function prepare_hyperV() {
     local vm_ip=$1
 
-    install_additional_packages ${vm_ip} hyperv-daemons
+    install_additional_packages ${vm_ip} hyperv-daemons cifs-utils
 
     # Adding Hyper-V vsock support
     ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
