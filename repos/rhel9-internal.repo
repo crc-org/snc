@@ -1,0 +1,5 @@
+[rhel-9.0-baseos]
+name=rhel9 baseos
+baseurl=https://rhsm-pulp.corp.redhat.com/content/eus/rhel9/9.0/$basearch/baseos/os/
+enabled=1
+gpgcheck=0
