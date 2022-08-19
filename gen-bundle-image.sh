@@ -23,23 +23,23 @@ function generate_image {
    local preset=$1
 
    if [[ ${preset} = "podman" ]]; then
-       cat <<EOF | podman build --os darwin --arch arm64 --tag podman-bundle:darwin-arm64 -f - .
+       cat <<EOF | podman build --label bundle=${vfkit_bundle_arm64} --os darwin --arch arm64 --tag podman-bundle:darwin-arm64 -f - .
 FROM scratch
 COPY ${vfkit_bundle_arm64} ${vfkit_bundle_arm64}.sig /
 EOF
    fi
 
-   cat <<EOF | podman build --os darwin --arch amd64 --tag ${preset}-bundle:darwin-amd64 -f - .
+   cat <<EOF | podman build --label bundle=${vfkit_bundle} --os darwin --arch amd64 --tag ${preset}-bundle:darwin-amd64 -f - .
 FROM scratch
 COPY ${vfkit_bundle} ${vfkit_bundle}.sig /
 EOF
 
-   cat <<EOF | podman build --os windows --arch amd64 --tag ${preset}-bundle:windows-amd64 -f - .
+   cat <<EOF | podman build --label bundle=${hyperv_bundle} --os windows --arch amd64 --tag ${preset}-bundle:windows-amd64 -f - .
 FROM scratch
 COPY ${hyperv_bundle} ${hyperv_bundle}.sig /
 EOF
 
-   cat <<EOF | podman build --os linux --arch amd64 --tag ${preset}-bundle:linux-amd64 -f - .
+   cat <<EOF | podman build  --label bundle=${libvirt_bundle} --os linux --arch amd64 --tag ${preset}-bundle:linux-amd64 -f - .
 FROM scratch
 COPY ${libvirt_bundle} ${libvirt_bundle}.sig /
 EOF
