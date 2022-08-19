@@ -177,6 +177,19 @@ function install_additional_packages() {
     fi
 }
 
+# This is only needed for creating arm64 bundles until RHCOS switches to RHEL-9
+function install_rhel9_kernel {
+    local vm_ip=$1
+    local pkgDir=$(mktemp -d tmp-rpmXXX)
+
+    mkdir -p ${pkgDir}/packages
+    yum download --setopt=reposdir=./repos --setopt=sslcacert=./repos/2015-RH-IT-Root-CA.pem --downloadonly --downloaddir ${pkgDir}/packages kernel kernel-modules-extra --resolve
+    ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
+    ${SSH} core@${vm_ip} -- 'SYSTEMD_OFFLINE=1 sudo -E rpm-ostree override replace /home/core/packages/*.rpm'
+    ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
+    rm -fr ${pkgDir}
+}
+
 function prepare_cockpit() {
     local vm_ip=$1
 
@@ -343,31 +356,4 @@ function download_podman() {
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
       mv podman-remote/windows/podman-${version}/usr/bin/podman.exe  podman-remote/windows
     fi
-}
-
-# This is only need for creating arm64 bundles until RHCOS switch to RHEL-9
-function swap_kernel {
-    local vm_ip=$1
-    # Download the kernel packages (Internal URI, need vpn)
-    rpm_url=http://download.eng.bos.redhat.com/rhel-9/rel-eng/RHEL-9/latest-RHEL-9/compose/BaseOS/aarch64/os/Packages/
-    version=$(curl -sL $rpm_url | awk -F\" '/kernel-core-/{print $6}'| sed -E "s/kernel-core-(.+).aarch64.rpm\$/\1/")
-    packages='kernel kernel-core kernel-modules kernel-modules-extra'
-    local pkgDir=$(mktemp -d tmp-rpmXXX)
-    mkdir -p ${pkgDir}/packages
-    for package in ${packages}; do
-       rpm_name=${package}-${version}.aarch64.rpm
-       curl -L ${rpm_url}/${rpm_name} -o ${pkgDir}/packages/${rpm_name}
-    done
-
-    # SCP the downloaded rpms to VM
-    ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
-
-    # Install these rpms to VM
-    ${SSH} core@${vm_ip} -- 'SYSTEMD_OFFLINE=1 sudo -E rpm-ostree override replace /home/core/packages/*.rpm'
-
-    # Remove the packages from VM
-    ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
-
-    # Cleanup up packages
-    rm -fr ${pkgDir}
 }

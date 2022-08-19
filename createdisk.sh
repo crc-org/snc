@@ -75,7 +75,9 @@ cat crio-wipe.service | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} "sudo tee 
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl pull quay.io/crcont/routes-controller:latest'
 
 if [ "${ARCH}" == "aarch64" ]; then
-   swap_kernel api.${CRC_VM_NAME}.${BASE_DOMAIN}
+   # aarch64 support is mainly used on Apple M1 machines which can't run a rhel8 kernel
+   # https://access.redhat.com/solutions/6545411
+   install_rhel9_kernel api.${CRC_VM_NAME}.${BASE_DOMAIN}
 fi
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
