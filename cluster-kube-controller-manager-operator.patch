@@ -1,0 +1,40 @@
+diff --git a/bindata/assets/config/defaultconfig.yaml b/bindata/assets/config/defaultconfig.yaml
+index d22e9f9e..a9076801 100644
+--- a/bindata/assets/config/defaultconfig.yaml
++++ b/bindata/assets/config/defaultconfig.yaml
+@@ -27,7 +27,7 @@ extendedArguments:
+   - "-bootstrapsigner"
+   - "-tokencleaner"
+   cluster-signing-duration:
+-  - "720h"
++  - "8760h"
+   secure-port:
+   - "10257"
+   cert-dir:
+diff --git a/pkg/operator/certrotationcontroller/certrotationcontroller.go b/pkg/operator/certrotationcontroller/certrotationcontroller.go
+index 0d328e24..01941a28 100644
+--- a/pkg/operator/certrotationcontroller/certrotationcontroller.go
++++ b/pkg/operator/certrotationcontroller/certrotationcontroller.go
+@@ -85,8 +85,8 @@ func newCertRotationController(
+ 			Namespace: operatorclient.OperatorNamespace,
+ 			// this is not a typo, this is the signer of the signer
+ 			Name:                   "csr-signer-signer",
+-			Validity:               60 * rotationDay,
+-			Refresh:                30 * rotationDay,
++			Validity:               2 * 365 * rotationDay,
++			Refresh:                365 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -104,8 +104,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "csr-signer",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               2 * 365 * rotationDay,
++			Refresh:                365 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.SignerRotation{
+ 				SignerName: "kube-csr-signer",
+
