@@ -1,0 +1,183 @@
+diff --git a/pkg/operator/certrotationcontroller/certrotationcontroller.go b/pkg/operator/certrotationcontroller/certrotationcontroller.go
+index 1bf5d3224..a28ce71ed 100644
+--- a/pkg/operator/certrotationcontroller/certrotationcontroller.go
++++ b/pkg/operator/certrotationcontroller/certrotationcontroller.go
+@@ -129,8 +129,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSigningCASecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "aggregator-client-signer",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -148,8 +148,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "aggregator-client",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:openshift-aggregator"},
+@@ -188,8 +188,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "kubelet-client",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:kube-apiserver", Groups: []string{"kube-master"}},
+@@ -228,8 +228,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "localhost-serving-cert-certkey",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ServingRotation{
+ 				Hostnames: func() []string { return []string{"localhost", "127.0.0.1"} },
+@@ -268,8 +268,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "service-network-serving-certkey",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ServingRotation{
+ 				Hostnames:        ret.serviceNetwork.GetHostnames,
+@@ -309,8 +309,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "external-loadbalancer-serving-certkey",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ServingRotation{
+ 				Hostnames:        ret.externalLoadBalancer.GetHostnames,
+@@ -350,8 +350,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "internal-loadbalancer-serving-certkey",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ServingRotation{
+ 				Hostnames:        ret.internalLoadBalancer.GetHostnames,
+@@ -410,8 +410,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSigningCASecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "kube-control-plane-signer",
+-			Validity:               60 * defaultRotationDay,
+-			Refresh:                30 * defaultRotationDay,
++			Validity:               2 * 365 * defaultRotationDay,
++			Refresh:                365 * defaultRotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -429,8 +429,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.GlobalMachineSpecifiedConfigNamespace,
+ 			Name:                   "kube-controller-manager-client-cert-key",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:kube-controller-manager"},
+@@ -450,8 +450,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSigningCASecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "kube-control-plane-signer",
+-			Validity:               60 * defaultRotationDay,
+-			Refresh:                30 * defaultRotationDay,
++			Validity:               2 * 365 * defaultRotationDay,
++			Refresh:                365 * defaultRotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -469,8 +469,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.GlobalMachineSpecifiedConfigNamespace,
+ 			Name:                   "kube-scheduler-client-cert-key",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:kube-scheduler"},
+@@ -490,8 +490,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSigningCASecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "kube-control-plane-signer",
+-			Validity:               60 * defaultRotationDay,
+-			Refresh:                30 * defaultRotationDay,
++			Validity:               2 * 365 * defaultRotationDay,
++			Refresh:                365 * defaultRotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -509,8 +509,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "control-plane-node-admin-client-cert-key",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:control-plane-node-admin", Groups: []string{"system:masters"}},
+@@ -530,8 +530,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSigningCASecret{
+ 			Namespace:              operatorclient.OperatorNamespace,
+ 			Name:                   "kube-control-plane-signer",
+-			Validity:               60 * defaultRotationDay,
+-			Refresh:                30 * defaultRotationDay,
++			Validity:               2 * 365 * defaultRotationDay,
++			Refresh:                365 * defaultRotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			Informer:               kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets(),
+ 			Lister:                 kubeInformersForNamespaces.InformersFor(operatorclient.OperatorNamespace).Core().V1().Secrets().Lister(),
+@@ -549,8 +549,8 @@ func newCertRotationController(
+ 		certrotation.RotatedSelfSignedCertKeySecret{
+ 			Namespace:              operatorclient.TargetNamespace,
+ 			Name:                   "check-endpoints-client-cert-key",
+-			Validity:               30 * rotationDay,
+-			Refresh:                15 * rotationDay,
++			Validity:               365 * rotationDay,
++			Refresh:                180 * rotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{Name: "system:serviceaccount:openshift-kube-apiserver:check-endpoints"},
+@@ -592,9 +592,9 @@ func newCertRotationController(
+ 			// This needs to live longer then control plane certs so there is high chance that if a cluster breaks
+ 			// because of expired certs these are still valid to use for collecting data using localhost-recovery
+ 			// endpoint with long lived serving certs for localhost.
+-			Validity: 120 * defaultRotationDay,
+-			// We rotate sooner so certs are always valid for 90 days (30 days more then kube-control-plane-signer)
+-			Refresh:                30 * defaultRotationDay,
++			Validity: 3 * 365 * defaultRotationDay,
++			// We rotate sooner so certs are always valid for 90 days (365 days more then kube-control-plane-signer)
++			Refresh:                365 * defaultRotationDay,
+ 			RefreshOnlyWhenExpired: refreshOnlyWhenExpired,
+ 			CertCreator: &certrotation.ClientRotation{
+ 				UserInfo: &user.DefaultInfo{
+

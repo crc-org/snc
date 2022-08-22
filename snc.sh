@@ -33,6 +33,7 @@ SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
+USE_PATCHED_RELEASE_IMAGE=${SNC_USE_PATCHED_RELEASE_IMAGE:-disabled}
 HTPASSWD_FILE='users.htpasswd'
 
 run_preflight_checks
@@ -72,6 +73,12 @@ if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-baremetal-install
 fi
 
+if [[ ${USE_PATCHED_RELEASE_IMAGE} == "enabled" ]]
+then
+   echo "Creating a new image with patched KAO/KCMO images"
+   create_new_release_with_patched_images
+   echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE set to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
+fi
 
 # Allow to disable debug by setting SNC_OPENSHIFT_INSTALL_NO_DEBUG in the environment
 if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
@@ -128,7 +135,7 @@ replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
 
 # Add CVO overrides before first start of the cluster. Objects declared in this file won't be created.
 ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
