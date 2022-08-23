@@ -110,12 +110,6 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
     echo 'Environment=KUBELET_NODE_IP="${INTERNAL_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
 EOF
 
-# Workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1729603
-# TODO: Should be removed once latest podman available or the fix is backported.
-# Issue found in podman version 1.4.2-stable2 (podman-1.4.2-5.el8.x86_64)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/100-crio-bridge.conf'
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo rm -fr /etc/cni/net.d/200-loopback.conf'
-
 podman_version=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'rpm -q --qf %{version} podman')
 
 # Remove the journal logs.
