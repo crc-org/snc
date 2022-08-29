@@ -7,16 +7,20 @@ GPG_SECRET_KEY_PASSPHRASE_PATH=${GPG_SECRET_KEY_PASSPHRASE:-gpg_key_pass}
 function set_bundle_variables {
    local version=$1
    local preset=$2
-   vfkit_bundle=crc_vfkit_${version}_amd64.crcbundle
-   libvirt_bundle=crc_libvirt_${version}_amd64.crcbundle
-   hyperv_bundle=crc_hyperv_${version}_amd64.crcbundle
 
    if [[ ${preset} = "podman" ]]; then
        vfkit_bundle_arm64=crc_podman_vfkit_${version}_arm64.crcbundle
-       vfkit_bundle=crc_podman_vfkit_${version}_amd64.crcbundle
-       libvirt_bundle=crc_podman_libvirt_${version}_amd64.crcbundle
-       hyperv_bundle=crc_podman_hyperv_${version}_amd64.crcbundle
    fi
+
+   if [[ ${preset} = "openshift" ]]; then
+       preset=""
+   else
+       preset="_${preset}"
+   fi
+
+   vfkit_bundle=crc${preset}_vfkit_${version}_amd64.crcbundle
+   libvirt_bundle=crc${preset}_libvirt_${version}_amd64.crcbundle
+   hyperv_bundle=crc${preset}_hyperv_${version}_amd64.crcbundle
 }
 
 function generate_image {
