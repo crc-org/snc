@@ -8,6 +8,9 @@ function set_bundle_variables {
    local version=$1
    local preset=$2
 
+   if [[ ${preset} = "openshift" ]]; then
+       vfkit_bundle_arm64=crc_vfkit_${version}_arm64.crcbundle
+   fi
    if [[ ${preset} = "podman" ]]; then
        vfkit_bundle_arm64=crc_podman_vfkit_${version}_arm64.crcbundle
    fi
@@ -26,8 +29,8 @@ function set_bundle_variables {
 function generate_image {
    local preset=$1
 
-   if [[ ${preset} = "podman" ]]; then
-       cat <<EOF | podman build --os darwin --arch arm64 --tag podman-bundle:darwin-arm64 -f - .
+   if [ ${preset} = "podman"  -o  ${preset} = "openshift" ]; then
+       cat <<EOF | podman build --os darwin --arch arm64 --tag ${preset}-bundle:darwin-arm64 -f - .
 FROM scratch
 COPY ${vfkit_bundle_arm64} ${vfkit_bundle_arm64}.sig /
 EOF
