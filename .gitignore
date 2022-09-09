@@ -9,3 +9,5 @@ yq
 openshift-clients/
 podman-remote/
 .sw[a-p]
+crc-cluster-kube-apiserver-operator
+crc-cluster-kube-controller-manager-operator
