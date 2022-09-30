@@ -161,7 +161,7 @@ function install_additional_packages() {
         # Download the hyperV daemons dependency on host
         local pkgDir=$(mktemp -d tmp-rpmXXX)
         mkdir -p ${pkgDir}/packages
-        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages "$*" --resolve
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages $* --resolve
 
         # SCP the downloaded rpms to VM
         ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
