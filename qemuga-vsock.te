@@ -1,0 +1,9 @@
+module qemuga-vsock 1.0;
+
+require {
+	type virt_qemu_ga_t;
+	class vsock_socket { bind create getattr listen accept read write };
+}
+
+#============= virt_qemu_ga_t ==============
+allow virt_qemu_ga_t self:vsock_socket { bind create getattr listen accept read write };
