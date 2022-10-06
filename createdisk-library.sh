@@ -165,6 +165,25 @@ function prepare_hyperV() {
             echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 }
+function prepare_qemu_guest_agent() {
+    local vm_ip=$1
+
+    install_additional_packages ${vm_ip} qemu-guest-agent
+
+    # f36 default selinux policy blocks usage of qemu-guest-agent over vsock
+    # checkpolicy
+    /usr/bin/checkmodule -M -m -o qemuga-vsock.mod qemuga-vsock.te
+    # policycoreutils
+    /usr/bin/semodule_package -o qemuga-vsock.pp -m qemuga-vsock.mod
+
+    ${SCP} qemuga-vsock.pp core@${vm_ip}:
+    ${SSH} core@${vm_ip} 'sudo semodule -i qemuga-vsock.pp && rm qemuga-vsock.pp'
+    ${SCP} qemu-guest-agent.service core@${vm_ip}:
+    ${SSH} core@${vm_ip} 'sudo mv -Z qemu-guest-agent.service /etc/systemd/system/'
+    # ${SSH} core@${vm_ip} 'sudo restorecon /etc/systemd/system/qemu-guest-agent.service'
+    ${SSH} core@${vm_ip} 'sudo systemctl daemon-reload'
+    ${SSH} core@${vm_ip} 'sudo systemctl enable qemu-guest-agent.service'
+}
 
 function generate_vfkit_bundle {
     local srcDir=$1
