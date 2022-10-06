@@ -4,14 +4,14 @@
 # 1 year certificates and then push them to quay.io/crcont. The provided pull secret should allow
 # push access to `quay.io/crcont` before providing to this script.
 #    - Since this script uses rhpkg and kinit commands, it is only tested on linux.
-#    - As of now this script works with 4.11 releases because only the `rhaos-4.11-rhel-8` branch
+#    - As of now this script works with 4.12 nightly because only the `rhaos-4.12-rhel-8` branch
 #      has been created in dist-git and tested.
 #    - This script is suppose to run standalone without cloning the snc repo so some code is repeated.
 # Usage:
-# If you want to build latest candidate stream for 4.11
-#   - ./internal.sh
-# If you want to build specific version of 4.11.3
-#   - OPENSHIFT_VERSION=4.11.3 ./internal.sh
+# If you want to build latest candidate stream for 4.12
+#   - ./build-patched-kao-kcmo-images.sh
+# If you want to build specific version of 4.12.0-ec.3
+#   - OPENSHIFT_VERSION=4.12.0-ec.3 ./build-patched-kao-kcmo-images.sh
 
 set -exuo pipefail
 
@@ -22,6 +22,8 @@ rm -fr crc-cluster-kube-apiserver-operator
 rm -fr crc-cluster-kube-controller-manager-operator
 rm -fr crc-dnsmasq
 rm -fr crc-routes-controller
+
+readonly OCP_VERSION=4.12
 
 function check_pull_secret() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
@@ -43,7 +45,7 @@ if test -n "${OPENSHIFT_VERSION-}"; then
     OPENSHIFT_RELEASE_VERSION=${OPENSHIFT_VERSION}
     echo "Using release ${OPENSHIFT_RELEASE_VERSION} from OPENSHIFT_VERSION"
 else
-    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/candidate-4.11/release.txt | sed -n 's/^ *Version: *//p')"
+    OPENSHIFT_RELEASE_VERSION="$(curl -L "${MIRROR}"/latest-${OCP_VERSION}/release.txt | sed -n 's/^ *Version: *//p')"
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
         echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the mirror"
     else
@@ -88,12 +90,12 @@ function patch_and_push_image() {
     rhpkg clone containers/crc-${image_name}
     pushd crc-${image_name}
     git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
-    # Just fetch the upstream/rhaos-4.11-rhel-8 instead of all the branches and tags from upstream
-    git fetch upstream rhaos-4.11-rhel-8 --no-tags
-    git checkout --track origin/rhaos-4.11-rhel-8
-    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-4.11-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
+    # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
+    git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
+    git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
+    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
     git push origin HEAD
-    rhpkg container-build  --target crc-1-rhel-8-candidate
+    rhpkg container-build --target crc-1-rhel-8-candidate
     popd
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
