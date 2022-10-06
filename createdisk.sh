@@ -26,6 +26,7 @@ ${SSH} core@${VM_IP} -- 'sudo rpm-ostree override remove moby-engine'
 
 prepare_cockpit ${VM_IP}
 prepare_hyperV ${VM_IP}
+prepare_qemu_guest_agent ${VM_IP}
 
 # Add gvisor-tap-vsock
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
