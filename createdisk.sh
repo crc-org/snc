@@ -55,6 +55,8 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     prepare_hyperV api.${CRC_VM_NAME}.${BASE_DOMAIN}
 fi
 
+prepare_qemu_guest_agent api.${CRC_VM_NAME}.${BASE_DOMAIN}
+
 # Add gvisor-tap-vsock and crc-dnsmasq services
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
   podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
