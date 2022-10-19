@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: crc-csi-hostpath-provisioner
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: kubevirt.io.hostpath-provisioner
+parameters:
+  storagePool: local
+volumeBindingMode: WaitForFirstConsumer

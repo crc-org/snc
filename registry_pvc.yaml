@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: crc-image-registry-storage	
+  name: crc-image-registry-storage
   namespace: openshift-image-registry
 spec:
   accessModes:
@@ -9,6 +9,4 @@ spec:
   resources:
     requests:
       storage: 100Gi
-  selector:
-    matchLabels:
-      volume: "pv0001"
+  storageClassName: crc-csi-hostpath-provisioner
