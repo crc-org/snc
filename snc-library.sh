@@ -141,61 +141,24 @@ function create_json_description {
             | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
 }
 
-function generate_pv() {
-  local pvdir="${1}"
-  local name="${2}"
-cat <<EOF
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ${name}
-  labels:
-    volume: ${name}
-spec:
-  capacity:
-    storage: 100Gi
-  accessModes:
-    - ReadWriteOnce
-    - ReadWriteMany
-    - ReadOnlyMany
-  hostPath:
-    path: ${pvdir}
-  persistentVolumeReclaimPolicy: Recycle
-EOF
-}
-
-function setup_pv_dirs() {
-    local dir="${1}"
-    local count="${2}"
-
-    ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
-    for pvsubdir in \$(seq -f "pv%04g" 1 ${count}); do
-        mkdir -p "${dir}/\${pvsubdir}"
-    done
-    if ! chcon -R -t svirt_sandbox_file_t "${dir}" &> /dev/null; then
-        echo "Failed to set SELinux context on ${dir}"
-    fi
-    chmod -R 770 ${dir}
-EOF
-}
 
 function create_pvs() {
-    local pvdir="${1}"
-    local count="${2}"
+    # Create hostpath-provisioner namespace
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/namespace.yaml
+    # Add external health-monitor, provisioner RBACs
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/external-provisioner-rbac.yaml -n hostpath-provisioner
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/external-health-monitor-rbac.yaml -n hostpath-provisioner
+    # Create CSIDriver/kubevirt.io.hostpath-provisioner resource
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-driver-hostpath-provisioner.yaml -n hostpath-provisioner
+    # Apply SCC allowin hostpath-provisioner containers to run as root and access host network
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/kubevirt-hostpath-security-constraints-csi.yaml
 
-    setup_pv_dirs "${pvdir}" "${count}"
+    # Deploy csi driver components
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-kubevirt-hostpath-provisioner.yaml -n hostpath-provisioner
+    # create StorageClass crc-csi-hostpath-provisioner
+    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-sc.yaml
 
-    for pvname in $(seq -f "pv%04g" 1 ${count}); do
-        if ! ${OC} get pv "${pvname}" &> /dev/null; then
-            generate_pv "${pvdir}/${pvname}" "${pvname}" > tmp_pv.yaml
-            retry ${OC} create -f tmp_pv.yaml
-	    rm -fr tmp_pv.yaml
-        else
-            echo "persistentvolume ${pvname} already exists"
-        fi
-    done
-
-    # Apply registry pvc to bound with pv0001
+    # Apply registry pvc with crc-csi-hostpath-provisioner StorageClass
     retry ${OC} apply -f registry_pvc.yaml
 
     # Add registry storage to pvc

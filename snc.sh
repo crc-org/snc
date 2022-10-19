@@ -185,7 +185,7 @@ ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HO
 create_json_description
 
 # Create persistent volumes
-create_pvs "${CRC_PV_DIR}" 30
+create_pvs
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
