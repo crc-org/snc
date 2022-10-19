@@ -182,7 +182,7 @@ ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_
 HOSTNAME=$(${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
 
-create_json_description
+create_json_description ${BUNDLE_TYPE}
 
 # Create persistent volumes
 create_pvs ${BUNDLE_TYPE}
