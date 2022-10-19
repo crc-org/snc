@@ -36,7 +36,7 @@ CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 USE_PATCHED_RELEASE_IMAGE=${SNC_USE_PATCHED_RELEASE_IMAGE:-disabled}
 HTPASSWD_FILE='users.htpasswd'
 
-run_preflight_checks
+run_preflight_checks ${BUNDLE_TYPE}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
