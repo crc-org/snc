@@ -134,18 +134,23 @@ function replace_pull_secret() {
 }
 
 function create_json_description {
-    openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
+    local bundle_type=$1
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
     echo {} | ${JQ} '.version = "1.4"' \
             | ${JQ} ".type = \"${BUNDLE_TYPE}\"" \
             | ${JQ} ".arch = \"${yq_ARCH}\"" \
             | ${JQ} ".buildInfo.buildTime = \"$(date -u --iso-8601=seconds)\"" \
-            | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
             | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${SNC_PRODUCT_NAME}\"" \
             | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
             | ${JQ} ".clusterInfo.appsDomain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
+    if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
+        openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
+        tmp=$(mktemp)
+        cat ${INSTALL_DIR}/crc-bundle-info.json | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
+            > ${tmp} && mv ${tmp} ${INSTALL_DIR}/crc-bundle-info.json
+    fi
 }
 
 
