@@ -8,5 +8,5 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 100Gi
+      storage: 20Gi
   storageClassName: crc-csi-hostpath-provisioner
