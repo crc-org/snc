@@ -143,6 +143,8 @@ function create_json_description {
 
 
 function create_pvs() {
+    local bundle_type=$1
+
     # Create hostpath-provisioner namespace
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/namespace.yaml
     # Add external provisioner RBACs
@@ -153,7 +155,14 @@ function create_pvs() {
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/kubevirt-hostpath-security-constraints-csi.yaml
 
     # Deploy csi driver components
-    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-kubevirt-hostpath-provisioner.yaml -n hostpath-provisioner
+    if [[ ${bundle_type} == "snc" ]]; then
+        # in case of OCP we want the images to come from registry.redhat.io
+        # this is done using the kustomize.yaml file
+        retry ${OC} apply -k kubevirt-hostpath-provisioner-csi/csi-driver -n hostpath-provisioner
+    else
+        retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-driver/csi-kubevirt-hostpath-provisioner.yaml -n hostpath-provisioner
+    fi
+
     # create StorageClass crc-csi-hostpath-provisioner
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-sc.yaml
 
