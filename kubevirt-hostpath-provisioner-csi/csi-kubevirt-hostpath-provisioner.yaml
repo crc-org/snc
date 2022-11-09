@@ -133,22 +133,6 @@ spec:
           name: socket-dir
       - args:
         - --v=3
-        - --csi-address=$(ADDRESS)
-        - --leader-election
-        env:
-        - name: ADDRESS
-          value: /csi/csi.sock
-        image: k8s.gcr.io/sig-storage/csi-external-health-monitor-controller:v0.3.0
-        imagePullPolicy: IfNotPresent
-        name: csi-external-health-monitor-controller
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        volumeMounts:
-        - mountPath: /csi
-          name: socket-dir
-      - args:
-        - --v=3
         - --csi-address=/csi/csi.sock
         - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-hostpath/csi.sock
         env:
