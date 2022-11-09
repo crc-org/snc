@@ -145,9 +145,8 @@ function create_json_description {
 function create_pvs() {
     # Create hostpath-provisioner namespace
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/namespace.yaml
-    # Add external health-monitor, provisioner RBACs
+    # Add external provisioner RBACs
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/external-provisioner-rbac.yaml -n hostpath-provisioner
-    retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/external-health-monitor-rbac.yaml -n hostpath-provisioner
     # Create CSIDriver/kubevirt.io.hostpath-provisioner resource
     retry ${OC} apply -f kubevirt-hostpath-provisioner-csi/csi-driver-hostpath-provisioner.yaml -n hostpath-provisioner
     # Apply SCC allowin hostpath-provisioner containers to run as root and access host network
