@@ -83,8 +83,8 @@ fi
 
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
-shutdown_vm ${VM_PREFIX}
-start_vm ${VM_PREFIX}
+shutdown_vm ${VM_PREFIX}-master-0
+start_vm ${VM_PREFIX}-master-0 ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
@@ -122,7 +122,7 @@ ${SSH} core@${VM_IP} -- 'sudo journalctl --rotate'
 ${SSH} core@${VM_IP} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
-shutdown_vm ${VM_PREFIX}
+shutdown_vm ${VM_PREFIX}-master-0
 
 # Download podman clients
 download_podman $podman_version ${yq_ARCH}

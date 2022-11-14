@@ -183,13 +183,13 @@ function create_pvs() {
 function renew_certificates() {
     local vm_prefix
     vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
-    shutdown_vm ${vm_prefix}
+    shutdown_vm ${vm_prefix}-master-0
 
     # Enable the network time sync and set the clock back to present on host
     sudo date -s '1 day'
     sudo timedatectl set-ntp on
 
-    start_vm ${vm_prefix}
+    start_vm ${vm_prefix}-master-0 api.${CRC_VM_NAME}.${BASE_DOMAIN}
 
     # Loop until the kubelet certs are valid for a month
     i=0
