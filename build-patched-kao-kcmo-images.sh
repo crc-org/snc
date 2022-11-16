@@ -75,7 +75,7 @@ function patch_and_push_image() {
     # Just fetch the upstream/rhaos-4.11-rhel-8 instead of all the branches and tags from upstream
     git fetch upstream rhaos-4.11-rhel-8 --no-tags
     git checkout --track origin/rhaos-4.11-rhel-8
-    git merge --no-edit ${vcs_ref}
+    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-4.11-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
     git push origin HEAD
     rhpkg container-build  --target crc-1-rhel-8-candidate
     popd
