@@ -77,7 +77,7 @@ function patch_and_push_image() {
     # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
     git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
     git checkout --track origin/private-rhaos-${OCP_VERSION}-rhel-8
-    git merge --no-edit ${vcs_ref}
+    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
     git push origin HEAD
     rhpkg container-build --scratch --target crc-1-rhel-8-candidate &> rhpkg.out
     brew_image=$(grep -o 'registry-proxy.engineering.redhat.com.*' rhpkg.out)
