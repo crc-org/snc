@@ -37,9 +37,9 @@ function create_new_release_with_patched_images() {
     ${OC} adm release new -a ${OPENSHIFT_PULL_SECRET_PATH} --from-release=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} \
 	    cluster-kube-apiserver-operator=${upstream_registry}/openshift-crc-cluster-kube-apiserver-operator@${kao_image_digest} \
 	    cluster-kube-controller-manager-operator=${upstream_registry}/openshift-crc-cluster-kube-controller-manager-operator@${kcmo_image_digest} \
-	    --to-image=quay.io/crcont/ocp-release:${openshift_version}
+	    --to-image=quay.io/crcont/ocp-release:${openshift_version}-${yq_ARCH}
     # Replace the release image override with crcont image
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/crcont/ocp-release:${openshift_version}
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/crcont/ocp-release:${openshift_version}-${yq_ARCH}
 }
 
 function run_preflight_checks() {
