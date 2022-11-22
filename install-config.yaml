@@ -31,4 +31,10 @@ platform:
     URI: qemu+tcp://192.168.122.1/system
     network:
       if: tt0
+capabilities:
+  baselineCapabilitySet: None
+  additionalEnabledCapabilities:
+  - openshift-samples
+  - marketplace
+  - Console
 publish: External
