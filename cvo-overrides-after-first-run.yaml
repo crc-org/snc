@@ -13,52 +13,12 @@
     unmanaged: true
   - kind: Deployment
     group: apps
-    name: kube-storage-version-migrator-operator
-    namespace: openshift-kube-storage-version-migrator-operator
-    unmanaged: true
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: kube-storage-version-migrator
-    namespace: ""
-    unmanaged: true
-  - kind: Deployment
-    group: apps
-    name: insights-operator
-    namespace: openshift-insights
-    unmanaged: true
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: insights
-    namespace: ""
-    unmanaged: true
-  - kind: Deployment
-    group: apps
     name: cloud-credential-operator
     namespace: openshift-cloud-credential-operator
     unmanaged: true
   - kind: ClusterOperator
     group: config.openshift.io
     name: cloud-credential
-    namespace: ""
-    unmanaged: true
-  - kind: Deployment
-    group: apps
-    name: cluster-storage-operator
-    namespace: openshift-cluster-storage-operator
-    unmanaged: true
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: storage
-    namespace: ""
-    unmanaged: true
-  - kind: Deployment
-    group: apps
-    name: cluster-baremetal-operator
-    namespace: openshift-machine-api
-    unmanaged: true
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: baremetal
     namespace: ""
     unmanaged: true
   - kind: Deployment
@@ -76,23 +36,6 @@
     name: csi-snapshot-controller-operator
     namespace: openshift-cluster-storage-operator
     unmanaged: true
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: csi-snapshot-controller
-    namespace: ""
-    unmanaged: true
-  # only used in bootstrap phase
-  - kind: ClusterOperator
-    group: config.openshift.io
-    name: machine-api
-    namespace: ""
-    unmanaged: true
-  # required to scale down etcd-quorum-guard
-  - kind: Deployment
-    group: apps
-    name: etcd-quorum-guard
-    namespace: openshift-etcd
-    unmanaged: true
   - kind: Deployment
     group: apps
     name: cluster-cloud-controller-manager-operator
@@ -103,4 +46,4 @@
     name: cloud-controller-manager
     namespace: ""
     unmanaged: true
-
+ 
