@@ -189,7 +189,11 @@ function renew_certificates() {
     start_vm ${vm_prefix}
 
     # After cluster starts kube-apiserver-client-kubelet signer need to be approved
-    timeout 500s bash -c -- "until ${OC} get csr | grep Pending; do echo 'Waiting for first CSR request.'; sleep 2; done"
+    timeout 500s bash -c -- "until ${OC} get csr | grep kube-apiserver-client-kubelet | grep Pending; do echo 'Waiting for first kube-apiserver-client-kubelet CSR request.'; sleep 2; done"
+    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
+
+    # After kube-apiserver-client-kubelet signer, kubelet-serving signer need to be approved
+    timeout 500s bash -c -- "until ${OC} get csr | grep kubelet-serving | grep Pending; do echo 'Waiting for first kubelet-serving CSR request.'; sleep 2; done"
     ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
 
     # Retry 10 times to make sure kubelet certs are rotated correctly.
@@ -206,7 +210,12 @@ function renew_certificates() {
     done
 
     if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
-        echo "Certs are not yet rotated to have 30 days validity"
+        echo "kubelet client certs are not yet rotated to have 30 days validity"
+	exit 1
+    fi
+
+    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+        echo "kubelet server certs are not yet rotated to have 30 days validity"
 	exit 1
     fi
 }
