@@ -254,6 +254,6 @@ wait_till_cluster_stable openshift-marketplace
 retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
 
 # Delete outdated rendered master/worker machineconfigs and just keep the latest one
-${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname | grep rendered-master | head -n -1 | xargs -t ${OC} delete
+${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname | grep rendered-master | head -n -2 | xargs -t ${OC} delete
 ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname | grep rendered-worker | head -n -1 | xargs -t ${OC} delete
 
