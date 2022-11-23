@@ -129,6 +129,7 @@ get_dest_dir_suffix "${OPENSHIFT_VERSION}"
 destDirSuffix="${DEST_DIR_SUFFIX}"
 
 libvirtDestDir="${destDirPrefix}_libvirt_${destDirSuffix}"
+rm -fr ${libvirtDestDir} ${libvirtDestDir}.crcbundle
 mkdir "$libvirtDestDir"
 
 create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_PREFIX}-master-0"
@@ -141,6 +142,7 @@ create_tarball "$libvirtDestDir"
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
+    rm -fr ${vfkitDestDir} ${vfkitDestDir}.crcbundle
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 fi
 
@@ -150,6 +152,7 @@ fi
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     hypervDestDir="${destDirPrefix}_hyperv_${destDirSuffix}"
+    rm -fr ${hypervDestDir} ${hypervDestDir}.crcbundle
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
 fi
 
