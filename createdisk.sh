@@ -16,7 +16,7 @@ BASE_OS=fedora-coreos
 
 INSTALL_DIR=${1:-crc-tmp-install-data}
 
-VM_IP=$(sudo virsh domifaddr ${CRC_VM_NAME} | grep vnet0 | awk '{print $4}' | sed 's;/24;;')
+VM_IP=$(sudo virsh domifaddr ${CRC_VM_NAME} | grep vnet | awk '{print $4}' | sed 's;/24;;')
 
 # Remove audit logs
 ${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
