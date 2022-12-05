@@ -180,7 +180,6 @@ function prepare_qemu_guest_agent() {
     ${SSH} core@${vm_ip} 'sudo semodule -i qemuga-vsock.pp && rm qemuga-vsock.pp'
     ${SCP} qemu-guest-agent.service core@${vm_ip}:
     ${SSH} core@${vm_ip} 'sudo mv -Z qemu-guest-agent.service /etc/systemd/system/'
-    # ${SSH} core@${vm_ip} 'sudo restorecon /etc/systemd/system/qemu-guest-agent.service'
     ${SSH} core@${vm_ip} 'sudo systemctl daemon-reload'
     ${SSH} core@${vm_ip} 'sudo systemctl enable qemu-guest-agent.service'
 }
