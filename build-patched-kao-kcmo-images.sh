@@ -20,6 +20,8 @@ export LANG=C.UTF-8
 
 rm -fr crc-cluster-kube-apiserver-operator
 rm -fr crc-cluster-kube-controller-manager-operator
+rm -fr crc-dnsmasq
+rm -fr crc-routes-controller
 
 function check_pull_secret() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
@@ -72,7 +74,6 @@ fi
 
 function patch_and_push_image() {
     local image_name=$1
-    openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} -ojsonpath='{.config.config.Labels.io\.openshift\.release}')
     image=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=${image_name})
     vcs_ref=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels."vcs-ref"')
     version=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.version')
@@ -90,5 +91,32 @@ function patch_and_push_image() {
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
+function update_base_image() {
+    local brew_repo=$1
+    local base_image=$2
+
+    rhpkg clone containers/${brew_repo}
+    pushd ${brew_repo}
+    git checkout --track origin/crc-1-rhel-8
+    git checkout --track origin/private-cfergeau
+    git reset --hard origin/crc-1-rhel-8
+    sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
+    git add Dockerfile
+    git commit -m "Use OpenShift ${openshift_version} base image"
+    git push origin -f HEAD:private-cfergeau
+    rhpkg container-build --scratch --target crc-1-rhel-8-candidate
+    popd
+
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:latest
+}
+
+openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} -ojsonpath='{.config.config.Labels.io\.openshift\.release}')
+
 patch_and_push_image cluster-kube-apiserver-operator
 patch_and_push_image cluster-kube-controller-manager-operator
+
+base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
+
+update_base_image crc-dnsmasq "${base_image}"
+update_base_image crc-routes-controller "${base_image}"
