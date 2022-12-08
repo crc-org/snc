@@ -210,13 +210,11 @@ function prepare_qemu_guest_agent() {
     local vm_ip=$1
 
     # f36 default selinux policy blocks usage of qemu-guest-agent over vsock
-    # checkpolicy
-    /usr/bin/checkmodule -M -m -o qemuga-vsock.mod qemuga-vsock.te
-    # policycoreutils
-    /usr/bin/semodule_package -o qemuga-vsock.pp -m qemuga-vsock.mod
+    ${SCP} qemuga-vsock.te core@${vm_ip}:
+    ${SSH} core@${vm_ip} '/usr/bin/checkmodule -M -m -o qemuga-vsock.mod qemuga-vsock.te'
+    ${SSH} core@${vm_ip} '/usr/bin/semodule_package -o qemuga-vsock.pp -m qemuga-vsock.mod'
 
-    ${SCP} qemuga-vsock.pp core@${vm_ip}:
-    ${SSH} core@${vm_ip} 'sudo semodule -i qemuga-vsock.pp && rm qemuga-vsock.pp'
+    ${SSH} core@${vm_ip} 'sudo semodule -i qemuga-vsock.pp && rm qemuga-vsock.pp qemuga-vsock.mod qemuga-vsock.te'
     ${SCP} qemu-guest-agent.service core@${vm_ip}:
     ${SSH} core@${vm_ip} 'sudo mv -Z qemu-guest-agent.service /etc/systemd/system/'
     ${SSH} core@${vm_ip} 'sudo systemctl daemon-reload'
