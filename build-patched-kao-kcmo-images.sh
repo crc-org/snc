@@ -101,6 +101,34 @@ function patch_and_push_image() {
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://${brew_image} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
+function create_patched_release_image_for_arch() {
+    local upstream_registry=$1
+    local arch=$2
+    local release_image="$(release_image_for_arch ${arch})"
+
+    # As of now, `oc adm release new` is not able to parse images which have
+    # multiple arch manifest file so we first need to get the digest of the
+    # image for ${yq_arch} and then use that digest with `oc adm release new`_
+    kao_image_digest=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${upstream_registry}/openshift-crc-cluster-kube-apiserver-operator:${openshift_version} --filter-by-os=linux/${arch} -ojson | jq -r .digest)
+    kcmo_image_digest=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${upstream_registry}/openshift-crc-cluster-kube-controller-manager-operator:${openshift_version} --filter-by-os=linux/${arch} -ojson | jq -r .digest)
+
+    ${OC} adm release new -a ${OPENSHIFT_PULL_SECRET_PATH} --from-release=${release_image} \
+	    cluster-kube-apiserver-operator=${upstream_registry}/openshift-crc-cluster-kube-apiserver-operator@${kao_image_digest} \
+	    cluster-kube-controller-manager-operator=${upstream_registry}/openshift-crc-cluster-kube-controller-manager-operator@${kcmo_image_digest} \
+	    --to-image=${upstream_registry}/ocp-release:${openshift_version}-${arch}
+}
+
+function create_new_release_with_patched_images() {
+    local upstream_registry="quay.io/crcont"
+
+    podman manifest create ${upstream_registry}/ocp-release:${openshift_version}
+    for arch in amd64 arm64; do \
+        create_patched_release_image_for_arch ${upstream_registry} ${arch}
+        podman manifest add ${upstream_registry}/ocp-release:${openshift_version} docker://${upstream_registry}/ocp-release:${openshift_version}-${arch}
+      done
+    podman manifest push --all ${upstream_registry}/ocp-release:${openshift_version}  docker://${upstream_registry}/ocp-release:${openshift_version}
+}
+
 function update_base_image() {
     local brew_repo=$1
     local base_image=$2
@@ -125,6 +153,7 @@ openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OP
 
 patch_and_push_image cluster-kube-apiserver-operator
 patch_and_push_image cluster-kube-controller-manager-operator
+create_new_release_with_patched_images
 
 base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
 
