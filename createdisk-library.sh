@@ -209,6 +209,10 @@ EOF
 function prepare_qemu_guest_agent() {
     local vm_ip=$1
 
+    if [[ ${BASE_OS} = "fedora-coreos" ]]; then
+        install_additional_packages ${vm_ip} checkpolicy
+    fi
+
     # f36 default selinux policy blocks usage of qemu-guest-agent over vsock
     ${SCP} qemuga-vsock.te core@${vm_ip}:
     ${SSH} core@${vm_ip} '/usr/bin/checkmodule -M -m -o qemuga-vsock.mod qemuga-vsock.te'
