@@ -209,10 +209,18 @@ EOF
 function prepare_qemu_guest_agent() {
     local vm_ip=$1
 
-    # f36 default selinux policy blocks usage of qemu-guest-agent over vsock
-    # checkpolicy
-    /usr/bin/checkmodule -M -m -o qemuga-vsock.mod qemuga-vsock.te
-    # policycoreutils
+    # f36+ default selinux policy blocks usage of qemu-guest-agent over vsock, we have to install
+    # our own selinux rules to allow this.
+    #
+    # we need to disable pipefail for the `checkmodule | grep check` as we expect `checkmodule`
+    # to fail on rhel8.
+    set +o pipefail
+    if ! checkmodule -c 19 2>&1 |grep 'invalid option' >/dev/null; then
+	    # RHEL8 checkmodule does not have this arg
+	    MOD_VERSION_ARG="-c 19"
+    fi
+    set -o pipefail
+    /usr/bin/checkmodule ${MOD_VERSION_ARG-} -M -m -o qemuga-vsock.mod qemuga-vsock.te
     /usr/bin/semodule_package -o qemuga-vsock.pp -m qemuga-vsock.mod
 
     ${SCP} qemuga-vsock.pp core@${vm_ip}:
