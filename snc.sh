@@ -54,8 +54,8 @@ else
 fi
 
 # Download the oc binary for specific OS environment
-download_oc
 OC=./openshift-clients/linux/oc
+download_oc
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" | sed -n 's/^Pull From: //p')"
