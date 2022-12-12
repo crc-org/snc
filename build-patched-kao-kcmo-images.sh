@@ -59,8 +59,16 @@ fi
 echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 
 mkdir -p openshift-clients/linux
-curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
 OC=./openshift-clients/linux/oc
+if [ -f "$OC" ]; then
+	current_oc_version=$(${OC} version --client -o json |jq -r .releaseClientVersion)
+fi
+echo "OC version: ${current_oc_version-}"
+if [ ${current_oc_version-} = ${OPENSHIFT_RELEASE_VERSION} ]; then
+    echo "No need to download oc, local oc is already version ${OPENSHIFT_RELEASE_VERSION}"
+else
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+fi
 
 function patch_and_push_image() {
     local image_name=$1

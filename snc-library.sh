@@ -10,7 +10,26 @@ function preflight_failure() {
         fi
 }
 
+function check_oc_version() {
+    local current_oc_version=
+    if [ -f "$OC" ]; then
+       current_oc_version=$(${OC} version --client -o json  |jq -r .releaseClientVersion)
+    fi
+
+    [ ${current_oc_version} = ${OPENSHIFT_RELEASE_VERSION} ]
+}
+
 function download_oc() {
+    local current_oc_version=
+
+    if [ -f "$OC" ]; then
+        current_oc_version=$(${OC} version --client -o json  |jq -r .releaseClientVersion)
+        if [ ${current_oc_version} = ${OPENSHIFT_RELEASE_VERSION} ]; then
+            echo "No need to download oc, local oc is already version ${OPENSHIFT_RELEASE_VERSION}"
+            return
+        fi
+    fi
+
     mkdir -p openshift-clients/linux
     curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
 
