@@ -75,8 +75,8 @@ fi
 
 if [[ ${USE_PATCHED_RELEASE_IMAGE} == "enabled" ]]
 then
-   echo "Creating a new image with patched KAO/KCMO images"
-   create_new_release_with_patched_images
+   echo "Using release image with patched KAO/KCMO images"
+   OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/crcont/ocp-release:${OPENSHIFT_RELEASE_VERSION}-${yq_ARCH}
    echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE set to ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
 
