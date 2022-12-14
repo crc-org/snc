@@ -24,7 +24,7 @@ sudo rm -fr /var/lib/libvirt/images/crc-podman.qcow2
 CRC_INSTALL_DIR=crc-tmp-install-data
 rm -fr ${CRC_INSTALL_DIR}
 mkdir ${CRC_INSTALL_DIR}
-current_selinux_context=$(ls -Z | grep ${CRC_INSTALL_DIR} | cut -f1 -d" ")
+chcon --verbose unconfined_u:object_r:svirt_home_t:s0 ${CRC_INSTALL_DIR}
 cp fcos-config.yaml ${CRC_INSTALL_DIR}
 
 # Generate a new ssh keypair for this cluster
@@ -41,12 +41,11 @@ ${PODMAN} run -i --rm quay.io/coreos/butane:release --pretty --strict < ${CRC_IN
 ${PODMAN} run --pull=always --rm -i quay.io/coreos/ignition-validate:release - < ${CRC_INSTALL_DIR}/fcos-config.ign
 
 # Download the latest fedora coreos latest qcow2
-${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}:/data:Z -w /data quay.io/coreos/coreos-installer:release download -a ${ARCH} -s stable -p qemu -f qcow2.xz --decompress
-sudo mv ${CRC_INSTALL_DIR}/fedora-coreos-*-qemu.${ARCH}.qcow2 /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2
+mkdir ${PWD}/${CRC_INSTALL_DIR}/tmp/
+${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}/tmp/:/data:Z -w /data quay.io/coreos/coreos-installer:release download -a ${ARCH} -s stable -p qemu -f qcow2.xz --decompress
+sudo mv ${CRC_INSTALL_DIR}/tmp/fedora-coreos-*-qemu.${ARCH}.qcow2 /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2
+rmdir ${PWD}/${CRC_INSTALL_DIR}/tmp/
 
-# Update the selinux context for ign config and ${CRC_INSTALL_DIR}
-chcon --verbose ${current_selinux_context} ${CRC_INSTALL_DIR}
-chcon --verbose unconfined_u:object_r:svirt_home_t:s0 ${CRC_INSTALL_DIR}/fcos-config.ign
 sudo setfacl -m u:qemu:rx $HOME
 sudo systemctl restart libvirtd
 
