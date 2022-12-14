@@ -45,21 +45,21 @@ start_vm ${CRC_VM_NAME} ${VM_IP}
 ${SSH} core@${VM_IP} -- 'sudo rpm-ostree cleanup --rollback --base --repomd'
 # Shutdown and Start the VM after removing base deployment tree
 # This is required because kernel commandline changed, namely
-# ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches 
+# ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches
 # between boot.0 and boot.1 when cleanup is run
 shutdown_vm ${CRC_VM_NAME}
 start_vm ${CRC_VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    # Get the rhcos ostree Hash ID
-    ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
-
     # Get the rhcos kernel release
     kernel_release=$(${SSH} core@${VM_IP} -- 'uname -r')
 
     # Get the kernel command line arguments
     kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
+
+    # Get the rhcos ostree Hash ID
+    ostree_hash=$(echo ${kernel_cmd_line} | grep -oP "(?<=${BASE_OS}-).*(?=/vmlinuz)")
 
     # SCP the vmlinuz/initramfs from VM to Host in provided folder.
     ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $INSTALL_DIR
