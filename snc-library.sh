@@ -45,22 +45,6 @@ function download_oc() {
     fi
 }
 
-function create_new_release_with_patched_images() {
-    upstream_registry=quay.io/crcont
-    openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} -ojsonpath='{.config.config.Labels.io\.openshift\.release}')
-    # As of now `oc adm release new` not able to parse images which have multiple arch manifest file so we first need to get the digest of the image for specific
-    # arch and then use that digest with `oc adm release new`.
-    kao_image_digest=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${upstream_registry}/openshift-crc-cluster-kube-apiserver-operator:${openshift_version} --filter-by-os=linux/${yq_ARCH} -ojson | jq -r .digest)
-    kcmo_image_digest=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${upstream_registry}/openshift-crc-cluster-kube-controller-manager-operator:${openshift_version} --filter-by-os=linux/${yq_ARCH} -ojson | jq -r .digest)
-
-    ${OC} adm release new -a ${OPENSHIFT_PULL_SECRET_PATH} --from-release=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} \
-	    cluster-kube-apiserver-operator=${upstream_registry}/openshift-crc-cluster-kube-apiserver-operator@${kao_image_digest} \
-	    cluster-kube-controller-manager-operator=${upstream_registry}/openshift-crc-cluster-kube-controller-manager-operator@${kcmo_image_digest} \
-	    --to-image=quay.io/crcont/ocp-release:${openshift_version}
-    # Replace the release image override with crcont image
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=quay.io/crcont/ocp-release:${openshift_version}
-}
-
 function run_preflight_checks() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
             echo "OpenShift pull secret file path must be specified through the OPENSHIFT_PULL_SECRET_PATH environment variable"
