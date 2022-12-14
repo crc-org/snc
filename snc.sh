@@ -48,7 +48,7 @@ else
     if test -n "${OPENSHIFT_RELEASE_VERSION}"; then
         echo "Using release ${OPENSHIFT_RELEASE_VERSION} from the latest mirror"
     else
-        echo "Unable to determine an OpenShift release version.  You may want to set the OPENSHIFT_VERSION environment variable explicitly."
+        echo "Unable to determine an OpenShift release version. You may want to set the OPENSHIFT_VERSION environment variable explicitly."
         exit 1
     fi
 fi
