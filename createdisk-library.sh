@@ -218,6 +218,7 @@ function generate_vfkit_bundle {
 
     generate_macos_bundle "vfkit" "$@"
 
+    create_qemu_image "$libvirtDestDir" "fedora-coreos-qemu.${ARCH}.qcow2" "${CRC_VM_NAME}.qcow2"
     ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
     add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.img" "raw"
 

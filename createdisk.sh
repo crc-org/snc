@@ -35,21 +35,6 @@ EOF
 
 cleanup_vm_image ${CRC_VM_NAME} ${VM_IP}
 
-# Only used for macOS bundle generation
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    # Get the rhcos kernel release
-    kernel_release=$(${SSH} core@${VM_IP} -- 'uname -r')
-
-    # Get the kernel command line arguments
-    kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
-
-    # Get the rhcos ostree Hash ID
-    ostree_hash=$(echo ${kernel_cmd_line} | grep -oP "(?<=${BASE_OS}-).*(?=/vmlinuz)")
-
-    # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-    ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $INSTALL_DIR
-fi
-
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
 
 # Shutdown the VM
@@ -69,14 +54,6 @@ create_qemu_image "$libvirtDestDir" "fedora-coreos-qemu.${ARCH}.qcow2" "${CRC_VM
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "$podman_version"
 create_tarball "$libvirtDestDir"
 
-# vfkit image generation
-# This must be done after the generation of libvirt image as it reuses some of
-# the content of $libvirtDestDir
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
-    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
-fi
-
 # HyperV image generation
 #
 # This must be done after the generation of libvirt image as it reuses some of
@@ -86,5 +63,29 @@ if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
 fi
 
-# Cleanup up vmlinux/initramfs files
-rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
+# vfkit image generation
+#
+# This must be done after the generation of libvirt image as it reuses some of
+# the content of $libvirtDestDir
+if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    start_vm ${CRC_VM_NAME} ${VM_IP}
+    cleanup_vm_image ${CRC_VM_NAME} ${VM_IP}
+
+    # Get the rhcos kernel release
+    kernel_release=$(${SSH} core@${VM_IP} -- 'uname -r')
+
+    # Get the kernel command line arguments
+    kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
+
+    # Get the rhcos ostree Hash ID
+    ostree_hash=$(echo ${kernel_cmd_line} | grep -oP "(?<=${BASE_OS}-).*(?=/vmlinuz)")
+
+    # SCP the vmlinuz/initramfs from VM to Host in provided folder.
+    ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $INSTALL_DIR
+
+    vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
+
+    # Cleanup up vmlinux/initramfs files
+    rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
+fi
