@@ -69,6 +69,7 @@ fi
 # the content of $libvirtDestDir
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     start_vm ${CRC_VM_NAME} ${VM_IP}
+    downgrade_kernel ${VM_IP} ${yq_ARCH}
     cleanup_vm_image ${CRC_VM_NAME} ${VM_IP}
 
     # Get the rhcos kernel release
@@ -80,8 +81,16 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     # Get the rhcos ostree Hash ID
     ostree_hash=$(echo ${kernel_cmd_line} | grep -oP "(?<=${BASE_OS}-).*(?=/vmlinuz)")
 
-    # SCP the vmlinuz/initramfs from VM to Host in provided folder.
-    ${SCP} -r core@${VM_IP}:/boot/ostree/${BASE_OS}-${ostree_hash}/* $INSTALL_DIR
+    # Copy kernel/initramfs
+    # A temporary location is needed as the initramfs cannot be directly read
+    # by the 'core' user
+    ${SSH} core@${VM_IP} -- 'bash -x -s' <<EOF
+      mkdir /tmp/kernel
+      sudo cp -r /boot/ostree/${BASE_OS}-${ostree_hash}/*${kernel_release}* /tmp/kernel
+      sudo chmod 644 /tmp/kernel/initramfs*
+EOF
+    ${SCP} -r core@${VM_IP}:/tmp/kernel/* $INSTALL_DIR
+    ${SSH} core@${VM_IP} -- "sudo rm -fr /tmp/kernel"
 
     vfkitDestDir="crc_podman_vfkit_${destDirSuffix}"
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
