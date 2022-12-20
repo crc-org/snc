@@ -188,18 +188,14 @@ function renew_certificates() {
 
     start_vm ${vm_prefix}
 
-    # After cluster starts kube-apiserver-client-kubelet signer need to be approved
-    timeout 500s bash -c -- "until ${OC} get csr | grep kube-apiserver-client-kubelet | grep Pending; do echo 'Waiting for first kube-apiserver-client-kubelet CSR request.'; sleep 2; done"
-    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
-
-    # After kube-apiserver-client-kubelet signer, kubelet-serving signer need to be approved
-    timeout 500s bash -c -- "until ${OC} get csr | grep kubelet-serving | grep Pending; do echo 'Waiting for first kubelet-serving CSR request.'; sleep 2; done"
-    ${OC} get csr -ojsonpath='{.items[*].metadata.name}' | xargs ${OC} adm certificate approve
-
     # Retry 10 times to make sure kubelet certs are rotated correctly.
     i=0
     while [ $i -lt 10 ]; do
-        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem ||
+		! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+            retry ${OC} get csr -ojson > certs.json
+	    retry ${OC} adm certificate approve -f certs.json
+	    rm -f certs.json
 	    # Wait until bootstrap csr request is generated with 10 min timeout
 	    echo "Retry loop $i, wait for 60sec before starting next loop"
             sleep 60
