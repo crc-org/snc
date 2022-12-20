@@ -18,9 +18,6 @@ INSTALL_DIR=${1:-crc-tmp-install-data}
 
 VM_IP=$(sudo virsh domifaddr ${CRC_VM_NAME} | grep vnet | awk '{print $4}' | sed 's;/24;;')
 
-# Remove audit logs
-${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
-
 # Remove moby-engine package
 ${SSH} core@${VM_IP} -- 'sudo rpm-ostree override remove moby-engine'
 
@@ -36,19 +33,7 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   systemctl enable gvisor-tap-vsock.service
 EOF
 
-# Shutdown and Start the VM after modifying the set of installed packages
-# This is required to get the latest ostree layer which have those installed packages.
-shutdown_vm ${CRC_VM_NAME}
-start_vm ${CRC_VM_NAME} ${VM_IP}
-
-# Remove miscellaneous unneeded data from rpm-ostree
-${SSH} core@${VM_IP} -- 'sudo rpm-ostree cleanup --rollback --base --repomd'
-# Shutdown and Start the VM after removing base deployment tree
-# This is required because kernel commandline changed, namely
-# ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches
-# between boot.0 and boot.1 when cleanup is run
-shutdown_vm ${CRC_VM_NAME}
-start_vm ${CRC_VM_NAME} ${VM_IP}
+cleanup_vm_image ${CRC_VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
@@ -66,12 +51,6 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
-
-# Remove the journal logs.
-# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
-# remove all the journal logs so separate commands are used here.
-${SSH} core@${VM_IP} -- 'sudo journalctl --rotate'
-${SSH} core@${VM_IP} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
 shutdown_vm ${CRC_VM_NAME}
