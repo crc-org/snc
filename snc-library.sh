@@ -188,17 +188,16 @@ function renew_certificates() {
 
     start_vm ${vm_prefix}
 
-    # Retry 10 times to make sure kubelet certs are rotated correctly.
+    # Loop until the kubelet certs are valid for a month
     i=0
-    while [ $i -lt 10 ]; do
+    while [ $i -lt 60 ]; do
         if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem ||
 		! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
             retry ${OC} get csr -ojson > certs.json
 	    retry ${OC} adm certificate approve -f certs.json
 	    rm -f certs.json
-	    # Wait until bootstrap csr request is generated with 10 min timeout
-	    echo "Retry loop $i, wait for 60sec before starting next loop"
-            sleep 60
+	    echo "Retry loop $i, wait for 10sec before starting next loop"
+            sleep 10
 	else
             break
         fi
