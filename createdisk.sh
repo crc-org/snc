@@ -57,12 +57,17 @@ fi
 
 prepare_qemu_guest_agent api.${CRC_VM_NAME}.${BASE_DOMAIN}
 
+image_tag="latest"
+if podman manifest inspect quay.io/crcont/dnsmasq:${OPENSHIFT_VERSION} >/dev/null 2>&1; then
+    image_tag=${OPENSHIFT_VERSION}
+fi
+
 # Add gvisor-tap-vsock and crc-dnsmasq services
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
   podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
   podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
   touch /var/srv/dnsmasq.conf
-  podman create --ip 10.88.0.8 --name crc-dnsmasq -v /var/srv/dnsmasq.conf:/etc/dnsmasq.conf -p 53:53/udp --privileged quay.io/crcont/dnsmasq:latest
+  podman create --ip 10.88.0.8 --name crc-dnsmasq -v /var/srv/dnsmasq.conf:/etc/dnsmasq.conf -p 53:53/udp --privileged quay.io/crcont/dnsmasq:${image_tag}
   podman generate systemd --restart-policy=no crc-dnsmasq > /etc/systemd/system/crc-dnsmasq.service
   systemctl daemon-reload
   systemctl enable gvisor-tap-vsock.service
@@ -72,7 +77,7 @@ EOF
 cat crio-wipe.service | ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} "sudo tee -a /etc/systemd/system/crio-wipe.service"
 
 # Preload routes controller
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl pull quay.io/crcont/routes-controller:latest'
+${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "sudo crictl pull quay.io/crcont/routes-controller:${image_tag}"
 
 if [ "${ARCH}" == "aarch64" ]; then
    # aarch64 support is mainly used on Apple M1 machines which can't run a rhel8 kernel
