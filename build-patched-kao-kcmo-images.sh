@@ -135,13 +135,11 @@ function update_base_image() {
     rhpkg clone containers/${brew_repo}
     pushd ${brew_repo}
     git checkout --track origin/crc-1-rhel-8
-    git checkout --track origin/private-cfergeau
-    git reset --hard origin/crc-1-rhel-8
     sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
     git add Dockerfile
     git commit -m "Use OpenShift ${openshift_version} base image"
-    git push origin -f HEAD:private-cfergeau
-    rhpkg container-build --scratch --target crc-1-rhel-8-candidate
+    git push origin
+    rhpkg container-build
     popd
 
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
