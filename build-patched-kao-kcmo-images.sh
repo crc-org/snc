@@ -123,6 +123,7 @@ function create_patched_release_image_for_arch() {
 function create_new_release_with_patched_images() {
     local upstream_registry="quay.io/crcont"
 
+    podman rmi -i ${upstream_registry}/ocp-release:${openshift_version}
     podman manifest create ${upstream_registry}/ocp-release:${openshift_version}
     for arch in amd64 arm64; do \
         create_patched_release_image_for_arch ${upstream_registry} ${arch}
