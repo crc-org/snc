@@ -87,16 +87,19 @@ function patch_and_push_image() {
     vcs_ref=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels."vcs-ref"')
     version=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.version')
     release=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.release')
-    rhpkg clone containers/crc-${image_name}
-    pushd crc-${image_name}
-    git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
-    # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
-    git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
-    git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
-    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
-    git push origin HEAD
-    rhpkg container-build --target crc-1-rhel-8-candidate
-    popd
+    # If brew build already exist for the release don't rebuild it again
+    if ! brew buildinfo crc-${image_name}-container-${version}-${release}; then
+        rhpkg clone containers/crc-${image_name}
+        pushd crc-${image_name}
+        git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
+        # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
+        git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
+        git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
+        git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
+        git push origin HEAD
+        rhpkg container-build --target crc-1-rhel-8-candidate
+        popd
+    fi
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
@@ -154,7 +157,11 @@ patch_and_push_image cluster-kube-apiserver-operator
 patch_and_push_image cluster-kube-controller-manager-operator
 create_new_release_with_patched_images
 
-base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
-
-update_base_image crc-dnsmasq "${base_image}"
-update_base_image crc-routes-controller "${base_image}"
+# In case there is no change in the openshift component then the base
+# image is also not changed so no need to build dnsmasq/route images
+if [ -f crc-cluster-kube-apiserver-operator/Dockerfile ]; then
+    base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
+    
+    update_base_image crc-dnsmasq "${base_image}"
+    update_base_image crc-routes-controller "${base_image}"
+fi
