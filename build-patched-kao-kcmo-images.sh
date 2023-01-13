@@ -128,7 +128,7 @@ function create_new_release_with_patched_images() {
         create_patched_release_image_for_arch ${upstream_registry} ${arch}
         podman manifest add ${upstream_registry}/ocp-release:${openshift_version} docker://${upstream_registry}/ocp-release:${openshift_version}-${arch}
       done
-    podman manifest push --all ${upstream_registry}/ocp-release:${openshift_version}  docker://${upstream_registry}/ocp-release:${openshift_version}
+    podman manifest push --authfile ${OPENSHIFT_PULL_SECRET_PATH} --all ${upstream_registry}/ocp-release:${openshift_version}  docker://${upstream_registry}/ocp-release:${openshift_version}
 }
 
 function update_base_image() {
