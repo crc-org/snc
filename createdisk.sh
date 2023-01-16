@@ -37,7 +37,7 @@ VM_PREFIX=$(get_vm_prefix ${CRC_VM_NAME})
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 
 # Get the IP of the VM
-INTERNAL_IP=$(sudo virsh domifaddr ${VM_PREFIX}-master-0 | tail -2 | head -1 | awk '{print $4}' | cut -d/ -f1)
+VM_IP=$(sudo virsh domifaddr ${VM_PREFIX}-master-0 | tail -2 | head -1 | awk '{print $4}' | cut -d/ -f1)
 
 # Disable kubelet service
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo systemctl disable kubelet
@@ -114,7 +114,7 @@ fi
 # More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
 ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} 'sudo bash -x -s' <<EOF
     echo '[Service]' > /etc/systemd/system/kubelet.service.d/80-nodeip.conf
-    echo 'Environment=KUBELET_NODE_IP="${INTERNAL_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
+    echo 'Environment=KUBELET_NODE_IP="${VM_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
 EOF
 
 podman_version=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'rpm -q --qf %{version} podman')
