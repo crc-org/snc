@@ -183,7 +183,7 @@ function install_rhel9_kernel {
     local pkgDir=$(mktemp -d tmp-rpmXXX)
 
     mkdir -p ${pkgDir}/packages
-    yum download --setopt=reposdir=./repos --setopt=sslcacert=./repos/2015-RH-IT-Root-CA.pem --downloadonly --downloaddir ${pkgDir}/packages kernel kernel-modules-extra kernel-core kernel-modules --resolve
+    yum download --setopt=reposdir=./repos --setopt=sslcacert=./repos/2015-RH-IT-Root-CA.crt --downloadonly --downloaddir ${pkgDir}/packages kernel kernel-modules-extra kernel-core kernel-modules --resolve
     ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
     ${SSH} core@${vm_ip} -- 'SYSTEMD_OFFLINE=1 sudo -E rpm-ostree override replace /home/core/packages/*.rpm'
     ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
