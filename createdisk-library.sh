@@ -97,7 +97,7 @@ function update_json_description {
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
         | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
         | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
-        | ${JQ} ".nodes[0].internalIP = \"${INTERNAL_IP}\"" \
+        | ${JQ} ".nodes[0].internalIP = \"${VM_IP}\"" \
         | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
