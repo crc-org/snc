@@ -56,8 +56,7 @@ fi
 
 function release_image_for_arch() {
      local arch=$1
-     local mirror="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp"
-     curl -L "${mirror}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
+     curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
 }
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
