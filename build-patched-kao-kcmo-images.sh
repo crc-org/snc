@@ -23,7 +23,7 @@ rm -fr crc-cluster-kube-controller-manager-operator
 rm -fr crc-dnsmasq
 rm -fr crc-routes-controller
 
-readonly OCP_VERSION=4.12
+readonly OCP_VERSION=4.13
 
 function check_pull_secret() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
@@ -38,7 +38,7 @@ function check_pull_secret() {
 check_pull_secret
 
 ARCH=$(uname -m)
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 if test -n "${OPENSHIFT_VERSION-}"; then
@@ -56,7 +56,7 @@ fi
 
 function release_image_for_arch() {
      local arch=$1
-     local mirror="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp"
+     local mirror="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp-dev-preview"
      curl -L "${mirror}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
 }
 
