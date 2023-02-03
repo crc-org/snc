@@ -33,11 +33,6 @@
     unmanaged: true
   - kind: Deployment
     group: apps
-    name: csi-snapshot-controller-operator
-    namespace: openshift-cluster-storage-operator
-    unmanaged: true
-  - kind: Deployment
-    group: apps
     name: cluster-cloud-controller-manager-operator
     namespace: openshift-cloud-controller-manager-operator
     unmanaged: true
