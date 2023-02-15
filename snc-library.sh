@@ -89,11 +89,11 @@ function run_preflight_checks() {
                 return
         fi
 
-        # check that api.${CRC_VM_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.1[01]
+        # check that api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.1[01]
         local ping_status
-        ping_status="$(ping -c1 api.${CRC_VM_NAME}.${BASE_DOMAIN} | head -1 || true >/dev/null)"
-        if echo ${ping_status} | grep "PING api.${CRC_VM_NAME}.${BASE_DOMAIN} (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
-                preflight_failure "DNS setup seems wrong, api.${CRC_VM_NAME}.${BASE_DOMAIN} resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
+        ping_status="$(ping -c1 api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} | head -1 || true >/dev/null)"
+        if echo ${ping_status} | grep "PING api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
+                preflight_failure "DNS setup seems wrong, api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
                 return
         fi
 
@@ -139,9 +139,9 @@ function create_json_description {
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
             | ${JQ} ".buildInfo.sncVersion = \"git${sncGitHash}\"" \
             | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION}\"" \
-            | ${JQ} ".clusterInfo.clusterName = \"${CRC_VM_NAME}\"" \
+            | ${JQ} ".clusterInfo.clusterName = \"${SNC_PRODUCT_NAME}\"" \
             | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
-            | ${JQ} ".clusterInfo.appsDomain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
+            | ${JQ} ".clusterInfo.appsDomain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
 }
 
 
@@ -182,20 +182,20 @@ function create_pvs() {
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
     local vm_prefix
-    vm_prefix=$(get_vm_prefix ${CRC_VM_NAME})
+    vm_prefix=$(get_vm_prefix ${SNC_PRODUCT_NAME})
     shutdown_vm ${vm_prefix}-master-0
 
     # Enable the network time sync and set the clock back to present on host
     sudo date -s '1 day'
     sudo timedatectl set-ntp on
 
-    start_vm ${vm_prefix}-master-0 api.${CRC_VM_NAME}.${BASE_DOMAIN}
+    start_vm ${vm_prefix}-master-0 api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}
 
     # Loop until the kubelet certs are valid for a month
     i=0
     while [ $i -lt 60 ]; do
-        if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem ||
-		! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+        if ! ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem ||
+		! ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
             retry ${OC} get csr -ojson > certs.json
 	    retry ${OC} adm certificate approve -f certs.json
 	    rm -f certs.json
@@ -207,12 +207,12 @@ function renew_certificates() {
 	i=$[$i+1]
     done
 
-    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
+    if ! ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-client-current.pem; then
         echo "kubelet client certs are not yet rotated to have 30 days validity"
 	exit 1
     fi
 
-    if ! ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
+    if ! ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- sudo openssl x509 -checkend 2160000 -noout -in /var/lib/kubelet/pki/kubelet-server-current.pem; then
         echo "kubelet server certs are not yet rotated to have 30 days validity"
 	exit 1
     fi
