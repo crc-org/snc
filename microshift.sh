@@ -80,6 +80,7 @@ function create_iso {
     local pkgDir=$1
     rm -fr microshift
     git clone -b release-4.13 https://github.com/openshift/microshift.git
+    cp podman_changes.ks microshift/
     pushd microshift
     sed -i '/# customizations/,$d' scripts/image-builder/config/blueprint_v0.0.1.toml
     cat << EOF >> scripts/image-builder/config/blueprint_v0.0.1.toml
@@ -89,6 +90,7 @@ version = "*"
 EOF
     sed -i 's/redhat/core/g' scripts/image-builder/config/kickstart.ks.template
     sed -i '/--bootproto=dhcp/a\network  --hostname=api.crc.testing' scripts/image-builder/config/kickstart.ks.template
+    sed -i '$e cat podman_changes.ks' scripts/image-builder/config/kickstart.ks.template
     scripts/image-builder/cleanup.sh -full
     # The home dir and files must have read permissions to group
     # and others because osbuilder is running from another non-priviledged user account
