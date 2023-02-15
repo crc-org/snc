@@ -80,8 +80,8 @@ function update_json_description {
     local srcDir=$1
     local destDir=$2
 
-    diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
-    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
+    diskSize=$(du -b $destDir/${SNC_PRODUCT_NAME}.qcow2 | awk '{print $1}')
+    diskSha256Sum=$(sha256sum $destDir/${SNC_PRODUCT_NAME}.qcow2 | awk '{print $1}')
 
     ocSize=$(du -b $destDir/oc | awk '{print $1}')
     ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
@@ -96,9 +96,9 @@ function update_json_description {
         | ${JQ} '.nodes[0].kind[0] = "master"' \
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
         | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
-        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
+        | ${JQ} ".nodes[0].diskImage = \"${SNC_PRODUCT_NAME}.qcow2\"" \
         | ${JQ} ".nodes[0].internalIP = \"${VM_IP}\"" \
-        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
+        | ${JQ} ".storage.diskImages[0].name = \"${SNC_PRODUCT_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
@@ -237,8 +237,8 @@ function generate_vfkit_bundle {
 
     generate_macos_bundle "vfkit" "$@"
 
-    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
-    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.img" "raw"
+    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${SNC_PRODUCT_NAME}.qcow2 $destDir/${SNC_PRODUCT_NAME}.img
+    add_disk_info_to_json_description "${destDir}" "${SNC_PRODUCT_NAME}.img" "raw"
 
     create_tarball "$destDir"
 }
@@ -345,8 +345,8 @@ function generate_hyperv_bundle {
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 
-    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
-    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.vhdx" vhdx
+    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${SNC_PRODUCT_NAME}.qcow2 $destDir/${SNC_PRODUCT_NAME}.vhdx
+    add_disk_info_to_json_description "${destDir}" "${SNC_PRODUCT_NAME}.vhdx" vhdx
 
     create_tarball "$destDir"
 }
