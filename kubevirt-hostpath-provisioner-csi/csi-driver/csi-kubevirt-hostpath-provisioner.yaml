@@ -141,7 +141,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
-        image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.2.0
+        image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.2.0
         imagePullPolicy: IfNotPresent
         name: node-driver-registrar
         resources: {}
@@ -159,7 +159,7 @@ spec:
       - args:
         - --csi-address=/csi/csi.sock
         - --health-port=9898
-        image: k8s.gcr.io/sig-storage/livenessprobe:v2.3.0
+        image: registry.k8s.io/sig-storage/livenessprobe:v2.3.0
         imagePullPolicy: IfNotPresent
         name: liveness-probe
         resources: {}
@@ -194,7 +194,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
-        image: k8s.gcr.io/sig-storage/csi-provisioner:v2.2.1
+        image: registry.k8s.io/sig-storage/csi-provisioner:v2.2.1
         imagePullPolicy: IfNotPresent
         name: csi-provisioner
         resources: {}
