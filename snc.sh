@@ -34,7 +34,7 @@ ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 
 ${YQ} eval --inplace ".passwd.users[0].ssh_authorized_keys[0] = \"$(cat id_ecdsa_crc.pub)\"" ${CRC_INSTALL_DIR}/fcos-config.yaml
 
-# Create the ign config 
+# Create the ign config
 ${PODMAN} run -i --rm quay.io/coreos/butane:release --pretty --strict < ${CRC_INSTALL_DIR}/fcos-config.yaml > ${CRC_INSTALL_DIR}/fcos-config.ign
 
 # Validate ign config
@@ -46,7 +46,7 @@ ${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}/tmp/:/data:Z -w /d
 sudo mv ${CRC_INSTALL_DIR}/tmp/fedora-coreos-*-qemu.${ARCH}.qcow2 /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2
 rmdir ${PWD}/${CRC_INSTALL_DIR}/tmp/
 
-sudo setfacl -m u:qemu:rx $HOME
+setfacl -m u:qemu:rx -R ${HOME}
 sudo systemctl restart libvirtd
 
 create_json_description
