@@ -20,6 +20,7 @@ run_preflight_checks
 sudo virsh destroy ${CRC_VM_NAME} || true
 sudo virsh undefine --nvram ${CRC_VM_NAME} || true
 sudo rm -fr /var/lib/libvirt/images/crc-podman.qcow2
+sudo rm -fr /var/lib/libvirt/images/snc-fcos-config.ign
 
 CRC_INSTALL_DIR=crc-tmp-install-data
 rm -fr ${CRC_INSTALL_DIR}
@@ -34,19 +35,19 @@ ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 
 ${YQ} eval --inplace ".passwd.users[0].ssh_authorized_keys[0] = \"$(cat id_ecdsa_crc.pub)\"" ${CRC_INSTALL_DIR}/fcos-config.yaml
 
-# Create the ign config 
-${PODMAN} run -i --rm quay.io/coreos/butane:release --pretty --strict < ${CRC_INSTALL_DIR}/fcos-config.yaml > ${CRC_INSTALL_DIR}/fcos-config.ign
+# Create the ign config
+${PODMAN} run -i --rm quay.io/coreos/butane:release --pretty --strict < ${CRC_INSTALL_DIR}/fcos-config.yaml > ${CRC_INSTALL_DIR}/snc-fcos-config.ign
 
 # Validate ign config
-${PODMAN} run --pull=always --rm -i quay.io/coreos/ignition-validate:release - < ${CRC_INSTALL_DIR}/fcos-config.ign
+${PODMAN} run --pull=always --rm -i quay.io/coreos/ignition-validate:release - < ${CRC_INSTALL_DIR}/snc-fcos-config.ign
 
 # Download the latest fedora coreos latest qcow2
 mkdir ${PWD}/${CRC_INSTALL_DIR}/tmp/
 ${PODMAN} run --pull=always --rm -v ${PWD}/${CRC_INSTALL_DIR}/tmp/:/data:Z -w /data quay.io/coreos/coreos-installer:release download -a ${ARCH} -s stable -p qemu -f qcow2.xz --decompress
 sudo mv ${CRC_INSTALL_DIR}/tmp/fedora-coreos-*-qemu.${ARCH}.qcow2 /var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2
+sudo mv -Z ${CRC_INSTALL_DIR}/snc-fcos-config.ign /var/lib/libvirt/images/
 rmdir ${PWD}/${CRC_INSTALL_DIR}/tmp/
 
-sudo setfacl -m u:qemu:rx $HOME
 sudo systemctl restart libvirtd
 
 create_json_description
@@ -54,7 +55,7 @@ create_json_description
 # Start the VM using virt-install command
 sudo ${VIRT_INSTALL} --name=${CRC_VM_NAME} --vcpus=2 --ram=2048 --arch=${ARCH}\
 	--import --graphics=none \
-	--qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=${PWD}/${CRC_INSTALL_DIR}/fcos-config.ign" \
+	--qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=/var/lib/libvirt/images/snc-fcos-config.ign" \
 	--disk=size=31,backing_store=/var/lib/libvirt/images/fedora-coreos-qemu.${ARCH}.qcow2 \
 	--os-variant=fedora-coreos-stable \
 	--noautoconsole --quiet
