@@ -41,6 +41,8 @@ fi
 
 VM_IP=$(sudo virsh domifaddr ${VM_NAME} | tail -2 | head -1 | awk '{print $4}' | cut -d/ -f1)
 
+wait_for_ssh ${VM_NAME} ${VM_IP}
+
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Remove unused images from container storage
     ${SSH} core@${VM_IP} -- 'sudo crictl rmi --prune'
