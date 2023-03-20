@@ -22,6 +22,7 @@ then
 fi
 BASE_OS=${BASE_OS:-rhcos}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
+BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
 destDirPrefix="crc"
 if [ ${BUNDLE_TYPE} == "microshift" ]; then
@@ -72,6 +73,9 @@ EOF
     ${SSH} core@${VM_IP} -- sudo systemctl disable firewalld
     # Remove pull secret file before creating bundle
     ${SSH} core@${VM_IP} -- sudo rm -f /etc/crio/openshift-pull-secret
+    # Copy the sample microshift config and update the base domain with crc base domain
+    ${SSH} core@${VM_IP} -- sudo cp /etc/microshift/config.yaml.default /etc/microshift/config.yaml
+    ${SSH} core@${VM_IP} -- "sudo sed -i 's/#baseDomain: .*/baseDomain: ${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/g' /etc/microshift/config.yaml.default"
 fi
 
 # Remove audit logs
