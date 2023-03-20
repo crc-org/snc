@@ -70,6 +70,8 @@ EOF
     # also in case of microshift the ports like 2222, 443, 80 ..etc need to be manually added
     # and OCP/OKD/podman bundles have it disabled by default.
     ${SSH} core@${VM_IP} -- sudo systemctl disable firewalld
+    # Remove pull secret file before creating bundle
+    ${SSH} core@${VM_IP} -- sudo rm -f /etc/crio/openshift-pull-secret
 fi
 
 # Remove audit logs
