@@ -92,10 +92,32 @@ if podman manifest inspect quay.io/crcont/dnsmasq:${OPENSHIFT_VERSION} >/dev/nul
     image_tag=${OPENSHIFT_VERSION}
 fi
 
+# create the tap device interface with specified mac address
+# this mac addresss is used to allocate a specific IP to the VM
+# when tap device is in use.
+${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+  nmcli connection add type tun ifname tap0 con-name tap0 mode tap autoconnect yes 802-3-ethernet.cloned-mac-address 5A:94:EF:E4:0C:EE
+EOF
+
 # Add gvisor-tap-vsock and crc-dnsmasq services
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
-  podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
+  podman create --name=gvisor-tap-vsock quay.io/crcont/gvisor-tap-vsock:latest
+  podman cp gvisor-tap-vsock:/vm /usr/local/bin/
+  podman rm gvisor-tap-vsock
+  tee /etc/systemd/system/gvisor-tap-vsock.service <<ETE
+[Unit]
+Description=gvisor-tap-vsock traffic forwarder
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+TimeoutStopSec=70
+ExecStart=/usr/local/bin/vm -preexisting -debug
+
+[Install]
+WantedBy=default.target
+ETE
   touch /var/srv/dnsmasq.conf
   podman create --ip 10.88.0.8 --name crc-dnsmasq -v /var/srv/dnsmasq.conf:/etc/dnsmasq.conf -p 53:53/udp --privileged quay.io/crcont/dnsmasq:${image_tag}
   podman generate systemd --restart-policy=no crc-dnsmasq > /etc/systemd/system/crc-dnsmasq.service
