@@ -15,10 +15,7 @@ rootless_networking="cni"
 EOF
 chown -R core:core /home/core/.config/containers
 
-tee /etc/containers/containers.conf <<EOF
-[engine]
-machine_enabled=true
-EOF
+touch /etc/containers/podman-machine
 
 tee /etc/containers/registries.conf.d/999-podman-machine.conf <<EOF
 unqualified-search-registries=["docker.io"]
