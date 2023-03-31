@@ -183,7 +183,7 @@ function downgrade_kernel() {
     local arch=$2
     case $arch in
          amd64)
-            ${SSH} core@${vm_ip} "curl -L -O https://kojipkgs.fedoraproject.org/packages/kernel/5.19.17/300.fc37/x86_64/kernel-5.19.17-300.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org/packages/kernel/5.19.17/300.fc37/x86_64/kernel-core-5.19.17-300.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org/packages/kernel/5.19.17/300.fc37/x86_64/kernel-modules-5.19.17-300.fc37.x86_64.rpm"
+            ${SSH} core@${vm_ip} "curl -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-5.19.16-301.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-core-5.19.16-301.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-modules-5.19.16-301.fc37.x86_64.rpm"
 	    ;;
          arm64)
             ${SSH} core@${vm_ip} "curl -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-5.18.19-200.fc36.aarch64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-core-5.18.19-200.fc36.aarch64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-modules-5.18.19-200.fc36.aarch64.rpm"
