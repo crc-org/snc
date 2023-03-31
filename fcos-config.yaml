@@ -112,13 +112,10 @@ storage:
          [containers]
          netns="bridge"
          rootless_networking="cni"
-      # Set machine_enabled to true to indicate we're in VM
-    - path: /etc/containers/containers.conf
+      # Create empty file as machine marker for podman
+      # https://github.com/containers/common/blob/main/pkg/machine/machine.go
+    - path: /etc/containers/podman-machine
       mode: 0644
-      contents:
-        inline: |
-          [engine]
-          machine_enabled=true
     - path: /etc/NetworkManager/dispatcher.d/pre-up.d/gvisor-tap-vsock-tap-device.sh
       mode: 0755
       contents:
