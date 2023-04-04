@@ -109,12 +109,6 @@ cat crio-wipe.service | ${SSH} core@${VM_IP} "sudo tee -a /etc/systemd/system/cr
 # Preload routes controller
 ${SSH} core@${VM_IP} -- "sudo podman pull quay.io/crcont/routes-controller:${image_tag}"
 
-if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
-   # aarch64 support is mainly used on Apple M1 machines which can't run a rhel8 kernel
-   # https://access.redhat.com/solutions/6545411
-   install_rhel9_kernel ${VM_IP}
-fi
-
 # Shutdown and Start the VM after installing the hyperV daemon packages.
 # This is required to get the latest ostree layer which have those installed packages.
 shutdown_vm ${VM_NAME}
