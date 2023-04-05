@@ -398,3 +398,10 @@ function sparsify_lvm() {
     virt-sparsify --in-place ${destDir}/${SNC_PRODUCT_NAME}.qcow2
     chmod 0644 ${destDir}/${SNC_PRODUCT_NAME}.qcow2
 }
+
+function remove_pull_secret_from_disk() {
+    if [ ${BUNDLE_TYPE} == "microshift" ]; then
+        # Remove pull secret file before creating bundle
+        ${SSH} core@${VM_IP} -- sudo rm -f /etc/crio/openshift-pull-secret
+    fi
+}
