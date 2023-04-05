@@ -400,8 +400,13 @@ function sparsify_lvm() {
 }
 
 function remove_pull_secret_from_disk() {
-    if [ ${BUNDLE_TYPE} == "microshift" ]; then
-        # Remove pull secret file before creating bundle
+    case "${BUNDLE_TYPE}" in
+      "microshift")
         ${SSH} core@${VM_IP} -- sudo rm -f /etc/crio/openshift-pull-secret
-    fi
+	;;
+      "snc")
+	# This assumes there's a single ostree deployment (`ostree admin status`), which is the case at the end of snc.sh
+	${SSH} core@${VM_IP} -- sudo cp /var/lib/kubelet/config.json /etc/machine-config-daemon/orig/var/lib/kubelet/config.json.mcdorig
+	;;
+    esac
 }
