@@ -340,9 +340,8 @@ function download_podman() {
     local arch=$2
 
     mkdir -p podman-remote/linux
-    curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-static-linux_${arch}.tar.gz | tar -zx -C podman-remote/linux ./bin/podman-remote-static-linux_${arch}
-    mv podman-remote/linux/bin/podman-remote-static-linux_${arch} podman-remote/linux/podman-remote
-    rm -fr podman-remote/linux/bin
+    curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-static-linux_${arch}.tar.gz | tar -zx -C podman-remote/linux podman-remote-static-linux_${arch}
+    mv podman-remote/linux/podman-remote-static-linux_${arch} podman-remote/linux/podman-remote
     chmod +x podman-remote/linux/podman-remote
 
     if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
