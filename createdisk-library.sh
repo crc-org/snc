@@ -10,6 +10,34 @@ function get_dest_dir_suffix {
     fi
 }
 
+# This removes extra os tree layers, log files, ... from the image
+function cleanup_vm_image() {
+    local vm_name=$1
+    local vm_ip=$2
+
+    # Shutdown and Start the VM to get the latest ostree layer. If packages
+    # have been added/removed since last boot, the VM will reboot in a different ostree layer.
+    shutdown_vm ${vm_name}
+    start_vm ${vm_name} ${vm_ip}
+
+    # Remove miscellaneous unneeded data from rpm-ostree
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --rollback --base --repomd'
+
+    # Remove logs.
+    # Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
+    # remove all the journal logs so separate commands are used here.
+    ${SSH} core@${vm_ip} -- 'sudo journalctl --rotate'
+    ${SSH} core@${vm_ip} -- 'sudo journalctl --vacuum-time=1s'
+    ${SSH} core@${vm_ip} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
+
+    # Shutdown and Start the VM after removing base deployment tree
+    # This is required because kernel commandline changed, namely
+    # ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches
+    # between boot.0 and boot.1 when cleanup is run
+    shutdown_vm ${vm_name}
+    start_vm ${vm_name} ${vm_ip}
+}
+
 function sparsify {
     local baseDir=$1
     local srcFile=$2

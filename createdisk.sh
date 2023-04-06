@@ -79,9 +79,6 @@ fi
 
 remove_pull_secret_from_disk
 
-# Remove audit logs
-${SSH} core@${VM_IP} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
-
 if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
     prepare_hyperV ${VM_IP}
 fi
@@ -116,10 +113,7 @@ if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
    install_rhel9_kernel ${VM_IP}
 fi
 
-# Shutdown and Start the VM after installing the hyperV daemon packages.
-# This is required to get the latest ostree layer which have those installed packages.
-shutdown_vm ${VM_NAME}
-start_vm ${VM_NAME} ${VM_IP}
+cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
@@ -151,12 +145,6 @@ EOF
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
-
-# Remove the journal logs.
-# Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
-# remove all the journal logs so separate commands are used here.
-${SSH} core@${VM_IP} -- 'sudo journalctl --rotate'
-${SSH} core@${VM_IP} -- 'sudo journalctl --vacuum-time=1s'
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
