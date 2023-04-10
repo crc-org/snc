@@ -55,8 +55,9 @@ if [ ${BUNDLE_TYPE} != "microshift" ]; then
     ${SSH} core@${VM_IP} -- sudo systemctl stop kubelet
 fi
 
-# Enable the podman.socket service for API V2
+# Enable the system and user level  podman.socket service for API V2
 ${SSH} core@${VM_IP} -- sudo systemctl enable podman.socket
+${SSH} core@${VM_IP} -- systemctl --user enable podman.socket
 
 if [ ${BUNDLE_TYPE} == "microshift" ]; then
     # Pull openshift release images because as part of microshift bundle creation we
