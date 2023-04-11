@@ -121,7 +121,7 @@ function get_vm_prefix {
     # This random_string is created by installer and added to each resource type,
     # in installer side also variable name is kept as `random_string`
     # so to maintain consistancy, we are also using random_string here.
-    random_string=$(sudo virsh list --all | grep -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
+    random_string=$(sudo virsh list --all | grep -m1 -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
     if [ -z $random_string ]; then
         echo "Could not find virtual machine created by snc.sh"
         exit 1;
