@@ -12,7 +12,7 @@ sudo yum install -y make golang
 export CRC_ZSTD_EXTRA_FLAGS="-10"
 ./createdisk.sh crc-tmp-install-data
 
-git clone https://github.com/code-ready/crc.git
+git clone https://github.com/crc-org/crc.git
 pushd crc
 make cross
 sudo mv out/linux-amd64/crc /usr/local/bin/
