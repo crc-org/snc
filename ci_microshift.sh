@@ -7,10 +7,9 @@ sudo yum install -y make golang
 ./shellcheck.sh
 ./microshift.sh
 
-# Run createdisk script
 # Set the zstd compression level to 10 to have faster
-# compression.
-export CRC_ZSTD_EXTRA_FLAGS="-10 --long"
+# compression while keeping a reasonable bundle size.
+export CRC_ZSTD_EXTRA_FLAGS="-10"
 ./createdisk.sh crc-tmp-install-data
 
 git clone https://github.com/code-ready/crc.git
