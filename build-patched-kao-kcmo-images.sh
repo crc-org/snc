@@ -56,7 +56,7 @@ fi
 
 function release_image_for_arch() {
      local arch=$1
-     local mirror="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp-dev-preview"
+     local mirror=$(echo ${MIRROR} | sed "s;/$ARCH/;/$arch/;g")
      curl -L "${mirror}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
 }
 
