@@ -35,8 +35,7 @@ function download_oc() {
 
     if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
         mkdir -p openshift-clients/mac
-        # workaround for https://github.com/code-ready/snc/issues/576
-        curl -L "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.10/openshift-client-mac.tar.gz" | tar -zx -C openshift-clients/mac oc
+        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
     fi
     if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
         mkdir -p openshift-clients/windows
