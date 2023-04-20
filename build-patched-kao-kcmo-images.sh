@@ -37,8 +37,8 @@ function check_pull_secret() {
 
 check_pull_secret
 
-ARCH=$(uname -m)
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
+HOST_ARCH=$(uname -m)
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 if test -n "${OPENSHIFT_VERSION-}"; then
@@ -56,12 +56,12 @@ fi
 
 function release_image_for_arch() {
      local arch=$1
-     local mirror=$(echo ${MIRROR} | sed "s;/$ARCH/;/$arch/;g")
+     local mirror=$(echo ${MIRROR} | sed "s;/$HOST_ARCH/;/$arch/;g")
      curl -L "${mirror}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
 }
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(release_image_for_arch $ARCH)"
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(release_image_for_arch $HOST_ARCH)"
 elif test -n "${OPENSHIFT_VERSION-}"; then
     echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
