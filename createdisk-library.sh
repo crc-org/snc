@@ -178,20 +178,22 @@ function install_additional_packages() {
 }
 
 function downgrade_kernel() {
-    # workaround https://github.com/crc-org/vfkit/issues/11 on macOS
+    # workaround https://github.com/crc-org/vfkit/issues/11 on macOS 11/12
     local vm_ip=$1
     local arch=$2
+    local bodhi_url
     case $arch in
          amd64)
-            ${SSH} core@${vm_ip} "curl -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-5.19.16-301.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-core-5.19.16-301.fc37.x86_64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.19.16/301.fc37/x86_64/kernel-modules-5.19.16-301.fc37.x86_64.rpm"
+	    # kernel-5.19.16-301.fc37
+            bodhi_url="https://bodhi.fedoraproject.org/updates/FEDORA-2022-1c6a1ca835"
 	    ;;
          arm64)
-            ${SSH} core@${vm_ip} "curl -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-5.18.19-200.fc36.aarch64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-core-5.18.19-200.fc36.aarch64.rpm -L -O https://kojipkgs.fedoraproject.org//packages/kernel/5.18.19/200.fc36/aarch64/kernel-modules-5.18.19-200.fc36.aarch64.rpm"
+	    # kernel-5.18.19-200.fc36
+            bodhi_url="https://bodhi.fedoraproject.org/updates/FEDORA-2022-5674f93546"
 	    ;;
     esac
 
-    ${SSH} core@${vm_ip} "sudo rpm-ostree override -C replace *.rpm"
-    ${SSH} core@${vm_ip} "rm *.rpm"
+    ${SSH} core@${vm_ip} "sudo rpm-ostree override -C replace ${bodhi_url}"
 }
 
 function prepare_cockpit() {
