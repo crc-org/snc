@@ -193,7 +193,11 @@ function downgrade_kernel() {
 	    ;;
     esac
 
-    ${SSH} core@${vm_ip} "sudo rpm-ostree override -C replace ${bodhi_url}"
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
+    ${SSH} core@${vm_ip} -- "sudo rpm-ostree override replace ${bodhi_url}"
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
+    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
 }
 
 function prepare_cockpit() {
