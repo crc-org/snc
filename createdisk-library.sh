@@ -193,14 +193,18 @@ function downgrade_kernel() {
 	    ;;
     esac
 
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo'
-    ${SSH} core@${vm_ip} -- "sudo rpm-ostree override replace ${bodhi_url}"
-    # kernel-modules-core is new in kernel 6.x packages and does not exist in 5.x kernel packages
-    # it will stay around if we don't explicitly remove it
-    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree override remove kernel-modules-core'
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo'
-    ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo'
+
+    ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
+        sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora.repo
+        sed -i -z s/enabled=0/enabled=1/ /etc/yum.repos.d/fedora-updates.repo
+        rpm-ostree override replace "${bodhi_url}"
+	# kernel-modules-core is new in kernel 6.x packages and does not exist
+	# in 5.x kernel packages. It will stay around if we don't explicitly
+	# remove it
+        rpm-ostree override remove kernel-modules-core
+        sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora.repo
+        sed -i -z s/enabled=1/enabled=0/ /etc/yum.repos.d/fedora-updates.repo
+EOF
 }
 
 function prepare_cockpit() {
