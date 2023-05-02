@@ -87,6 +87,9 @@ function create_iso {
 [[packages]]
 name = "microshift-release-info"
 version = "*"
+[[packages]]
+name = "cloud-utils-growpart"
+version = "*"
 EOF
     sed -i 's/redhat/core/g' scripts/image-builder/config/kickstart.ks.template
     sed -i "/--bootproto=dhcp/a\network --hostname=api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}" scripts/image-builder/config/kickstart.ks.template
