@@ -113,6 +113,9 @@ download_microshift_rpm ${microshift_pkg_dir}
 create_iso ${microshift_pkg_dir}
 sudo cp -Z microshift/_output/image-builder/microshift-installer-*.iso /var/lib/libvirt/images/microshift-installer.iso
 OPENSHIFT_RELEASE_VERSION=$(rpm -qp  --qf '%{VERSION}' ${microshift_pkg_dir}/microshift-4.*.rpm)
+# Change 4.x.0~ec0 to 4.x.0-ec0
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_complex_versioning
+OPENSHIFT_RELEASE_VERSION=$(echo OPENSHIFT_RELEASE_VERSION | tr '~' '-')
 rm -fr ${microshift_pkg_dir}
 
 # Download the oc binary for specific OS environment
