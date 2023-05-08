@@ -113,6 +113,15 @@ cat crio-wipe.service | ${SSH} core@${VM_IP} "sudo tee -a /etc/systemd/system/cr
 # Preload routes controller
 ${SSH} core@${VM_IP} -- "sudo podman pull quay.io/crcont/routes-controller:${image_tag}"
 
+if [ ${BUNDLE_TYPE} == "snc" ]; then
+    # Add internalIP as node IP for kubelet systemd unit file
+    # More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
+    ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+    echo '[Service]' > /etc/systemd/system/kubelet.service.d/80-nodeip.conf
+    echo 'Environment=KUBELET_NODE_IP="${VM_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
+EOF
+fi
+
 if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
    # Install qemu-user-static-x86 packaage from fedora koji to run x86 image on M1
    # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
@@ -146,14 +155,6 @@ if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
     ${SSH} core@${VM_IP} -- "sudo rm -fr /tmp/kernel"
 fi
 
-if [ ${BUNDLE_TYPE} == "snc" ]; then
-    # Add internalIP as node IP for kubelet systemd unit file
-    # More details at https://bugzilla.redhat.com/show_bug.cgi?id=1872632
-    ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-    echo '[Service]' > /etc/systemd/system/kubelet.service.d/80-nodeip.conf
-    echo 'Environment=KUBELET_NODE_IP="${VM_IP}"' >> /etc/systemd/system/kubelet.service.d/80-nodeip.conf
-EOF
-fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
 
