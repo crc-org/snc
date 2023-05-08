@@ -65,8 +65,8 @@ function configure_host {
 
 function enable_repos {
     sudo subscription-manager repos \
-       --enable rhocp-4.12-for-rhel-8-$(uname -i)-rpms \
-       --enable fast-datapath-for-rhel-8-$(uname -i)-rpms
+       --enable rhocp-4.13-for-rhel-9-$(uname -i)-rpms \
+       --enable fast-datapath-for-rhel-9-$(uname -i)-rpms
 }
 
 function download_microshift_rpm {
