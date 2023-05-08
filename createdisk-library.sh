@@ -208,7 +208,7 @@ function install_additional_packages() {
 }
 
 # This is only needed for creating arm64 bundles until RHCOS switches to RHEL-9
-function install_rhel9_kernel {
+function downgrade_rhel9_kernel {
     local vm_ip=$1
     local pkgDir=$(mktemp -d tmp-rpmXXX)
 
