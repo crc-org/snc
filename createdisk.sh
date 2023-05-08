@@ -114,9 +114,6 @@ cat crio-wipe.service | ${SSH} core@${VM_IP} "sudo tee -a /etc/systemd/system/cr
 ${SSH} core@${VM_IP} -- "sudo podman pull quay.io/crcont/routes-controller:${image_tag}"
 
 if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
-   # aarch64 support is mainly used on Apple M1 machines which can't run a rhel8 kernel
-   # https://access.redhat.com/solutions/6545411
-   install_rhel9_kernel ${VM_IP}
    # Install qemu-user-static-x86 packaage from fedora koji to run x86 image on M1
    # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
    # in any subscription repo.
@@ -127,6 +124,10 @@ cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    # workaround https://github.com/crc-org/vfkit/issues/11 on macOS 12
+    downgrade_rhel9_kernel ${VM_IP}
+    cleanup_vm_image ${VM_NAME} ${VM_IP}
+
     # Get the rhcos ostree Hash ID
     ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
 
