@@ -111,6 +111,10 @@ if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
    # aarch64 support is mainly used on Apple M1 machines which can't run a rhel8 kernel
    # https://access.redhat.com/solutions/6545411
    install_rhel9_kernel ${VM_IP}
+   # Install qemu-user-static-x86 packaage from fedora koji to run x86 image on M1
+   # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
+   # in any subscription repo.
+   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install https://kojipkgs.fedoraproject.org//packages/qemu/7.0.0/15.fc37/aarch64/qemu-user-static-x86-7.0.0-15.fc37.aarch64.rpm"
 fi
 
 cleanup_vm_image ${VM_NAME} ${VM_IP}
