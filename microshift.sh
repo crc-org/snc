@@ -20,9 +20,9 @@ if [ ! -n "${MICROSHIFT_NVR}" ]; then
     exit 1
 fi
 
-if ! grep -q -i "release 8" /etc/redhat-release
+if ! grep -q -i "release 9" /etc/redhat-release
 then
-  echo "This script only works for RHEL-8"
+  echo "This script only works for RHEL-9"
   exit 1
 fi
 
