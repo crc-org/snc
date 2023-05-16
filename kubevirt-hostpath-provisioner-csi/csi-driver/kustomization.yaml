@@ -1,9 +1,6 @@
 resources:
   - csi-kubevirt-hostpath-provisioner.yaml
 images:
-  - name: quay.io/kubevirt/hostpath-csi-driver
-    newName: quay.io/crcont/hostpath-csi-driver
-    newTag: v4.11.0
   - name: registry.k8s.io/sig-storage/csi-node-driver-registrar
     newName: registry.redhat.io/openshift4/ose-csi-node-driver-registrar
     newTag: latest
