@@ -37,8 +37,8 @@ function check_pull_secret() {
 
 check_pull_secret
 
-ARCH=$(uname -m)
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+HOST_ARCH=$(uname -m)
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 if test -n "${OPENSHIFT_VERSION-}"; then
@@ -56,12 +56,12 @@ fi
 
 function release_image_for_arch() {
      local arch=$1
-     local mirror="https://mirror.openshift.com/pub/openshift-v4/${arch}/clients/ocp"
+     local mirror=$(echo ${MIRROR} | sed "s;/$HOST_ARCH/;/$arch/;g")
      curl -L "${mirror}/${OPENSHIFT_RELEASE_VERSION}/release.txt" 2>/dev/null| sed -n 's/^Pull From: //p'
 }
 
 if test -z "${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE-}"; then
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(release_image_for_arch $ARCH)"
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="$(release_image_for_arch $HOST_ARCH)"
 elif test -n "${OPENSHIFT_VERSION-}"; then
     echo "Both OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE and OPENSHIFT_VERSION are set, OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE will take precedence"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: $OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE"
@@ -87,18 +87,20 @@ function patch_and_push_image() {
     vcs_ref=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels."vcs-ref"')
     version=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.version')
     release=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.release')
-    rhpkg clone containers/crc-${image_name}
-    pushd crc-${image_name}
-    git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
-    # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
-    git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
-    git checkout --track origin/private-rhaos-${OCP_VERSION}-rhel-8
-    git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
-    git push origin HEAD
-    rhpkg container-build --scratch --target crc-1-rhel-8-candidate &> rhpkg.out
-    brew_image=$(grep -o 'registry-proxy.engineering.redhat.com.*' rhpkg.out)
-    popd
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://${brew_image} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
+    # If brew build already exist for the release don't rebuild it again
+    if ! brew buildinfo crc-${image_name}-container-${version}-${release}; then
+        rhpkg clone containers/crc-${image_name}
+        pushd crc-${image_name}
+        git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
+        # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
+        git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
+        git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
+        git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
+        git push origin HEAD
+        rhpkg container-build --target crc-1-rhel-8-candidate
+        popd
+    fi
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
 function create_patched_release_image_for_arch() {
@@ -121,12 +123,13 @@ function create_patched_release_image_for_arch() {
 function create_new_release_with_patched_images() {
     local upstream_registry="quay.io/crcont"
 
+    podman rmi -i ${upstream_registry}/ocp-release:${openshift_version}
     podman manifest create ${upstream_registry}/ocp-release:${openshift_version}
     for arch in amd64 arm64; do \
         create_patched_release_image_for_arch ${upstream_registry} ${arch}
         podman manifest add ${upstream_registry}/ocp-release:${openshift_version} docker://${upstream_registry}/ocp-release:${openshift_version}-${arch}
       done
-    podman manifest push --all ${upstream_registry}/ocp-release:${openshift_version}  docker://${upstream_registry}/ocp-release:${openshift_version}
+    podman manifest push --authfile ${OPENSHIFT_PULL_SECRET_PATH} --all ${upstream_registry}/ocp-release:${openshift_version}  docker://${upstream_registry}/ocp-release:${openshift_version}
 }
 
 function update_base_image() {
@@ -136,17 +139,15 @@ function update_base_image() {
     rhpkg clone containers/${brew_repo}
     pushd ${brew_repo}
     git checkout --track origin/crc-1-rhel-8
-    git checkout --track origin/private-cfergeau
-    git reset --hard origin/crc-1-rhel-8
     sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
     git add Dockerfile
     git commit -m "Use OpenShift ${openshift_version} base image"
-    git push origin -f HEAD:private-cfergeau
-    rhpkg container-build --scratch --target crc-1-rhel-8-candidate
+    git push origin
+    rhpkg container-build
     popd
 
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:latest
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:latest
 }
 
 openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} -ojsonpath='{.config.config.Labels.io\.openshift\.release}')
@@ -155,7 +156,11 @@ patch_and_push_image cluster-kube-apiserver-operator
 patch_and_push_image cluster-kube-controller-manager-operator
 create_new_release_with_patched_images
 
-base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
-
-update_base_image crc-dnsmasq "${base_image}"
-update_base_image crc-routes-controller "${base_image}"
+# In case there is no change in the openshift component then the base
+# image is also not changed so no need to build dnsmasq/route images
+if [ -f crc-cluster-kube-apiserver-operator/Dockerfile ]; then
+    base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
+    
+    update_base_image crc-dnsmasq "${base_image}"
+    update_base_image crc-routes-controller "${base_image}"
+fi

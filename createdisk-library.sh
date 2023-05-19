@@ -10,6 +10,34 @@ function get_dest_dir_suffix {
     fi
 }
 
+# This removes extra os tree layers, log files, ... from the image
+function cleanup_vm_image() {
+    local vm_name=$1
+    local vm_ip=$2
+
+    # Shutdown and Start the VM to get the latest ostree layer. If packages
+    # have been added/removed since last boot, the VM will reboot in a different ostree layer.
+    shutdown_vm ${vm_name}
+    start_vm ${vm_name} ${vm_ip}
+
+    # Remove miscellaneous unneeded data from rpm-ostree
+    ${SSH} core@${vm_ip} -- 'sudo rpm-ostree cleanup --rollback --base --repomd'
+
+    # Remove logs.
+    # Note: With `sudo journalctl --rotate --vacuum-time=1s`, it doesn't
+    # remove all the journal logs so separate commands are used here.
+    ${SSH} core@${vm_ip} -- 'sudo journalctl --rotate'
+    ${SSH} core@${vm_ip} -- 'sudo journalctl --vacuum-time=1s'
+    ${SSH} core@${vm_ip} -- 'sudo find /var/log/ -iname "*.log" -exec rm -f {} \;'
+
+    # Shutdown and Start the VM after removing base deployment tree
+    # This is required because kernel commandline changed, namely
+    # ostree=/ostree/boot.1/fedora-coreos/$hash/0 which switches
+    # between boot.0 and boot.1 when cleanup is run
+    shutdown_vm ${vm_name}
+    start_vm ${vm_name} ${vm_ip}
+}
+
 function sparsify {
     local baseDir=$1
     local srcFile=$2
@@ -79,9 +107,10 @@ function create_qemu_image {
 function update_json_description {
     local srcDir=$1
     local destDir=$2
+    local vm_name=$3
 
-    diskSize=$(du -b $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
-    diskSha256Sum=$(sha256sum $destDir/${CRC_VM_NAME}.qcow2 | awk '{print $1}')
+    diskSize=$(du -b $destDir/${SNC_PRODUCT_NAME}.qcow2 | awk '{print $1}')
+    diskSha256Sum=$(sha256sum $destDir/${SNC_PRODUCT_NAME}.qcow2 | awk '{print $1}')
 
     ocSize=$(du -b $destDir/oc | awk '{print $1}')
     ocSha256Sum=$(sha256sum $destDir/oc | awk '{print $1}')
@@ -95,10 +124,10 @@ function update_json_description {
         | ${JQ} '.clusterInfo.kubeConfig = "kubeconfig"' \
         | ${JQ} '.nodes[0].kind[0] = "master"' \
         | ${JQ} '.nodes[0].kind[1] = "worker"' \
-        | ${JQ} ".nodes[0].hostname = \"${VM_PREFIX}-master-0\"" \
-        | ${JQ} ".nodes[0].diskImage = \"${CRC_VM_NAME}.qcow2\"" \
-        | ${JQ} ".nodes[0].internalIP = \"${INTERNAL_IP}\"" \
-        | ${JQ} ".storage.diskImages[0].name = \"${CRC_VM_NAME}.qcow2\"" \
+        | ${JQ} ".nodes[0].hostname = \"${vm_name}\"" \
+        | ${JQ} ".nodes[0].diskImage = \"${SNC_PRODUCT_NAME}.qcow2\"" \
+        | ${JQ} ".nodes[0].internalIP = \"${VM_IP}\"" \
+        | ${JQ} ".storage.diskImages[0].name = \"${SNC_PRODUCT_NAME}.qcow2\"" \
         | ${JQ} '.storage.diskImages[0].format = "qcow2"' \
         | ${JQ} ".storage.diskImages[0].size = \"${diskSize}\"" \
         | ${JQ} ".storage.diskImages[0].sha256sum = \"${diskSha256Sum}\"" \
@@ -130,6 +159,7 @@ function eventually_add_pull_secret {
 function copy_additional_files {
     local srcDir=$1
     local destDir=$2
+    local vm_name=$3
 
     # Copy the kubeconfig file
     cp $1/auth/kubeconfig $destDir/
@@ -143,7 +173,7 @@ function copy_additional_files {
 
     cp podman-remote/linux/podman-remote $destDir/
 
-    update_json_description $srcDir $destDir
+    update_json_description $srcDir $destDir $vm_name
 
     eventually_add_pull_secret $destDir
 }
@@ -183,7 +213,7 @@ function install_rhel9_kernel {
     local pkgDir=$(mktemp -d tmp-rpmXXX)
 
     mkdir -p ${pkgDir}/packages
-    yum download --setopt=reposdir=./repos --setopt=sslcacert=./repos/2015-RH-IT-Root-CA.pem --downloadonly --downloaddir ${pkgDir}/packages kernel kernel-modules-extra kernel-core kernel-modules --resolve
+    yum download --setopt=reposdir=./repos --setopt=sslcacert=./repos/2015-RH-IT-Root-CA.crt --downloadonly --downloaddir ${pkgDir}/packages kernel kernel-modules-extra kernel-core kernel-modules --resolve
     ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
     ${SSH} core@${vm_ip} -- 'SYSTEMD_OFFLINE=1 sudo -E rpm-ostree override replace /home/core/packages/*.rpm'
     ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
@@ -237,8 +267,8 @@ function generate_vfkit_bundle {
 
     generate_macos_bundle "vfkit" "$@"
 
-    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.img
-    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.img" "raw"
+    ${QEMU_IMG} convert -f qcow2 -O raw $srcDir/${SNC_PRODUCT_NAME}.qcow2 $destDir/${SNC_PRODUCT_NAME}.img
+    add_disk_info_to_json_description "${destDir}" "${SNC_PRODUCT_NAME}.img" "raw"
 
     create_tarball "$destDir"
 }
@@ -345,8 +375,8 @@ function generate_hyperv_bundle {
         | ${JQ} '.driverInfo.name = "hyperv"' \
         >$destDir/crc-bundle-info.json
 
-    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${CRC_VM_NAME}.qcow2 $destDir/${CRC_VM_NAME}.vhdx
-    add_disk_info_to_json_description "${destDir}" "${CRC_VM_NAME}.vhdx" vhdx
+    ${QEMU_IMG} convert -f qcow2 -O vhdx -o subformat=dynamic $srcDir/${SNC_PRODUCT_NAME}.qcow2 $destDir/${SNC_PRODUCT_NAME}.vhdx
+    add_disk_info_to_json_description "${destDir}" "${SNC_PRODUCT_NAME}.vhdx" vhdx
 
     create_tarball "$destDir"
 }
@@ -380,4 +410,31 @@ function download_podman() {
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
       mv podman-remote/windows/podman-${version}/usr/bin/podman.exe  podman-remote/windows
     fi
+}
+
+# As of now sparsify helper is very specific to OCP/OKD kind of bundle where we get the
+# partition for the root label and then mount it with guestfish to cleanup /boot. With
+# microshift vm we are using lvm and guestfish error out during mount
+# mount /dev/sda3 /
+# libguestfs: error: mount: mount exited with status 32: mount: /sysroot: unknown filesystem type 'LVM2_member'
+# There might be other way for guestfish to mount lvm but as of now using a seperate helper is easy.
+function sparsify_lvm() {
+    local destDir=$1
+    sudo cp /var/lib/libvirt/images/${SNC_PRODUCT_NAME}.qcow2 ${destDir}
+    sudo chown $USER:$USER -R ${destDir}
+    export LIBGUESTFS_BACKEND=direct
+    virt-sparsify --in-place ${destDir}/${SNC_PRODUCT_NAME}.qcow2
+    chmod 0644 ${destDir}/${SNC_PRODUCT_NAME}.qcow2
+}
+
+function remove_pull_secret_from_disk() {
+    case "${BUNDLE_TYPE}" in
+      "microshift")
+        ${SSH} core@${VM_IP} -- sudo rm -f /etc/crio/openshift-pull-secret
+	;;
+      "snc")
+	# This assumes there's a single ostree deployment (`ostree admin status`), which is the case at the end of snc.sh
+	${SSH} core@${VM_IP} -- sudo cp /var/lib/kubelet/config.json /etc/machine-config-daemon/orig/var/lib/kubelet/config.json.mcdorig
+	;;
+    esac
 }

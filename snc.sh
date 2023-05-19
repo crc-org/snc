@@ -23,7 +23,7 @@ then
 fi
 
 INSTALL_DIR=crc-tmp-install-data
-CRC_VM_NAME=${CRC_VM_NAME:-crc}
+SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
 CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-33285996544}
@@ -36,7 +36,7 @@ CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 USE_PATCHED_RELEASE_IMAGE=${SNC_USE_PATCHED_RELEASE_IMAGE:-disabled}
 HTPASSWD_FILE='users.htpasswd'
 
-run_preflight_checks
+run_preflight_checks ${BUNDLE_TYPE}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 # Otherwise use the tagged version if available
@@ -109,8 +109,8 @@ fi
 
 # Set NetworkManager DNS overlay file
 cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/crc-snc.conf
-server=/${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.1
-address=/apps-${CRC_VM_NAME}.${BASE_DOMAIN}/192.168.126.11
+server=/${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/192.168.126.1
+address=/apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/192.168.126.11
 EOF
 
 # Reload the NetworkManager to make DNS overlay effective
@@ -129,7 +129,7 @@ rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTAL
 ${YQ} eval --inplace ".compute[0].architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".controlPlane.architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-config.yaml
-${YQ} eval --inplace ".metadata.name = \"${CRC_VM_NAME}\"" ${INSTALL_DIR}/install-config.yaml
+${YQ} eval --inplace ".metadata.name = \"${SNC_PRODUCT_NAME}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
@@ -141,7 +141,7 @@ OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRI
 ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overrides.yaml")' ${INSTALL_DIR}/manifests/cvo-overrides.yaml cvo-overrides.yaml
 
 # Add custom domain to cluster-ingress
-${YQ} eval --inplace ".spec.domain = \"apps-${CRC_VM_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
+${YQ} eval --inplace ".spec.domain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
 # Set master memory and cpus
 # This is only valid for openshift 4.3 onwards
 echo "Master memory: $SNC_CLUSTER_MEMORY"
@@ -179,10 +179,10 @@ fi
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
-HOSTNAME=$(${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
+HOSTNAME=$(${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname ${HOSTNAME}
 
-create_json_description
+create_json_description ${BUNDLE_TYPE}
 
 # Create persistent volumes
 create_pvs ${BUNDLE_TYPE}
@@ -224,12 +224,12 @@ retry ${OC} create -f security-notice.yaml
 retry ${OC} patch clusterversion version -p '{"spec":{"clusterID":""}}' --type merge
 
 # SCP the kubeconfig file to VM
-${SCP} ${KUBECONFIG} core@api.${CRC_VM_NAME}.${BASE_DOMAIN}:/home/core/
-${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
+${SCP} ${KUBECONFIG} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:/home/core/
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mv /home/core/kubeconfig /opt/'
 
 # Add exposed registry CA to VM
 retry ${OC} extract secret/router-ca --keys=tls.crt -n openshift-ingress-operator --confirm
-retry ${OC} create configmap registry-certs --from-file=default-route-openshift-image-registry.apps-crc.testing=tls.crt -n openshift-config
+retry ${OC} create configmap registry-certs --from-file=default-route-openshift-image-registry.apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}=tls.crt -n openshift-config
 retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTrustedCA": {"name": "registry-certs"}}}' --type merge
 
 # Remove the machine config for chronyd to make it active again
@@ -255,6 +255,6 @@ retry ${OC} delete pod --field-selector=status.phase==Succeeded --all-namespaces
 
 # Delete outdated rendered master/worker machineconfigs and just keep the latest one
 mc_name=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
-echo "${mc_name}" | grep rendered-master | head -n -2 | xargs -t ${OC} delete
+echo "${mc_name}" | grep rendered-master | head -n -1 | xargs -t ${OC} delete
 echo "${mc_name}" | grep rendered-worker | head -n -1 | xargs -t ${OC} delete
 

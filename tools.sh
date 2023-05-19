@@ -121,7 +121,7 @@ function get_vm_prefix {
     # This random_string is created by installer and added to each resource type,
     # in installer side also variable name is kept as `random_string`
     # so to maintain consistancy, we are also using random_string here.
-    random_string=$(sudo virsh list --all | grep -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
+    random_string=$(sudo virsh list --all | grep -m1 -oP "(?<=${crc_vm_name}-).*(?=-master-0)")
     if [ -z $random_string ]; then
         echo "Could not find virtual machine created by snc.sh"
         exit 1;
@@ -130,23 +130,30 @@ function get_vm_prefix {
 }
 
 function shutdown_vm {
-    local vm_prefix=$1
-    retry sudo virsh shutdown ${vm_prefix}-master-0
+    local vm_name=$1
+    retry sudo virsh shutdown ${vm_name}
     # Wait till instance started successfully
-    until sudo virsh domstate ${vm_prefix}-master-0 | grep shut; do
-        echo " ${vm_prefix}-master-0 still running"
+    until sudo virsh domstate ${vm_name} | grep shut; do
+        echo " ${vm_name} still running"
         sleep 3
     done
 }
 
-function start_vm {
-    local vm_prefix=$1
-    retry sudo virsh start ${vm_prefix}-master-0
-    # Wait till ssh connection available
-    until ${SSH} core@api.${CRC_VM_NAME}.${BASE_DOMAIN} -- "exit 0" >/dev/null 2>&1; do
-        echo " ${vm_prefix}-master-0 still booting"
+function wait_for_ssh {
+    local vm_name=$1
+    local vm_ip=$2
+    until ${SSH} core@${vm_ip} -- "exit 0" >/dev/null 2>&1; do
+        echo " ${vm_name} still booting"
         sleep 2
     done
+}
+
+function start_vm {
+    local vm_name=$1
+    local vm_ip=$2
+    retry sudo virsh start ${vm_name}
+    # Wait till ssh connection available
+    wait_for_ssh ${vm_name} ${vm_ip}
 }
 
 function generate_htpasswd_file {
