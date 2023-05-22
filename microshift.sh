@@ -20,9 +20,9 @@ if [ ! -n "${MICROSHIFT_NVR}" ]; then
     exit 1
 fi
 
-if ! grep -q -i "release 8" /etc/redhat-release
+if ! grep -q -i "release 9" /etc/redhat-release
 then
-  echo "This script only works for RHEL-8"
+  echo "This script only works for RHEL-9"
   exit 1
 fi
 
@@ -65,8 +65,8 @@ function configure_host {
 
 function enable_repos {
     sudo subscription-manager repos \
-       --enable rhocp-4.12-for-rhel-8-$(uname -i)-rpms \
-       --enable fast-datapath-for-rhel-8-$(uname -i)-rpms
+       --enable rhocp-4.13-for-rhel-9-$(uname -i)-rpms \
+       --enable fast-datapath-for-rhel-9-$(uname -i)-rpms
 }
 
 function download_microshift_rpm {
@@ -79,7 +79,7 @@ function download_microshift_rpm {
 function create_iso {
     local pkgDir=$1
     rm -fr microshift
-    git clone -b release-4.12 https://github.com/openshift/microshift.git
+    git clone -b release-4.13 https://github.com/openshift/microshift.git
     cp podman_changes.ks microshift/
     pushd microshift
     sed -i '/# customizations/,$d' scripts/image-builder/config/blueprint_v0.0.1.toml
@@ -116,6 +116,9 @@ download_microshift_rpm ${microshift_pkg_dir}
 create_iso ${microshift_pkg_dir}
 sudo cp -Z microshift/_output/image-builder/microshift-installer-*.iso /var/lib/libvirt/images/microshift-installer.iso
 OPENSHIFT_RELEASE_VERSION=$(rpm -qp  --qf '%{VERSION}' ${microshift_pkg_dir}/microshift-4.*.rpm)
+# Change 4.x.0~ec0 to 4.x.0-ec0
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_complex_versioning
+OPENSHIFT_RELEASE_VERSION=$(echo OPENSHIFT_RELEASE_VERSION | tr '~' '-')
 rm -fr ${microshift_pkg_dir}
 
 # Download the oc binary for specific OS environment
