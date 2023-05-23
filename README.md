@@ -79,4 +79,12 @@ Host bootstrap
     UserKnownHostsFile /dev/null
 ```
 
+## Environment Variables
+
+The following environment variables can be used to change the default values of bundle generation.
+
+SNC_GENERATE_MACOS_BUNDLE : if set to 0, bundle generation for MacOS is disabled, any other value will enable it.
+SNC_GENERATE_WINDOWS_BUNDLE : if set to 0, bundle generation for Windows is disabled, any other value will enable it.
+
+
 Please note the SNC project is “as-is” on this Github repository. At this time, it is not an offically supported Red Hat solution.

@@ -85,7 +85,7 @@ fi
 
 remove_pull_secret_from_disk
 
-if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
     prepare_hyperV ${VM_IP}
 fi
 
@@ -132,7 +132,7 @@ fi
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
     if [ ${BUNDLE_TYPE} != "okd" ]; then
         # workaround https://github.com/crc-org/vfkit/issues/11 on macOS 12
         downgrade_rhel9_kernel ${VM_IP}
@@ -186,7 +186,7 @@ create_tarball "$libvirtDestDir"
 # vfkit image generation
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
-if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
     rm -fr ${vfkitDestDir} ${vfkitDestDir}.crcbundle
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
@@ -196,7 +196,7 @@ fi
 #
 # This must be done after the generation of libvirt image as it reuses some of
 # the content of $libvirtDestDir
-if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
     hypervDestDir="${destDirPrefix}_hyperv_${destDirSuffix}"
     rm -fr ${hypervDestDir} ${hypervDestDir}.crcbundle
     generate_hyperv_bundle "$libvirtDestDir" "$hypervDestDir"
