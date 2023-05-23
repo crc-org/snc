@@ -22,18 +22,18 @@ ARCH=$(uname -m)
 case "${ARCH}" in
     x86_64)
         yq_ARCH="amd64"
-        SNC_GENERATE_MACOS_BUNDLE=1
-        SNC_GENERATE_WINDOWS_BUNDLE=1
+        SNC_GENERATE_MACOS_BUNDLE=${SNC_GENERATE_MACOS_BUNDLE:-1}
+        SNC_GENERATE_WINDOWS_BUNDLE=${SNC_GENERATE_WINDOWS_BUNDLE:-1}
 	;;
     aarch64)
         yq_ARCH="arm64"
-        SNC_GENERATE_MACOS_BUNDLE=1
-        SNC_GENERATE_WINDOWS_BUNDLE=
+        SNC_GENERATE_MACOS_BUNDLE=${SNC_GENERATE_MACOS_BUNDLE:-1}
+        SNC_GENERATE_WINDOWS_BUNDLE=${SNC_GENERATE_WINDOWS_BUNDLE:-0}
 	;;
     *)
         yq_ARCH=${ARCH}
-        SNC_GENERATE_MACOS_BUNDLE=
-        SNC_GENERATE_WINDOWS_BUNDLE=
+        SNC_GENERATE_MACOS_BUNDLE=${SNC_GENERATE_MACOS_BUNDLE:-0}
+        SNC_GENERATE_WINDOWS_BUNDLE=${SNC_GENERATE_WINDOWS_BUNDLE:-0}
 	;;
 esac
 
@@ -72,7 +72,7 @@ if ! rpm -q libguestfs-xfs; then
     sudo yum install libguestfs-xfs
 fi
 
-if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" -o -n "${SNC_GENERATE_MACOS_BUNDLE}" ];then
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" -o "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ];then
     if ! which ${UNZIP}; then
         sudo yum -y install /usr/bin/unzip
     fi

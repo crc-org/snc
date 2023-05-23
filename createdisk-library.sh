@@ -396,7 +396,7 @@ function download_podman() {
     mv podman-remote/linux/podman-remote-static podman-remote/linux/podman-remote
     chmod +x podman-remote/linux/podman-remote
 
-    if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
+    if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
       mkdir -p podman-remote/mac
       curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-darwin_${arch}.zip -o podman-remote/mac/podman.zip
       ${UNZIP} -o -d podman-remote/mac/ podman-remote/mac/podman.zip
@@ -404,7 +404,7 @@ function download_podman() {
       chmod +x podman-remote/mac/podman
     fi
 
-    if [ -n "${SNC_GENERATE_WINDOWS_BUNDLE}" ]; then
+    if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
       mkdir -p podman-remote/windows
       curl -L https://github.com/containers/podman/releases/download/v${version}/podman-remote-release-windows_${arch}.zip -o podman-remote/windows/podman.zip
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
