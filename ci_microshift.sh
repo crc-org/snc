@@ -5,12 +5,12 @@ set -exuo pipefail
 sudo yum install -y make golang
 
 ./shellcheck.sh
-./microshift.sh
+SNC_GENERATE_MACOS_BUNDLE=0  ./microshift.sh
 
 # Set the zstd compression level to 10 to have faster
 # compression while keeping a reasonable bundle size.
 export CRC_ZSTD_EXTRA_FLAGS="-10"
-./createdisk.sh crc-tmp-install-data
+SNC_GENERATE_MACOS_BUNDLE=0  ./createdisk.sh crc-tmp-install-data
 
 git clone https://github.com/crc-org/crc.git
 pushd crc
