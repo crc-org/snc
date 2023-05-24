@@ -54,10 +54,12 @@ ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 # podman package is required to run the ostree-container to serve the rpm-ostree content
 # createrepo package is required to create localrepo for microshift and it's dependenices
 # yum-utils package is required for reposync utility to synchronize packages of a remote DNF repository to a local directory
+# containernetworking-plugins contains networking plugin like bridge which required by podman
+# runc package provide OCI spec for running containers
 function configure_host {
     sudo dnf install -y git osbuild-composer composer-cli ostree rpm-ostree \
       cockpit-composer cockpit-machines bash-completion lorax podman \
-      yum-utils createrepo
+      yum-utils createrepo runc containernetworking-plugins
     sudo systemctl start osbuild-composer.socket
     sudo systemctl start cockpit.socket
     sudo firewall-cmd --add-service=cockpit
