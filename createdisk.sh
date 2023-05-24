@@ -181,7 +181,9 @@ else
     sparsify_lvm "${libvirtDestDir}"
 fi
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "${VM_NAME}"
-create_tarball "$libvirtDestDir"
+if [ "${SNC_GENERATE_LINUX_BUNDLE}" != "0" ]; then
+    create_tarball "$libvirtDestDir"
+fi
 
 # vfkit image generation
 # This must be done after the generation of libvirt image as it reuses some of
