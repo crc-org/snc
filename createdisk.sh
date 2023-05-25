@@ -133,9 +133,11 @@ cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Only used for macOS bundle generation
 if [ -n "${SNC_GENERATE_MACOS_BUNDLE}" ]; then
-    # workaround https://github.com/crc-org/vfkit/issues/11 on macOS 12
-    downgrade_rhel9_kernel ${VM_IP}
-    cleanup_vm_image ${VM_NAME} ${VM_IP}
+    if [ ${BUNDLE_TYPE} != "okd" ]; then
+        # workaround https://github.com/crc-org/vfkit/issues/11 on macOS 12
+        downgrade_rhel9_kernel ${VM_IP}
+        cleanup_vm_image ${VM_NAME} ${VM_IP}
+    fi 
 
     # Get the rhcos ostree Hash ID
     ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
