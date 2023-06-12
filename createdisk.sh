@@ -112,6 +112,9 @@ cat crio-wipe.service | ${SSH} core@${VM_IP} "sudo tee -a /etc/systemd/system/cr
 
 # Preload routes controller
 ${SSH} core@${VM_IP} -- "sudo podman pull quay.io/crcont/routes-controller:${image_tag}"
+TAG=${image_tag} envsubst < route_controller.yaml.in > $INSTALL_DIR/route_controller.yaml
+${SCP} $INSTALL_DIR/route_controller.yaml core@${VM_IP}:/home/core/
+${SSH} core@${VM_IP} -- 'sudo mkdir -p /opt/crc && sudo mv /home/core/route_controller.yaml /opt/crc/'
 
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Add internalIP as node IP for kubelet systemd unit file
