@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: routes-controller
+  name: routes-controller
+  namespace: openshift-ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: routes-controller
+  template:
+    metadata:
+      labels:
+        app: routes-controller
+    spec:
+      containers:
+      - image: quay.io/crcont/routes-controller:${TAG}
+        name: routes-controller
+        imagePullPolicy: IfNotPresent
+
