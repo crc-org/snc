@@ -81,6 +81,10 @@ EOF
     # Copy the sample microshift config and update the base domain with crc base domain
     ${SSH} core@${VM_IP} -- sudo cp /etc/microshift/config.yaml.default /etc/microshift/config.yaml
     ${SSH} core@${VM_IP} -- "sudo sed -i 's/#baseDomain: .*/baseDomain: ${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/g' /etc/microshift/config.yaml"
+    # Remove the lvm system.device file since it have diskID and deviceName which changes
+    # for different hypervisor and as per `man lvmdevices` if the file does not exist, or if lvm.conf
+    # includes use_devicesfile=0, then lvm will not use a devices file.
+    ${SSH} core@${VM_IP} -- "sudo rm -fr /etc/lvm/devices/system.devices"
 fi
 
 remove_pull_secret_from_disk
