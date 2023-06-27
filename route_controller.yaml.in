@@ -15,6 +15,7 @@ spec:
       labels:
         app: routes-controller
     spec:
+      serviceAccountName: router
       containers:
       - image: quay.io/crcont/routes-controller:${TAG}
         name: routes-controller
