@@ -46,6 +46,10 @@ function sparsify {
     export LIBGUESTFS_BACKEND=direct
     # Check which partition is labeled as `root`
     partition=$(${VIRT_FILESYSTEMS} -a $baseDir/$srcFile -l --partitions | sort -rk4 -n | sed -n 1p | cut -f1 -d' ')
+    # check if the base image has the lvm named as `rhel/root`
+    if ${VIRT_FILESYSTEMS} --lvs -a ${baseDir}/${srcFile}  | grep -q "rhel/root"; then
+      partition="/dev/rhel/root"
+    fi
 
     # https://bugzilla.redhat.com/show_bug.cgi?id=1837765
     export LIBGUESTFS_MEMSIZE=2048
@@ -85,8 +89,10 @@ function create_qemu_image {
     local base=$2
     local overlay=$3
 
+    # ${overlay} won't exist in some cases, for example when using microshift
     if [ -f /var/lib/libvirt/images/${overlay} ]; then
       sudo cp /var/lib/libvirt/images/${overlay} ${destDir}
+    elif [ -f /var/lib/libvirt/images/${base} ]; then
       sudo cp /var/lib/libvirt/images/${base} ${destDir}
     else
       sudo cp /var/lib/libvirt/openshift-images/${VM_PREFIX}/${overlay} ${destDir}
@@ -94,8 +100,10 @@ function create_qemu_image {
     fi
 
     sudo chown $USER:$USER -R ${destDir}
-    ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${base} ${destDir}/${overlay}
-    ${QEMU_IMG} commit ${destDir}/${overlay}
+    if [ -f ${destDir}/${overlay} ]; then
+      ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${base} ${destDir}/${overlay}
+      ${QEMU_IMG} commit ${destDir}/${overlay}
+    fi
 
     sparsify ${destDir} ${base} ${overlay}
 
@@ -410,21 +418,6 @@ function download_podman() {
       ${UNZIP} -o -d podman-remote/windows/ podman-remote/windows/podman.zip
       mv podman-remote/windows/podman-${version}/usr/bin/podman.exe  podman-remote/windows
     fi
-}
-
-# As of now sparsify helper is very specific to OCP/OKD kind of bundle where we get the
-# partition for the root label and then mount it with guestfish to cleanup /boot. With
-# microshift vm we are using lvm and guestfish error out during mount
-# mount /dev/sda3 /
-# libguestfs: error: mount: mount exited with status 32: mount: /sysroot: unknown filesystem type 'LVM2_member'
-# There might be other way for guestfish to mount lvm but as of now using a seperate helper is easy.
-function sparsify_lvm() {
-    local destDir=$1
-    sudo cp /var/lib/libvirt/images/${SNC_PRODUCT_NAME}.qcow2 ${destDir}
-    sudo chown $USER:$USER -R ${destDir}
-    export LIBGUESTFS_BACKEND=direct
-    virt-sparsify --in-place ${destDir}/${SNC_PRODUCT_NAME}.qcow2
-    chmod 0644 ${destDir}/${SNC_PRODUCT_NAME}.qcow2
 }
 
 function remove_pull_secret_from_disk() {
