@@ -181,13 +181,7 @@ libvirtDestDir="${destDirPrefix}_libvirt_${destDirSuffix}"
 rm -fr ${libvirtDestDir} ${libvirtDestDir}.crcbundle
 mkdir "$libvirtDestDir"
 
-if [ $BUNDLE_TYPE != "microshift" ]; then
-    create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_NAME}"
-    mv "${libvirtDestDir}/${VM_NAME}" "${libvirtDestDir}/${SNC_PRODUCT_NAME}.qcow2"
-else
-    create_qemu_image "$libvirtDestDir" "${VM_NAME}.qcow2" "microshift"
-    mv "${libvirtDestDir}/microshift" "${libvirtDestDir}/${SNC_PRODUCT_NAME}.qcow2"
-fi
+create_bundle_qemu_image "$libvirtDestDir" "${VM_PREFIX}" "${VM_NAME}"
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "${VM_NAME}"
 if [ "${SNC_GENERATE_LINUX_BUNDLE}" != "0" ]; then
     create_tarball "$libvirtDestDir"

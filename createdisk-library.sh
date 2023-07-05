@@ -112,6 +112,20 @@ function create_qemu_image {
     rm -fr ${destDir}/${base}
 }
 
+function create_bundle_qemu_image() {
+  local libvirtDestDir="$1"
+  local VM_PREFIX="$2"
+  local VM_NAME="$3"
+
+  if [ "${BUNDLE_TYPE}" != "microshift" ]; then
+    create_qemu_image "$libvirtDestDir" "${VM_PREFIX}-base" "${VM_NAME}"
+    mv "${libvirtDestDir}/${VM_NAME}" "${libvirtDestDir}/${SNC_PRODUCT_NAME}.qcow2"
+  else
+    create_qemu_image "$libvirtDestDir" "${VM_NAME}.qcow2" "microshift.qcow2"
+    mv "${libvirtDestDir}/microshift.qcow2" "${libvirtDestDir}/${SNC_PRODUCT_NAME}.qcow2"
+  fi
+}
+
 function update_json_description {
     local srcDir=$1
     local destDir=$2
@@ -431,3 +445,4 @@ function remove_pull_secret_from_disk() {
 	;;
     esac
 }
+
