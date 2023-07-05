@@ -19,7 +19,7 @@ cat > /tmp/ignoretests.txt << EOF
 EOF
 
 ./shellcheck.sh
-SNC_GENERATE_MACOS_BUNDLE=0 ./snc.sh
+./snc.sh
 
 echo "### Extracting openshift-tests binary"
 mkdir /tmp/os-test
@@ -30,7 +30,7 @@ sudo mv /tmp/os-test/openshift-tests /usr/local/bin/
 
 # Run createdisk script
 export CRC_ZSTD_EXTRA_FLAGS="-10 --long"
-SNC_GENERATE_MACOS_BUNDLE=0 ./createdisk.sh crc-tmp-install-data
+./createdisk.sh crc-tmp-install-data
 
 # Destroy the cluster
 ./openshift-baremetal-install destroy cluster --dir crc-tmp-install-data
