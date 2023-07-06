@@ -62,18 +62,18 @@ function run_preflight_checks() {
 	fi
 
         # check if we can connect to ${LIBVIRT_URI}
-        if ! virsh -c ${LIBVIRT_URI} uri >/dev/null; then
+        if ! sudo virsh -c ${LIBVIRT_URI} uri >/dev/null; then
               preflight_failure  "libvirtd is not listening for ${LIBVIRT_URI}, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
         fi
 
-	if ! virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
+	if ! sudo virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
 		echo "Installing libvirt default network configuration"
 		sudo dnf install -y libvirt-daemon-config-network || exit 1
 	fi
 	echo "default libvirt network is available"
 
 	#Check if default libvirt network is Active
-	if [[ $(virsh -c ${LIBVIRT_URI}  net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
+	if [[ $(sudo virsh -c ${LIBVIRT_URI}  net-info default | awk '{print $2}' | sed '3q;d') == "no" ]]; then
 		echo "Default network is not active, starting it"
 		sudo virsh -c ${LIBVIRT_URI} net-start default || exit 1
 	fi
@@ -87,7 +87,7 @@ function run_preflight_checks() {
 	esac
 
         # check for availability of a hypervisor using kvm
-        if ! virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
+        if ! sudo virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
                 preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
                 return
         fi
