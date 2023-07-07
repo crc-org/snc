@@ -100,7 +100,7 @@ function patch_and_push_image() {
         rhpkg container-build --target crc-1-rhel-8-candidate
         popd
     fi
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
 function create_patched_release_image_for_arch() {
@@ -146,8 +146,8 @@ function update_base_image() {
     rhpkg container-build
     popd
 
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=repos/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:latest
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:latest
 }
 
 openshift_version=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} -ojsonpath='{.config.config.Labels.io\.openshift\.release}')
