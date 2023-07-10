@@ -154,7 +154,7 @@ libvirtDestDir="${destDirPrefix}_libvirt_${destDirSuffix}"
 rm -fr ${libvirtDestDir} ${libvirtDestDir}.crcbundle
 mkdir "$libvirtDestDir"
 
-create_bundle_qemu_image "$libvirtDestDir" "${VM_PREFIX}" "${VM_NAME}"
+create_bundle_qemu_image "$libvirtDestDir" "${VM_PREFIX:-$VM_NAME}" "${VM_NAME}"
 copy_additional_files "$INSTALL_DIR" "$libvirtDestDir" "${VM_NAME}"
 if [ "${SNC_GENERATE_LINUX_BUNDLE}" != "0" ]; then
     create_tarball "$libvirtDestDir"
@@ -202,7 +202,7 @@ if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
     rm -fr ${vfkitDestDir} ${vfkitDestDir}.crcbundle
 
-    create_bundle_qemu_image "$libvirtDestDir" "${VM_PREFIX}" "${VM_NAME}"
+    create_bundle_qemu_image "$libvirtDestDir" "${VM_PREFIX:-$VM_NAME}" "${VM_NAME}"
 
     generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
 
