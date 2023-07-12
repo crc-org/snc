@@ -14,7 +14,6 @@ export CRC_ZSTD_EXTRA_FLAGS="-10"
 
 # Delete the crc domain which created by snc so it can created
 # for crc test
-sudo virsh destroy crc
 sudo virsh undefine crc
 
 git clone https://github.com/crc-org/crc.git
