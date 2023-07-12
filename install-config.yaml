@@ -37,4 +37,5 @@ capabilities:
   - openshift-samples
   - marketplace
   - Console
+  - MachineAPI
 publish: External
