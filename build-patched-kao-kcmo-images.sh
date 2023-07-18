@@ -139,11 +139,14 @@ function update_base_image() {
     rhpkg clone containers/${brew_repo}
     pushd ${brew_repo}
     git checkout --track origin/crc-1-rhel-8
-    sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
-    git add Dockerfile
-    git commit -m "Use OpenShift ${openshift_version} base image"
-    git push origin
-    rhpkg container-build
+    base_image_of_repo=$(grep "^FROM openshift/ose-base" Dockerfile | sed 's/^FROM //')
+    if [ ${base_image} != ${base_image_of_repo} ]; then
+      sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
+      git add Dockerfile
+      git commit -m "Use OpenShift ${openshift_version} base image"
+      git push origin
+      rhpkg container-build
+    fi
     popd
 
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/${brew_repo}:latest docker://quay.io/crcont/${brew_repo#crc-}:${openshift_version}
@@ -156,11 +159,13 @@ patch_and_push_image cluster-kube-apiserver-operator
 patch_and_push_image cluster-kube-controller-manager-operator
 create_new_release_with_patched_images
 
-# In case there is no change in the openshift component then the base
-# image is also not changed so no need to build dnsmasq/route images
-if [ -f crc-cluster-kube-apiserver-operator/Dockerfile ]; then
-    base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
-    
-    update_base_image crc-dnsmasq "${base_image}"
-    update_base_image crc-routes-controller "${base_image}"
+# In case there is no change in the openshift component then KAO repo is not present locally
+# and need to be fetched.
+if [ ! -f crc-cluster-kube-apiserver-operator/Dockerfile ]; then
+    rhpkg clone --branch rhaos-${OCP_VERSION}-rhel-8 containers/crc-cluster-kube-apiserver-operator
 fi
+
+base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
+
+update_base_image crc-dnsmasq "${base_image}"
+update_base_image crc-routes-controller "${base_image}"
