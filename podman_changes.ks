@@ -21,3 +21,6 @@ tee /etc/containers/registries.conf.d/999-podman-machine.conf <<EOF
 unqualified-search-registries=["docker.io"]
 EOF
 
+# Enable linger for core user to make sure podman socket work when user not logged in
+mkdir -p /var/lib/systemd/linger/
+touch /var/lib/systemd/linger/core
