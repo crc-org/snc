@@ -66,7 +66,9 @@ function enable_repos {
 
 function download_microshift_rpm {
     local pkgDir=$1
-    if [ -n "${MICROSHIFT_NVR-}" ]; then
+    if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
+        sudo yum download --setopt=reposdir=./repos --downloadonly --downloaddir ${pkgDir} microshift microshift-networking microshift-release-info microshift-selinux microshift-greenboot
+    elif [ -n "${MICROSHIFT_NVR-}" ]; then
         sudo yum download --downloaddir ${pkgDir} --downloadonly microshift-${MICROSHIFT_NVR-} microshift-networking-${MICROSHIFT_NVR-} microshift-release-info-${MICROSHIFT_NVR-} microshift-selinux-${MICROSHIFT_NVR-} microshift-greenboot-${MICROSHIFT_NVR-}
     else
         sudo yum download --downloaddir ${pkgDir} --downloadonly microshift microshift-networking microshift-release-info microshift-selinux microshift-greenboot
@@ -76,7 +78,11 @@ function download_microshift_rpm {
 function create_iso {
     local pkgDir=$1
     rm -fr microshift
-    git clone -b release-4.13 https://github.com/openshift/microshift.git
+    if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
+       git clone -b main https://github.com/openshift/microshift.git
+    else
+       git clone -b release-4.13 https://github.com/openshift/microshift.git
+    fi
     cp podman_changes.ks microshift/
     pushd microshift
     sed -i '/# customizations/,$d' scripts/image-builder/config/blueprint_v0.0.1.toml
