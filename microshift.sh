@@ -12,7 +12,11 @@ BUNDLE_TYPE="microshift"
 INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
+    MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
+else
+    MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+fi
 
 if ! grep -q -i "release 9" /etc/redhat-release
 then
