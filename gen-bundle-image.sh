@@ -8,22 +8,18 @@ function set_bundle_variables {
    local version=$1
    local preset=$2
 
-   if [[ ${preset} = "openshift" ]]; then
-       vfkit_bundle_arm64=crc_vfkit_${version}_arm64.crcbundle
-   fi
-   if [[ ${preset} = "podman" ]]; then
-       vfkit_bundle_arm64=crc_podman_vfkit_${version}_arm64.crcbundle
+   local bundlePreset=""
+   if [ ${preset} != 'openshift' ]; then
+       bundlePreset="_${preset}"
    fi
 
-   if [[ ${preset} = "openshift" ]]; then
-       preset=""
-   else
-       preset="_${preset}"
+   if [ ${PRESET} != 'okd' ]; then
+       vfkit_bundle_arm64=crc${bundlePreset}_vfkit_${version}_arm64.crcbundle
    fi
 
-   vfkit_bundle=crc${preset}_vfkit_${version}_amd64.crcbundle
-   libvirt_bundle=crc${preset}_libvirt_${version}_amd64.crcbundle
-   hyperv_bundle=crc${preset}_hyperv_${version}_amd64.crcbundle
+   vfkit_bundle=crc${bundlePreset}_vfkit_${version}_amd64.crcbundle
+   libvirt_bundle=crc${bundlePreset}_libvirt_${version}_amd64.crcbundle
+   hyperv_bundle=crc${bundlePreset}_hyperv_${version}_amd64.crcbundle
 }
 
 function generate_image {
@@ -78,7 +74,7 @@ function sign_bundle_files {
 }
 
 if [[ $# -ne 2 ]]; then
-   echo "You need to provide the bundle version and preset (openshift/podman/okd)"
+   echo "You need to provide the bundle version and preset (openshift/podman/okd/microshift)"
    exit 1
 fi
 
