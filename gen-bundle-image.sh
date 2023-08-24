@@ -57,7 +57,7 @@ function generate_manifest {
    local preset=$2
    podman manifest rm ${preset}-bundle:${version} || true
    podman manifest create ${preset}-bundle:${version}
-   if [[ ${preset} = "podman" ]]; then
+   if [[ ${preset} != "okd" ]]; then
       podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:darwin-arm64
    fi
    podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:darwin-amd64
@@ -69,7 +69,7 @@ function generate_manifest {
 function sign_bundle_files {
   local preset=$1
   rm -fr *.sig
-  if [[ ${preset} = "podman" ]]; then
+  if [[ ${preset} != "okd" ]]; then
      gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle_arm64}.sig --detach-sig ${vfkit_bundle_arm64}
   fi
   gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle}.sig --detach-sig ${vfkit_bundle}
