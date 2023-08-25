@@ -25,7 +25,7 @@ function set_bundle_variables {
 function generate_image {
    local preset=$1
 
-   if [ ${preset} = "podman"  -o  ${preset} = "openshift" ]; then
+   if [ ${preset} != "okd" ]; then
        cat <<EOF | podman build --os darwin --arch arm64 --tag ${preset}-bundle:darwin-arm64 -f - .
 FROM scratch
 COPY ${vfkit_bundle_arm64} ${vfkit_bundle_arm64}.sig /
