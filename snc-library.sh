@@ -143,11 +143,13 @@ function create_json_description {
             | ${JQ} ".clusterInfo.openshiftVersion = \"${OPENSHIFT_RELEASE_VERSION}\"" \
             | ${JQ} ".clusterInfo.clusterName = \"${SNC_PRODUCT_NAME}\"" \
             | ${JQ} ".clusterInfo.baseDomain = \"${BASE_DOMAIN}\"" \
-            | ${JQ} ".clusterInfo.appsDomain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
+            | ${JQ} ".clusterInfo.appsDomain = \"apps.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" >${INSTALL_DIR}/crc-bundle-info.json
     if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
         openshiftInstallerVersion=$(${OPENSHIFT_INSTALL} version)
         tmp=$(mktemp)
-        cat ${INSTALL_DIR}/crc-bundle-info.json | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
+        cat ${INSTALL_DIR}/crc-bundle-info.json \
+            | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
+            | ${JQ} ".clusterInfo.appsDomain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" \
             > ${tmp} && mv ${tmp} ${INSTALL_DIR}/crc-bundle-info.json
     fi
 }
