@@ -158,4 +158,5 @@ sudo virt-install \
     --cdrom /var/lib/libvirt/images/microshift-installer.iso \
     --events on_reboot=restart \
     --autoconsole none \
+    --boot uefi \
     --wait 5
