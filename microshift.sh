@@ -103,6 +103,7 @@ EOF
     sed -i "/--bootproto=dhcp/a\network --hostname=api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}" scripts/image-builder/config/kickstart.ks.template
     sed -i 's/clearpart --all --initlabel/clearpart --all --disklabel gpt/g' scripts/image-builder/config/kickstart.ks.template
     sed -i "/clearpart --all/a\part biosboot --fstype=biosboot --size=1" scripts/image-builder/config/kickstart.ks.template
+    sed -i '$i\grub2-install --target=i386-pc /dev/vda' scripts/image-builder/config/kickstart.ks.template
     sed -i '$e cat podman_changes.ks' scripts/image-builder/config/kickstart.ks.template
     scripts/image-builder/cleanup.sh -full
     # The home dir and files must have read permissions to group
