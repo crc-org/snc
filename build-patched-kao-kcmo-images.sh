@@ -91,7 +91,7 @@ function patch_and_push_image() {
     if ! brew buildinfo crc-${image_name}-container-${version}-${release}; then
         rhpkg clone containers/crc-${image_name}
         pushd crc-${image_name}
-        git remote add upstream git://pkgs.devel.redhat.com/containers/ose-${image_name}
+        git remote add upstream https://pkgs.devel.redhat.com/git/containers/ose-${image_name}
         # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
         git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
         git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
