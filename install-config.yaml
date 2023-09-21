@@ -38,4 +38,7 @@ capabilities:
   - marketplace
   - Console
   - MachineAPI
+  - ImageRegistry
+  - DeploymentConfig
+  - Build
 publish: External
