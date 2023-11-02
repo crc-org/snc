@@ -37,4 +37,8 @@ capabilities:
   - openshift-samples
   - marketplace
   - Console
+  - MachineAPI
+  - ImageRegistry
+  - DeploymentConfig
+  - Build
 publish: External
