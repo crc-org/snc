@@ -64,7 +64,7 @@ function configure_host {
 
 function enable_repos {
     sudo subscription-manager repos \
-       --enable rhocp-4.13-for-rhel-9-$(uname -i)-rpms \
+       --enable rhocp-4.14-for-rhel-9-$(uname -i)-rpms \
        --enable fast-datapath-for-rhel-9-$(uname -i)-rpms
 }
 
@@ -86,7 +86,7 @@ function create_iso {
     if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
        git clone -b main https://github.com/openshift/microshift.git
     else
-       git clone -b release-4.13 https://github.com/openshift/microshift.git
+       git clone -b release-4.14 https://github.com/openshift/microshift.git
     fi
     cp podman_changes.ks microshift/
     pushd microshift

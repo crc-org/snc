@@ -23,7 +23,7 @@ rm -fr crc-cluster-kube-controller-manager-operator
 rm -fr crc-dnsmasq
 rm -fr crc-routes-controller
 
-readonly OCP_VERSION=4.13
+readonly OCP_VERSION=4.14
 
 function check_pull_secret() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
