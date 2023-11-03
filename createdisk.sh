@@ -78,9 +78,12 @@ EOF
     # also in case of microshift the ports like 2222, 443, 80 ..etc need to be manually added
     # and OCP/OKD/podman bundles have it disabled by default.
     ${SSH} core@${VM_IP} -- sudo systemctl disable firewalld
-    # Copy the sample microshift config and update the base domain with crc base domain
-    ${SSH} core@${VM_IP} -- sudo cp /etc/microshift/config.yaml.default /etc/microshift/config.yaml
-    ${SSH} core@${VM_IP} -- "sudo sed -i 's/#baseDomain: .*/baseDomain: ${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/g' /etc/microshift/config.yaml"
+    ${SSH} core@${VM_IP} -- cat /etc/microshift/config.yaml.default > config.yaml
+    ${YQ} eval --inplace ".dns.baseDomain = \"${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\""  config.yaml
+    ${SCP} config.yaml core@${VM_IP}:/home/core
+    ${SSH} core@${VM_IP} -- 'sudo mv /home/core/config.yaml /etc/microshift/config.yaml'
+    # Make sure `baseDomain` is set to crc.testing
+    ${SSH} core@${VM_IP} -- "grep '^\s\+baseDomain: ${SNC_PRODUCT_NAME}.${BASE_DOMAIN}' /etc/microshift/config.yaml"
     # Remove the lvm system.device file since it have diskID and deviceName which changes
     # for different hypervisor and as per `man lvmdevices` if the file does not exist, or if lvm.conf
     # includes use_devicesfile=0, then lvm will not use a devices file.
