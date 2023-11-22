@@ -41,4 +41,5 @@ capabilities:
   - ImageRegistry
   - DeploymentConfig
   - Build
+  - OperatorLifecycleManager
 publish: External
