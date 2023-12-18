@@ -20,7 +20,6 @@ export LANG=C.UTF-8
 
 rm -fr crc-cluster-kube-apiserver-operator
 rm -fr crc-cluster-kube-controller-manager-operator
-rm -fr crc-dnsmasq
 rm -fr crc-routes-controller
 
 readonly OCP_VERSION=4.14
@@ -167,5 +166,4 @@ fi
 
 base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
 
-update_base_image crc-dnsmasq "${base_image}"
 update_base_image crc-routes-controller "${base_image}"
