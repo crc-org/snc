@@ -6,6 +6,7 @@ QEMU_IMG=${QEMU_IMG:-qemu-img}
 VIRT_FILESYSTEMS=${VIRT_FILESYSTEMS:-virt-filesystems}
 GUESTFISH=${GUESTFISH:-guestfish}
 VIRSH=${VIRSH:-virsh}
+VIRT_INSTALL=${VIRT_INSTALL:-virt-install}
 
 XMLLINT=${XMLLINT:-xmllint}
 
@@ -68,6 +69,11 @@ fi
 if ! which ${QEMU_IMG}; then
     sudo yum -y install /usr/bin/qemu-img
 fi
+
+if ! which ${VIRT_INSTALL}; then
+    sudo yum -y install /usr/bin/virt-install
+fi
+
 # The CoreOS image uses an XFS filesystem
 # Beware than if you are running on an el7 system, you won't be able
 # to resize the crc VM XFS filesystem as it was created on el8
@@ -157,6 +163,50 @@ function start_vm {
     retry sudo virsh start ${vm_name}
     # Wait till ssh connection available
     wait_for_ssh ${vm_name} ${vm_ip}
+}
+
+function destroy_libvirt_resources {
+    local iso=$1
+
+    sudo virsh destroy ${SNC_PRODUCT_NAME} || true
+    sudo virsh undefine ${SNC_PRODUCT_NAME} --nvram || true
+    sudo virsh vol-delete --pool ${SNC_PRODUCT_NAME} ${SNC_PRODUCT_NAME}.qcow2 || true
+    sudo virsh vol-delete --pool ${SNC_PRODUCT_NAME} ${iso} || true
+    sudo virsh pool-destroy ${SNC_PRODUCT_NAME} || true
+    sudo virsh pool-undefine ${SNC_PRODUCT_NAME} || true
+    sudo virsh net-destroy ${SNC_PRODUCT_NAME} || true
+    sudo virsh net-undefine ${SNC_PRODUCT_NAME} || true
+}
+
+function create_libvirt_resources {
+   sudo virsh pool-define-as ${SNC_PRODUCT_NAME} --type dir --target /var/lib/libvirt/${SNC_PRODUCT_NAME}
+   sudo virsh pool-start --build ${SNC_PRODUCT_NAME}
+   sudo virsh pool-autostart ${SNC_PRODUCT_NAME}
+   sed -e "s|NETWORK_NAME|${SNC_PRODUCT_NAME}|" \
+       -e "s|CLUSTER_NAME|${SNC_PRODUCT_NAME}|" \
+       -e "s|BASE_DOMAIN|${BASE_DOMAIN}|" \
+       host-libvirt-net.xml.template > host-libvirt-net.xml
+   sudo virsh net-create host-libvirt-net.xml
+   rm -fr host-libvirt-net.xml
+}
+
+function create_vm {
+    local iso=$1
+
+    sudo virt-install \
+        --name ${SNC_PRODUCT_NAME} \
+        --vcpus ${SNC_CLUSTER_CPUS} \
+        --memory ${SNC_CLUSTER_MEMORY} \
+        --arch=${ARCH} \
+        --disk path=/var/lib/libvirt/${SNC_PRODUCT_NAME}/${SNC_PRODUCT_NAME}.qcow2,size=${CRC_VM_DISK_SIZE} \
+        --network network="${SNC_PRODUCT_NAME}",mac=52:54:00:ee:42:e1 \
+        --os-variant rhel9-unknown \
+        --nographics \
+        --cdrom /var/lib/libvirt/${SNC_PRODUCT_NAME}/${iso} \
+        --events on_reboot=restart \
+        --autoconsole none \
+        --boot uefi \
+        --wait
 }
 
 function generate_htpasswd_file {
