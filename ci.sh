@@ -32,9 +32,20 @@ sudo mv /tmp/os-test/openshift-tests /usr/local/bin/
 export CRC_ZSTD_EXTRA_FLAGS="-10 --long"
 ./createdisk.sh crc-tmp-install-data
 
-# Destroy the cluster
-./openshift-baremetal-install destroy cluster --dir crc-tmp-install-data
+function destroy_cluster () {
+    # Destroy the cluster
+    local snc_product_name=crc
+    sudo virsh destroy ${snc_product_name} || true
+    sudo virsh undefine ${snc_product_name} --nvram || true
+    sudo virsh vol-delete --pool ${snc_product_name} ${snc_product_name}.qcow2 || true
+    sudo virsh vol-delete --pool ${snc_product_name} rhcos-live.iso || true
+    sudo virsh pool-destroy ${snc_product_name} || true
+    sudo virsh pool-undefine ${snc_product_name} || true
+    sudo virsh net-destroy ${snc_product_name} || true
+    sudo virsh net-undefine ${snc_product_name} || true
+}
 
+destroy_cluster
 # Unset the kubeconfig which is set by snc
 unset KUBECONFIG
 

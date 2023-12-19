@@ -26,7 +26,7 @@ INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
-CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-33285996544}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
@@ -68,9 +68,9 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
-    echo "Extracting OpenShift baremetal installer binary"
-    ${OC} adm release extract -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-baremetal-install --to .
-    OPENSHIFT_INSTALL=./openshift-baremetal-install
+    echo "Extracting OpenShift installer binary"
+    ${OC} adm release extract -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-install --to .
+    OPENSHIFT_INSTALL=./openshift-install
 fi
 
 if [[ ${USE_PATCHED_RELEASE_IMAGE} == "enabled" ]]
@@ -86,7 +86,6 @@ if test -z "${SNC_OPENSHIFT_INSTALL_NO_DEBUG-}"; then
 else
         OPENSHIFT_INSTALL_EXTRA_ARGS=""
 fi
-
 # Destroy an existing cluster and resources
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} destroy cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || echo "failed to destroy previous cluster.  Continuing anyway"
 # Generate a new ssh keypair for this cluster
@@ -107,6 +106,9 @@ if [ -f /etc/NetworkManager/dnsmasq.d/openshift.conf ]; then
     sudo rm /etc/NetworkManager/dnsmasq.d/openshift.conf
 fi
 
+destroy_libvirt_resources rhcos-live.iso
+create_libvirt_resources
+
 # Set NetworkManager DNS overlay file
 cat << EOF | sudo tee /etc/NetworkManager/dnsmasq.d/crc-snc.conf
 server=/${SNC_PRODUCT_NAME}.${BASE_DOMAIN}/192.168.126.1
@@ -115,7 +117,6 @@ EOF
 
 # Reload the NetworkManager to make DNS overlay effective
 sudo systemctl reload NetworkManager
-
 
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
@@ -126,11 +127,9 @@ fi
 
 # Create the INSTALL_DIR for the installer and copy the install-config
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR} && cp install-config.yaml ${INSTALL_DIR}
-${YQ} eval --inplace ".compute[0].architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".controlPlane.architecture = \"${yq_ARCH}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval --inplace ".metadata.name = \"${SNC_PRODUCT_NAME}\"" ${INSTALL_DIR}/install-config.yaml
-${YQ} eval --inplace '.compute[0].replicas = 0' ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
 
@@ -142,16 +141,6 @@ ${YQ} eval-all --inplace 'select(fileIndex == 0) * select(filename == "cvo-overr
 
 # Add custom domain to cluster-ingress
 ${YQ} eval --inplace ".spec.domain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" ${INSTALL_DIR}/manifests/cluster-ingress-02-config.yml
-# Set master memory and cpus
-# This is only valid for openshift 4.3 onwards
-echo "Master memory: $SNC_CLUSTER_MEMORY"
-${YQ} eval --inplace ".spec.providerSpec.value.domainMemory = $SNC_CLUSTER_MEMORY" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
-echo "Master CPUS: $SNC_CLUSTER_CPUS"
-${YQ} eval --inplace ".spec.providerSpec.value.domainVcpu = $SNC_CLUSTER_CPUS" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
-# Set master disk size
-# This is only valid for openshift 4.5 onwards
-echo "Master disk size: $CRC_VM_DISK_SIZE"
-${YQ} eval --inplace ".spec.providerSpec.value.volume.volumeSize = $CRC_VM_DISK_SIZE" ${INSTALL_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml
 # Add network resource to lower the mtu for CNV
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
@@ -164,11 +153,27 @@ DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-siz
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create ignition-configs ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create single-node-ignition-config ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 # mask the chronyd service on the bootstrap node
-cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap.ign) > ${INSTALL_DIR}/bootstrap.ign
+cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign) > ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign
 
-${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create cluster ${OPENSHIFT_INSTALL_EXTRA_ARGS} || ${OC} adm must-gather --dest-dir ${INSTALL_DIR}
+# Download the image
+# https://docs.openshift.com/container-platform/4.14/installing/installing_sno/install-sno-installing-sno.html#install-sno-installing-sno-manually
+# (Step retrieve the RHCOS iso url)
+ISO_URL=$(OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} coreos print-stream-json | grep location | grep $ARCH | grep iso | cut -d\" -f4)
+curl -L ${ISO_URL} -o ${INSTALL_DIR}/rhcos-live.iso
+
+podman run --privileged --pull always --rm \
+      -v /dev:/dev -v /run/udev:/run/udev -v $PWD:/data \
+      -w /data quay.io/coreos/coreos-installer:release \
+      iso ignition embed --force \
+      --ignition-file ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign \
+      ${INSTALL_DIR}/rhcos-live.iso
+
+sudo mv -Z ${INSTALL_DIR}/rhcos-live.iso /var/lib/libvirt/${SNC_PRODUCT_NAME}/rhcos-live.iso
+create_vm rhcos-live.iso
+
+${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS} || ${OC} adm must-gather --dest-dir ${INSTALL_DIR}
 
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
@@ -262,6 +267,13 @@ while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Upda
     echo "Machine config still in updating/degrading state"
 done
 
+# Create a container from baremetal-runtimecfg image which consumed by nodeip-configuration service so it is
+# not deleted by `crictl rmi --prune` command
+BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman create --name baremetal_runtimecfg ${BAREMETAL_RUNTIMECFG}"
+
 # Remove unused images from container storage
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 
+# Remove the baremetal_runtimecfg container which is temp created
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"

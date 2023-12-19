@@ -193,22 +193,18 @@ function create_pvs() {
 
     # Add registry storage to pvc
     retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/storage/pvc", "value": {"claim": "crc-image-registry-storage"}}]' --type=json
-    # Remove emptyDir as storage for registry
-    retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "remove", "path": "/spec/storage/emptyDir"}]' --type=json
 }
 
 # This follows https://blog.openshift.com/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms/
 # in order to trigger regeneration of the initial 24h certs the installer created on the cluster
 function renew_certificates() {
-    local vm_prefix
-    vm_prefix=$(get_vm_prefix ${SNC_PRODUCT_NAME})
-    shutdown_vm ${vm_prefix}-master-0
+    shutdown_vm ${SNC_PRODUCT_NAME}
 
     # Enable the network time sync and set the clock back to present on host
     sudo date -s '1 day'
     sudo timedatectl set-ntp on
 
-    start_vm ${vm_prefix}-master-0 api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}
+    start_vm ${SNC_PRODUCT_NAME} api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}
 
     # Loop until the kubelet certs are valid for a month
     i=0
