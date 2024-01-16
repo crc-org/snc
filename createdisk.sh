@@ -99,17 +99,14 @@ fi
 prepare_qemu_guest_agent ${VM_IP}
 
 image_tag="latest"
-if podman manifest inspect quay.io/crcont/dnsmasq:${OPENSHIFT_VERSION} >/dev/null 2>&1; then
+if podman manifest inspect quay.io/crcont/routes-controller:${OPENSHIFT_VERSION} >/dev/null 2>&1; then
     image_tag=${OPENSHIFT_VERSION}
 fi
 
-# Add gvisor-tap-vsock and crc-dnsmasq services
+# Add gvisor-tap-vsock service
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
   podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
-  touch /var/srv/dnsmasq.conf
-  podman create --ip 10.88.0.8 --name crc-dnsmasq -v /var/srv/dnsmasq.conf:/etc/dnsmasq.conf -p 53:53/udp --privileged quay.io/crcont/dnsmasq:${image_tag}
-  podman generate systemd --restart-policy=no crc-dnsmasq > /etc/systemd/system/crc-dnsmasq.service
   systemctl daemon-reload
   systemctl enable gvisor-tap-vsock.service
 EOF
