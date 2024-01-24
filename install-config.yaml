@@ -42,4 +42,5 @@ capabilities:
   - DeploymentConfig
   - Build
   - OperatorLifecycleManager
+  - CloudCredential
 publish: External
