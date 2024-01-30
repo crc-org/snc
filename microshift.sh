@@ -12,11 +12,8 @@ BUNDLE_TYPE="microshift"
 INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
-if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
-    MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
-else
-    MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
-fi
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
+OPENSHIFT_MINOR_VERSION=${OPENSHIFT_MINOR_VERSION:-4.14}
 
 if ! grep -q -i "release 9" /etc/redhat-release
 then
@@ -64,7 +61,7 @@ function configure_host {
 
 function enable_repos {
     sudo subscription-manager repos \
-       --enable rhocp-4.14-for-rhel-9-$(uname -i)-rpms \
+       --enable rhocp-${OPENSHIFT_MINOR_VERSION}-for-rhel-9-$(uname -i)-rpms \
        --enable fast-datapath-for-rhel-9-$(uname -i)-rpms
 }
 
@@ -83,11 +80,7 @@ function download_microshift_rpm {
 function create_iso {
     local pkgDir=$1
     rm -fr microshift
-    if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
-       git clone -b main https://github.com/openshift/microshift.git
-    else
-       git clone -b release-4.14 https://github.com/openshift/microshift.git
-    fi
+    git clone -b release-${OPENSHIFT_MINOR_VERSION} https://github.com/openshift/microshift.git
     cp podman_changes.ks microshift/
     pushd microshift
     sed -i '/# customizations/,$d' scripts/image-builder/config/blueprint_v0.0.1.toml
