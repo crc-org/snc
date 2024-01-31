@@ -35,7 +35,11 @@ function download_oc() {
 
     if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
         mkdir -p openshift-clients/mac
-        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+        if [ "${yq_ARCH}" == "arm64" ]; then
+            curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${yq_ARCH}-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+        else
+            curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-mac-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/mac oc
+        fi
     fi
     if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
         mkdir -p openshift-clients/windows
