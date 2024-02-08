@@ -262,3 +262,6 @@ while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Upda
     echo "Machine config still in updating/degrading state"
 done
 
+# Remove unused images from container storage
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
+
