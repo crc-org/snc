@@ -1,5 +1,5 @@
 [mirror-microshift]
 name=microshift repo for mirror
-baseurl=https://mirror.openshift.com/pub/openshift-v4/$basearch/microshift/ocp-dev-preview/latest-4.15/el9/os/
+baseurl=https://mirror.openshift.com/pub/openshift-v4/$basearch/microshift/ocp/latest-4.15/el9/os/
 enabled=1
 gpgcheck=0
