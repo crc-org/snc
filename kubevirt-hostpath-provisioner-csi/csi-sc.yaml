@@ -8,3 +8,4 @@ provisioner: kubevirt.io.hostpath-provisioner
 parameters:
   storagePool: local
 volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
