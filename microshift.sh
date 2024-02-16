@@ -11,6 +11,9 @@ source snc-library.sh
 BUNDLE_TYPE="microshift"
 INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
+SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-2048}
+SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-2}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 OPENSHIFT_MINOR_VERSION=${OPENSHIFT_MINOR_VERSION:-4.14}
@@ -31,11 +34,8 @@ fi
 run_preflight_checks ${BUNDLE_TYPE}
 rm -fr ${INSTALL_DIR} && mkdir ${INSTALL_DIR}
 
-sudo virsh destroy ${SNC_PRODUCT_NAME} || true
-sudo virsh undefine --nvram ${SNC_PRODUCT_NAME} || true
-sudo rm -fr /var/lib/libvirt/images/${SNC_PRODUCT_NAME}.qcow2
-sudo rm -fr /var/lib/libvirt/images/microshift-installer-*.iso
-
+destroy_libvirt_resources microshift-installer.iso
+create_libvirt_resources
 
 # Generate a new ssh keypair for this cluster
 # Create a 521bit ECDSA Key
@@ -122,7 +122,7 @@ microshift_pkg_dir=$(mktemp -p /tmp -d tmp-rpmXXX)
 chmod 0755 ${microshift_pkg_dir}
 download_microshift_rpm ${microshift_pkg_dir}
 create_iso ${microshift_pkg_dir}
-sudo cp -Z microshift/_output/image-builder/microshift-installer-*.iso /var/lib/libvirt/images/microshift-installer.iso
+sudo cp -Z microshift/_output/image-builder/microshift-installer-*.iso /var/lib/libvirt/${SNC_PRODUCT_NAME}/microshift-installer.iso
 OPENSHIFT_RELEASE_VERSION=$(rpm -qp  --qf '%{VERSION}' ${microshift_pkg_dir}/microshift-4.*.rpm)
 # Change 4.x.0~ec0 to 4.x.0-ec0
 # https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_complex_versioning
@@ -143,17 +143,4 @@ mkdir -p ${INSTALL_DIR}/auth
 touch ${INSTALL_DIR}/auth/kubeconfig
 
 # Start the VM with generated ISO
-sudo virt-install \
-    --name ${SNC_PRODUCT_NAME} \
-    --vcpus 2 \
-    --memory 2048 \
-    --arch=${ARCH} \
-    --disk path=/var/lib/libvirt/images/${SNC_PRODUCT_NAME}.qcow2,size=31 \
-    --network network=default,model=virtio \
-    --os-variant rhel8-unknown \
-    --nographics \
-    --cdrom /var/lib/libvirt/images/microshift-installer.iso \
-    --events on_reboot=restart \
-    --autoconsole none \
-    --boot uefi \
-    --wait 5
+create_vm microshift-installer.iso
