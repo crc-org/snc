@@ -86,33 +86,17 @@ EOF
 
 function create_qemu_image {
     local destDir=$1
-    local base=$2
-    local overlay=$3
+    local tempFile="temp_${SNC_PRODUCT_NAME}"
 
-    if [ -f /var/lib/libvirt/images/${base} ]; then
-      sudo cp /var/lib/libvirt/images/${base} ${destDir}
-    else
-      sudo cp /var/lib/libvirt/${SNC_PRODUCT_NAME}/${base} ${destDir}
-    fi
+    sudo cp /var/lib/libvirt/${SNC_PRODUCT_NAME}/${SNC_PRODUCT_NAME}.qcow2 ${destDir}/${tempFile}
 
     sudo chown $USER:$USER -R ${destDir}
-    if [ -f ${destDir}/${overlay} ]; then
-      ${QEMU_IMG} rebase -f qcow2 -F qcow2 -b ${base} ${destDir}/${overlay}
-      ${QEMU_IMG} commit ${destDir}/${overlay}
-    fi
 
-    sparsify ${destDir} ${base} ${overlay}
+    sparsify ${destDir} ${tempFile} ${SNC_PRODUCT_NAME}.qcow2
 
-    chmod 0644 ${destDir}/${overlay}
+    chmod 0644 ${destDir}/${tempFile}
 
-    rm -fr ${destDir}/${base}
-}
-
-function create_bundle_qemu_image() {
-  local libvirtDestDir="$1"
-  local VM_NAME="$2"
-  create_qemu_image "$libvirtDestDir" "${VM_NAME}.qcow2" "${VM_NAME}"
-  mv "${libvirtDestDir}/${VM_NAME}" "${libvirtDestDir}/${SNC_PRODUCT_NAME}.qcow2"
+    rm -fr ${destDir}/${tempFile}
 }
 
 function update_json_description {
