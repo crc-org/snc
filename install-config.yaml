@@ -34,3 +34,4 @@ capabilities:
   - ImageRegistry
   - DeploymentConfig
   - Build
+  - OperatorLifecycleManager
