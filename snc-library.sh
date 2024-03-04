@@ -61,13 +61,9 @@ function run_preflight_checks() {
         echo "Checking libvirt and DNS configuration"
 
 	LIBVIRT_URI=qemu:///system
-	if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
-           LIBVIRT_URI=qemu+tcp://localhost/system
-	fi
-
         # check if we can connect to ${LIBVIRT_URI}
         if ! sudo virsh -c ${LIBVIRT_URI} uri >/dev/null; then
-              preflight_failure  "libvirtd is not listening for ${LIBVIRT_URI}, see https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections"
+              preflight_failure  "libvirtd is not accessible over ${LIBVIRT_URI}, check if libvirt daemon is running https://libvirt.org/daemons.html"
         fi
 
 	if ! sudo virsh -c ${LIBVIRT_URI} net-info default &> /dev/null; then
@@ -96,34 +92,14 @@ function run_preflight_checks() {
                 return
         fi
 	if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
-        # check that api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.1[01]
+        # check that api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.11
         local ping_status
         ping_status="$(ping -c1 api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} | head -1 || true >/dev/null)"
-        if echo ${ping_status} | grep "PING api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} (" && ! echo ${ping_status} | grep "192.168.126.1[01])"; then
-                preflight_failure "DNS setup seems wrong, api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} resolved to an IP which is neither 192.168.126.10 nor 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
+        if echo ${ping_status} | grep "PING api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} (" && ! echo ${ping_status} | grep "192.168.126.11)"; then
+                preflight_failure "DNS setup seems wrong, api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} resolved to an IP which is not 192.168.126.11, please check your NetworkManager configuration and /etc/hosts content"
                 return
         fi
 	fi
-        # check if firewalld is configured to allow traffic from 192.168.126.0/24 to 192.168.122.1
-        # this check is very basic and expects the configuration to match
-        # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld
-        # Disabled for now as on stock RHEL8 installs, additional permissions are needed for
-        # firewall-cmd --list-services, so this test fails for unrelated reasons
-        #
-        #local zone
-        #if firewall-cmd -h >/dev/null; then
-        #        # With older libvirt, the 'libvirt' zone will not exist
-        #        if firewall-cmd --get-zones |grep '\<libvirt\>'; then
-        #                zone=libvirt
-        #        else
-        #                zone=dmz
-        #        fi
-        #        if ! firewall-cmd --zone=${zone} --list-services | grep '\<libvirt\>'; then
-        #                preflight_failure "firewalld is available, but it is not configured to allow 'libvirt' traffic in either the 'libvirt' or 'dmz' zone, please check https://github.com/openshift/installer/tree/master/docs/dev/libvirt#firewalld"
-        #                return
-        #        fi
-        #fi
-
         echo "libvirt and DNS configuration successfully checked"
 }
 
