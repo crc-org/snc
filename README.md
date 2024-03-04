@@ -1,5 +1,7 @@
 # Single node cluster (snc) scripts for OpenShift 4 
 
+**NOTE:** Please select the respective branch to create a bundle for a specific OpenShift release (ie. to create a 4.15.x OpenShift bundle, choose the release-4.15 branch)
+
 ## How to use?
 - Clone this repo `git clone https://github.com/code-ready/snc.git`
 - `cd <directory_to_cloned_repo>`
@@ -7,7 +9,6 @@
 
 ## How to create disk image?
 - Once your `snc.sh` script run successfully.
-- You need to wait for around 30 mins till cluster settle.
 - `./createdisk.sh crc-tmp-install-data`
 
 ## Monitoring
@@ -59,19 +60,12 @@ Note: a GPG key is needed to sign the bundles before they are wrapped in a conta
 
 ## Troubleshooting
 
-OpenShift installer will create 2 VMs. It is sometimes useful to ssh inside the VMs.
-Add the following lines in your `~/.ssh/config` file. You can then do `ssh master` and `ssh bootstrap`.
+OpenShift installer will create 1 VM. It is sometimes useful to ssh inside the VM.
+Add the following lines in your `~/.ssh/config` file. You can then do `ssh master`.
 
 ```
 Host master
     Hostname 192.168.126.11
-    User core
-    IdentityFile <directory_to_cloned_repo>/id_ecdsa_crc
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
-
-Host bootstrap
-    Hostname 192.168.126.10
     User core
     IdentityFile <directory_to_cloned_repo>/id_ecdsa_crc
     StrictHostKeyChecking no
