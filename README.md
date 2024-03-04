@@ -1,7 +1,6 @@
 # Single node cluster (snc) scripts for OpenShift 4 
 
 ## How to use?
-- Make sure the one time setup is satisfied. (https://github.com/openshift/installer/blob/master/docs/dev/libvirt/README.md#one-time-setup)
 - Clone this repo `git clone https://github.com/code-ready/snc.git`
 - `cd <directory_to_cloned_repo>`
 - `./snc.sh`
