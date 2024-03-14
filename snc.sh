@@ -201,6 +201,10 @@ retry ${OC} patch clusterversion version --type json -p "$(cat cvo-overrides-aft
 # Scale route deployment from 2 to 1
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
+# Set managementState Image Registry Operator configuration from Removed to Managed
+# because https://docs.openshift.com/container-platform/4.15/registry/configuring_registry_storage/configuring-registry-storage-baremetal.html#registry-removed_configuring-registry-storage-baremetal
+retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"managementState":"Managed"}}' --type=merge
+
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
