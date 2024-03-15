@@ -1,0 +1,44 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-openshift-machineconfig-master-swap-service
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    systemd:
+      units:
+      - contents: |
+          [Unit]
+          Description=Create 4GB swap partition
+          Before=var-crc-swapfile1.swap
+          
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/usr/bin/mkdir -p /var/crc
+          ExecStart=/usr/bin/fallocate -l 4096m /var/crc/swapfile1
+          ExecStart=/usr/bin/chmod 600 /var/crc/swapfile1
+          ExecStart=/usr/sbin/mkswap /var/crc/swapfile1
+          
+          [Install]
+          WantedBy=multi-user.target
+        enabled: false
+        name: swap-partition.service
+      - contents: |
+          [Unit]
+          Description=Turn on the swap
+          
+          [Swap]
+          What=/var/crc/swapfile1
+          
+          [Install]
+          WantedBy=multi-user.target
+        enabled: false
+        name: var-crc-swapfile1.swap
+    networkd: {}
+    passwd: {}
+    storage: {}
+    osImageURL: ""
