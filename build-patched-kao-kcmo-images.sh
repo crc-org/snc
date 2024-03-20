@@ -91,15 +91,18 @@ function patch_and_push_image() {
         rhpkg clone containers/crc-${image_name}
         pushd crc-${image_name}
         git remote add upstream https://pkgs.devel.redhat.com/git/containers/ose-${image_name}
-        # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-8 instead of all the branches and tags from upstream
-        git fetch upstream rhaos-${OCP_VERSION}-rhel-8 --no-tags
-        git checkout --track origin/rhaos-${OCP_VERSION}-rhel-8
-        git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-8" -m "MaxFileSize: 104857600" ${vcs_ref}
+        # Just fetch the upstream/rhaos-${OCP_VERSION}-rhel-9 instead of all the branches and tags from upstream
+        git fetch upstream rhaos-${OCP_VERSION}-rhel-9 --no-tags
+        git checkout --track origin/rhaos-${OCP_VERSION}-rhel-9
+        git merge --no-ff -m "Merge commit ${vcs_ref} into rhaos-${OCP_VERSION}-rhel-9" -m "MaxFileSize: 104857600" ${vcs_ref}
         git push origin HEAD
-        rhpkg container-build --target crc-1-rhel-8-candidate
+        rhpkg container-build --target crc-1-rhel-9-candidate
         popd
     fi
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
+    # Operator images created using rhel-9 tags have `rhel9-operator` as part of image name so replacing `operator` with it.
+    # https://www.gnu.org/software/bash/manual/bash.html#Shell-Parameter-Expansion
+    rhel9_image_name="${image_name/operator/rhel9-operator}"
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${rhel9_image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
 function create_patched_release_image_for_arch() {
@@ -137,10 +140,10 @@ function update_base_image() {
 
     rhpkg clone containers/${brew_repo}
     pushd ${brew_repo}
-    git checkout --track origin/crc-1-rhel-8
-    base_image_of_repo=$(grep "^FROM openshift/ose-base" Dockerfile | sed 's/^FROM //')
+    git checkout --track origin/crc-1-rhel-9
+    base_image_of_repo=$(grep "^FROM openshift/openshift-enterprise-base" Dockerfile | sed 's/^FROM //')
     if [ ${base_image} != ${base_image_of_repo} ]; then
-      sed -i "s!^FROM openshift/ose-base.*!FROM $base_image!" Dockerfile
+      sed -i "s!^FROM openshift/openshift-enterprise-base.*!FROM $base_image!" Dockerfile
       git add Dockerfile
       git commit -m "Use OpenShift ${openshift_version} base image"
       git push origin
@@ -161,9 +164,9 @@ create_new_release_with_patched_images
 # In case there is no change in the openshift component then KAO repo is not present locally
 # and need to be fetched.
 if [ ! -f crc-cluster-kube-apiserver-operator/Dockerfile ]; then
-    rhpkg clone --branch rhaos-${OCP_VERSION}-rhel-8 containers/crc-cluster-kube-apiserver-operator
+    rhpkg clone --branch rhaos-${OCP_VERSION}-rhel-9 containers/crc-cluster-kube-apiserver-operator
 fi
 
-base_image=$(grep "^FROM openshift/ose-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
+base_image=$(grep "^FROM openshift/openshift-enterprise-base" crc-cluster-kube-apiserver-operator/Dockerfile | sed 's/^FROM //')
 
 update_base_image crc-routes-controller "${base_image}"
