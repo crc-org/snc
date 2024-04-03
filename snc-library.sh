@@ -279,3 +279,18 @@ function wait_till_cluster_stable() {
     retry all_pods_are_running_completed "${ignoreNamespace}"
 }
 
+function install_lvms_operator() {
+    local bundle_type=$1
+
+    if [[ ${bundle_type} == "snc" ]]; then
+        # Create openshift-storage namespace
+        retry ${OC} apply -f lvms-operator/namespace.yaml
+        # Create lvms operator group
+        retry ${OC} apply -f lvms-operator/operator-group.yaml
+        # Create lvms operator subscription
+        retry ${OC} apply -f lvms-operator/subscription.yaml
+        # Create LVMCluster resource
+        retry ${OC} apply -f lvms-operator/lvmcluster.yaml
+    fi
+}
+
