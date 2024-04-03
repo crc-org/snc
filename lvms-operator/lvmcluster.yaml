@@ -1,0 +1,19 @@
+apiVersion: lvm.topolvm.io/v1alpha1
+kind: LVMCluster
+metadata:
+  name: crc-lvmcluster
+  namespace: openshift-storage
+spec:
+  storage:
+    deviceClasses:
+    - name: vg1
+      fstype: xfs
+      default: true
+      deviceSelector:
+        paths:
+        - /dev/vda5
+        forceWipeDevicesAndDestroyAllData: true
+      thinPoolConfig:
+        name: thin-pool-1
+        sizePercent: 90
+        overprovisionRatio: 10
