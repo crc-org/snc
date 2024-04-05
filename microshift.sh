@@ -16,7 +16,7 @@ SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-2}
 CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
-OPENSHIFT_MINOR_VERSION=${OPENSHIFT_MINOR_VERSION:-4.14}
+OPENSHIFT_MINOR_VERSION=${OPENSHIFT_MINOR_VERSION:-4.16}
 
 if ! grep -q -i "release 9" /etc/redhat-release
 then
