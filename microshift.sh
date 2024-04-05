@@ -76,7 +76,9 @@ function download_microshift_rpm {
     elif [ -n "${MICROSHIFT_NVR-}" ]; then
         nvr_suffix="-${MICROSHIFT_NVR-}"
     fi
-    sudo yum download ${extra_opts} --downloaddir ${pkgDir} --downloadonly microshift${nvr_suffix} microshift-networking${nvr_suffix} microshift-release-info${nvr_suffix} microshift-selinux${nvr_suffix} microshift-greenboot${nvr_suffix} microshift-olm${nvr_suffix}
+    sudo yum download ${extra_opts} --downloaddir ${pkgDir} --downloadonly microshift${nvr_suffix} microshift-networking${nvr_suffix} \
+        microshift-release-info${nvr_suffix} microshift-selinux${nvr_suffix} microshift-greenboot${nvr_suffix} microshift-olm${nvr_suffix} \
+        microshift-multus${nvr_suffix}
 }
 
 function create_iso {
