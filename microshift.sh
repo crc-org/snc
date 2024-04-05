@@ -60,9 +60,11 @@ function configure_host {
 }
 
 function enable_repos {
-    sudo subscription-manager repos \
-       --enable rhocp-${OPENSHIFT_MINOR_VERSION}-for-rhel-9-$(uname -i)-rpms \
-       --enable fast-datapath-for-rhel-9-$(uname -i)-rpms
+    local enable_repos="--enable fast-datapath-for-rhel-9-$(uname -i)-rpms"
+    if [ -z "${MICROSHIFT_PRERELEASE-}" ]; then
+        enable_repos="${enable_repos} --enable rhocp-${OPENSHIFT_MINOR_VERSION}-for-rhel-9-$(uname -i)-rpms"
+    fi
+    sudo subscription-manager repos ${enable_repos}
 }
 
 function download_microshift_rpm {
