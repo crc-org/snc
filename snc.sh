@@ -158,7 +158,7 @@ OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRI
 cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign) > ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign
 
 # Download the image
-# https://docs.openshift.com/container-platform/4.14/installing/installing_sno/install-sno-installing-sno.html#install-sno-installing-sno-manually
+# https://docs.openshift.com/container-platform/latest/installing/installing_sno/install-sno-installing-sno.html#install-sno-installing-sno-manually
 # (Step retrieve the RHCOS iso url)
 ISO_URL=$(OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} coreos print-stream-json | grep location | grep $ARCH | grep iso | cut -d\" -f4)
 curl -L ${ISO_URL} -o ${INSTALL_DIR}/rhcos-live.iso
@@ -202,7 +202,7 @@ retry ${OC} patch clusterversion version --type json -p "$(cat cvo-overrides-aft
 retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
 
 # Set managementState Image Registry Operator configuration from Removed to Managed
-# because https://docs.openshift.com/container-platform/4.15/registry/configuring_registry_storage/configuring-registry-storage-baremetal.html#registry-removed_configuring-registry-storage-baremetal
+# because https://docs.openshift.com/container-platform/latest/registry/configuring_registry_storage/configuring-registry-storage-baremetal.html#registry-removed_configuring-registry-storage-baremetal
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"managementState":"Managed"}}' --type=merge
 
 # Set default route for registry CRD from false to true.

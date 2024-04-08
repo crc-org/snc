@@ -22,7 +22,7 @@ rm -fr crc-cluster-kube-apiserver-operator
 rm -fr crc-cluster-kube-controller-manager-operator
 rm -fr crc-routes-controller
 
-readonly OCP_VERSION=4.14
+readonly OCP_VERSION=4.16
 
 function check_pull_secret() {
         if [ -z "${OPENSHIFT_PULL_SECRET_PATH-}" ]; then
