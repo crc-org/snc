@@ -145,6 +145,8 @@ ${YQ} eval --inplace ".spec.domain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
+# Add machine config resource for topolvm partition
+cp 98-topolvm-partition.yaml $INSTALL_DIR/openshift/
 # Add dummy network unit file
 cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
 # Add kubelet config resource to make change in kubelet
