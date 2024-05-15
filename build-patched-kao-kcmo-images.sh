@@ -99,10 +99,10 @@ function patch_and_push_image() {
         rhpkg container-build --target crc-1-rhel-9-candidate
         popd
     fi
-    # Operator images created using rhel-9 tags have `rhel9-operator` as part of image name so replacing `operator` with it.
-    # https://www.gnu.org/software/bash/manual/bash.html#Shell-Parameter-Expansion
-    rhel9_image_name="${image_name/operator/rhel9-operator}"
-    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://registry-proxy.engineering.redhat.com/rh-osbs/openshift-crc-${rhel9_image_name}:${version}-${release} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
+    # Metadata output from pull list offers 2 variants - SHA digest variant and tag variant.
+    # They are essentially the same, so we can choose either ([0] or [1]).
+    image_from_brew=$(curl -L https://download.eng.bos.redhat.com/brewroot/packages/crc-cluster-kube-apiserver-operator-container/${version}/${release}/metadata.json | jq -r '.build.extra.image.index.pull[0]')
+    skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://{image_from_brew} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
 function create_patched_release_image_for_arch() {
