@@ -191,11 +191,11 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname
 
 create_json_description ${BUNDLE_TYPE}
 
-# Create persistent volumes
-create_pvs ${BUNDLE_TYPE}
-
 # Install LVMS operator
 install_lvms_operator ${BUNDLE_TYPE}
+
+# Create persistent volumes
+create_registry_pvc
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged
