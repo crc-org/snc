@@ -200,19 +200,6 @@ function install_additional_packages() {
     fi
 }
 
-# This is only needed for creating arm64 bundles until RHCOS switches to RHEL-9
-function downgrade_rhel9_kernel {
-    local vm_ip=$1
-    local pkgDir=$(mktemp -d tmp-rpmXXX)
-
-    mkdir -p ${pkgDir}/packages
-    podman run --rm -v "./${pkgDir}/packages":/packages:z registry.access.redhat.com/ubi9 yum --releasever=9.0 --repo="rhel-9-for-${ARCH}-baseos-eus-rpms" download --downloaddir /packages kernel kernel-modules-extra kernel-core kernel-modules
-    ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
-    ${SSH} core@${vm_ip} -- 'SYSTEMD_OFFLINE=1 sudo -E rpm-ostree override replace --remove=kernel-modules-core /home/core/packages/*.rpm'
-    ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
-    rm -fr ${pkgDir}
-}
-
 function prepare_cockpit() {
     local vm_ip=$1
 
