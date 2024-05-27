@@ -101,7 +101,7 @@ function patch_and_push_image() {
     fi
     # Metadata output from pull list offers 2 variants - SHA digest variant and tag variant.
     # They are essentially the same, so we can choose either ([0] or [1]).
-    image_from_brew=$(curl -L https://download.eng.bos.redhat.com/brewroot/packages/crc-cluster-kube-apiserver-operator-container/${version}/${release}/metadata.json | jq -r '.build.extra.image.index.pull[0]')
+    image_from_brew=$(curl -L https://download.eng.bos.redhat.com/brewroot/packages/crc-${image_name}-container/${version}/${release}/metadata.json | jq -r '.build.extra.image.index.pull[0]')
     skopeo copy --dest-authfile ${OPENSHIFT_PULL_SECRET_PATH} --all --src-cert-dir=pki/ docker://${image_from_brew} docker://quay.io/crcont/openshift-crc-${image_name}:${openshift_version}
 }
 
