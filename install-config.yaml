@@ -35,4 +35,5 @@ capabilities:
   - DeploymentConfig
   - Build
   - OperatorLifecycleManager
+  - Ingress
 publish: External
