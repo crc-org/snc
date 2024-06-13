@@ -31,7 +31,7 @@ function download_oc() {
     fi
 
     mkdir -p openshift-clients/linux
-    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
+    curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-linux-${yq_ARCH}-rhel8-${OPENSHIFT_RELEASE_VERSION}.tar.gz" | tar -zx -C openshift-clients/linux oc
 
     if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
         mkdir -p openshift-clients/mac
