@@ -1,6 +1,7 @@
 [Unit]
 Description=QEMU Guest Agent
 IgnoreOnIsolate=True
+ConditionVirtualization=apple
 
 [Service]
 UMask=0077
