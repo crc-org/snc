@@ -241,8 +241,13 @@ function no_operators_degraded() {
     ${OC} get co -ojsonpath='{.items[*].status.conditions[?(@.type=="Degraded")].status}' | grep -v True
 }
 
+function retry_failed_pods() {
+    ${OC} delete pods --field-selector=status.phase=Failed -A
+}
+
 function all_pods_are_running_completed() {
     local ignoreNamespace=$1
+    retry_failed_pods
     ! ${OC} get pod --no-headers --all-namespaces --field-selector=metadata.namespace!="${ignoreNamespace}" | grep -v Running | grep -v Completed
 }
 
