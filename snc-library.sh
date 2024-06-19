@@ -268,12 +268,15 @@ function wait_till_cluster_stable() {
        fi
        if [ $count -eq $numConsecutive ]; then
            echo "Cluster has stabilized"
-           retry ${OC} delete pods --field-selector=status.phase=Failed -A
            break
        fi
        sleep 30s
        a=$((a + 1))
     done
+
+    # Remove failed (including ContainerStatusUnknown) pods which are
+    # never cleaned up on their own; controller-owned ones get replaced.
+    retry ${OC} delete pods --field-selector=status.phase=Failed -A
 
     # Wait till all the pods are either running or complete state
     retry all_pods_are_running_completed "${ignoreNamespace}"
