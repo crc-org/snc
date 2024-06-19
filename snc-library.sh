@@ -243,6 +243,7 @@ function no_operators_degraded() {
 
 function all_pods_are_running_completed() {
     local ignoreNamespace=$1
+    ${OC} delete pods --field-selector=status.phase=Failed -A
     ! ${OC} get pod --no-headers --all-namespaces --field-selector=metadata.namespace!="${ignoreNamespace}" | grep -v Running | grep -v Completed
 }
 
