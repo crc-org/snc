@@ -1,0 +1,16 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 98-topolvm-partition
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    storage:
+      disks:
+        - device: /dev/vda
+          partitions:
+            - label: topolvm
+              startMiB: 28600
