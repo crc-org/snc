@@ -15,6 +15,7 @@ function set_bundle_variables {
 
    if [ ${PRESET} != 'okd' ]; then
        vfkit_bundle_arm64=crc${bundlePreset}_vfkit_${version}_arm64.crcbundle
+       libvirt_bundle_arm64=crc${bundlePreset}_libvirt_${version}_arm64.crcbundle
    fi
 
    vfkit_bundle=crc${bundlePreset}_vfkit_${version}_amd64.crcbundle
@@ -29,6 +30,10 @@ function generate_image {
        cat <<EOF | podman build --os darwin --arch arm64 --tag ${preset}-bundle:darwin-arm64 -f - .
 FROM scratch
 COPY ${vfkit_bundle_arm64} ${vfkit_bundle_arm64}.sig /
+EOF
+       cat <<EOF | podman build --os linux --arch arm64 --tag ${preset}-bundle:linux-arm64 -f - .
+FROM scratch
+COPY ${libvirt_bundle_arm64} ${libvirt_bundle_arm64}.sig /
 EOF
    fi
 
@@ -46,6 +51,7 @@ EOF
 FROM scratch
 COPY ${libvirt_bundle} ${libvirt_bundle}.sig /
 EOF
+
 }
 
 function generate_manifest {
@@ -55,6 +61,7 @@ function generate_manifest {
    podman manifest create ${preset}-bundle:${version}
    if [[ ${preset} != "okd" ]]; then
       podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:darwin-arm64
+      podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:linux-arm64
    fi
    podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:darwin-amd64
    podman manifest add ${preset}-bundle:${version} containers-storage:localhost/${preset}-bundle:windows-amd64
@@ -67,6 +74,7 @@ function sign_bundle_files {
   rm -fr *.sig
   if [[ ${preset} != "okd" ]]; then
      gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle_arm64}.sig --detach-sig ${vfkit_bundle_arm64}
+     gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${libvirt_bundle_arm64}.sig --detach-sig ${libvirt_bundle_arm64}
   fi
   gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${vfkit_bundle}.sig --detach-sig ${vfkit_bundle}
   gpg --batch --default-key crc@crc.dev --pinentry-mode=loopback --passphrase-file ${GPG_SECRET_KEY_PASSPHRASE_PATH} --armor --output ${hyperv_bundle}.sig --detach-sig ${hyperv_bundle}
