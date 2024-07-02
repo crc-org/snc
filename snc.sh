@@ -26,7 +26,7 @@ INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
-CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-35}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
@@ -147,6 +147,11 @@ cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
 # Add dummy network unit file
 cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
+cp 99-openshift-machineconfig-master-swap-count.yaml $INSTALL_DIR/openshift/
+cp 99-openshift-machineconfig-master-swap-service.yaml $INSTALL_DIR/openshift/
+cp 99-kubelet-config.yaml $INSTALL_DIR/openshift/
+cp 99_feature-gate.yaml $INSTALL_DIR/openshift/
+
 # Add kubelet config resource to make change in kubelet
 DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-sizing-enabled-env.yaml.in > $INSTALL_DIR/openshift/99_master-node-sizing-enabled-env.yaml
 # Add codeReadyContainer as invoker to identify it with telemeter

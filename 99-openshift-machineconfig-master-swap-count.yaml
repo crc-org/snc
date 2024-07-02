@@ -1,0 +1,12 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-kernel-swapcount-arg
+spec:
+  config:
+  ignition:
+    version: 3.4.0
+  kernelArguments:
+    - swapaccount=1

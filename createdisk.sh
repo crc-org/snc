@@ -53,6 +53,9 @@ if [ ${BUNDLE_TYPE} != "microshift" ]; then
     
     # Stop the kubelet service so it will not reprovision the pods
     ${SSH} core@${VM_IP} -- sudo systemctl stop kubelet
+    # Enable swap partition and swap service
+    ${SSH} core@${VM_IP} -- sudo systemctl enable swap-partition.service
+    ${SSH} core@${VM_IP} -- sudo systemctl enable var-crc-swapfile1.swap
 fi
 
 # Enable the system and user level  podman.socket service for API V2
