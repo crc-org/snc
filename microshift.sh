@@ -17,7 +17,7 @@ CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
 OPENSHIFT_MINOR_VERSION=${OPENSHIFT_MINOR_VERSION:-4.17}
-
+#
 if ! grep -q -i "release 9" /etc/redhat-release
 then
   echo "This script only works for RHEL-9"
