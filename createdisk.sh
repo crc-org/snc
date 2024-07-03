@@ -74,6 +74,7 @@ EOF
     ${SSH} core@${VM_IP} -- sudo systemctl disable firewalld
     ${SSH} core@${VM_IP} -- cat /etc/microshift/config.yaml.default > config.yaml
     ${YQ} eval --inplace ".dns.baseDomain = \"${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\""  config.yaml
+    ${YQ} eval --inplace ".ingress.listenAddress = null"  config.yaml
     ${SCP} config.yaml core@${VM_IP}:/home/core
     ${SSH} core@${VM_IP} -- 'sudo mv /home/core/config.yaml /etc/microshift/config.yaml'
     # Make sure `baseDomain` is set to crc.testing
