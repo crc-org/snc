@@ -125,10 +125,10 @@ EOF
 fi
 
 if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
-   # Install qemu-user-static-x86 packaage from fedora koji to run x86 image on M1
+   # Install qemu-user-static-x86 package from fedora koji to run x86 image on M1
    # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
    # in any subscription repo.
-   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install https://kojipkgs.fedoraproject.org//packages/qemu/7.0.0/15.fc37/aarch64/qemu-user-static-x86-7.0.0-15.fc37.aarch64.rpm"
+   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install https://kojipkgs.fedoraproject.org//packages/qemu/8.2.4/1.fc40/aarch64/qemu-user-static-x86-8.2.4-1.fc40.aarch64.rpm"
 fi
 
 cleanup_vm_image ${VM_NAME} ${VM_IP}
