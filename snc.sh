@@ -145,6 +145,8 @@ ${YQ} eval --inplace ".spec.domain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"
 cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 # Add patch to mask the chronyd service on master
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
+# Add machine config resource for topolvm partition
+cp 98-topolvm-partition.yaml $INSTALL_DIR/openshift/
 # Add dummy network unit file
 cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
 # Add kubelet config resource to make change in kubelet
@@ -189,8 +191,11 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} sudo hostnamectl set-hostname
 
 create_json_description ${BUNDLE_TYPE}
 
+# Install LVMS operator
+install_lvms_operator ${BUNDLE_TYPE}
+
 # Create persistent volumes
-create_pvs ${BUNDLE_TYPE}
+create_registry_pvc
 
 # Mark some of the deployments unmanaged by the cluster-version-operator (CVO)
 # https://github.com/openshift/cluster-version-operator/blob/master/docs/dev/clusterversion.md#setting-objects-unmanaged

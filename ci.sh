@@ -58,6 +58,8 @@ sudo systemctl reload NetworkManager
 
 git clone https://github.com/code-ready/crc.git
 pushd crc
+git fetch origin pull/4114/head:disk-resize
+git checkout disk-resize
 podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-8-release-golang-1.21-openshift-4.16 /bin/bash -c "cd /data && make cross"
 sudo mv out/linux-amd64/crc /usr/local/bin/
 popd
