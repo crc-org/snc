@@ -114,7 +114,7 @@ function retry {
         exit=$?
         wait=$((2 ** $count))
         count=$(($count + 1))
-        if [ $count -lt $retries ]; then
+        if [ $count -le $retries ]; then
             echo "Retry $count/$retries exited $exit, retrying in $wait seconds..." 1>&2
             sleep $wait
         else
