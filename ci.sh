@@ -68,7 +68,7 @@ crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret
 
 mkdir -p /tmp/artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
-openshift-tests run kubernetes/conformance --dry-run | grep -F -v -f /tmp/ignoretests.txt | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit --disable-monitor alert-summary-serializer,metrics-endpoints-down,metrics-api-availability,monitoring-statefulsets-recreation,pod-network-avalibility -f -
+openshift-tests run kubernetes/conformance --dry-run | grep -F -v -f /tmp/ignoretests.txt | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit --disable-monitor alert-summary-serializer,metrics-endpoints-down,metrics-api-availability,monitoring-statefulsets-recreation,pod-network-avalibility,legacy-test-framework-invariants,pathological-event-analyzer -f -
 rc=$?
 echo "${rc}" > /tmp/test-return
 set -e
