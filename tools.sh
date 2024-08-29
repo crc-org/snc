@@ -108,7 +108,9 @@ if ! which ${PATCH}; then
 fi
 
 function retry {
-    local retries=10
+    # total wait time = 2 ^ (retries - 1) - 1 seconds
+    local retries=14
+
     local count=0
     until "$@"; do
         exit=$?
