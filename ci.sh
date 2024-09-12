@@ -66,9 +66,9 @@ crc config set bundle crc_libvirt_*.crcbundle
 crc setup
 crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret
 
-mkdir -p /tmp/artifacts
+mkdir -p crc-tmp-install-data/test-artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
-openshift-tests run kubernetes/conformance --dry-run | grep -F -v -f /tmp/ignoretests.txt | openshift-tests run -o /tmp/artifacts/e2e.log --junit-dir /tmp/artifacts/junit --disable-monitor alert-summary-serializer,metrics-endpoints-down,metrics-api-availability,monitoring-statefulsets-recreation,pod-network-avalibility,legacy-test-framework-invariants,api-unreachable-from-client-metrics,clusteroperator-collector -f -
+openshift-tests run kubernetes/conformance --dry-run | grep -F -v -f /tmp/ignoretests.txt | openshift-tests run -o crc-tmp-install-data/test-artifacts/e2e.log --junit-dir crc-tmp-install-data/test-artifacts/junit --disable-monitor alert-summary-serializer,metrics-endpoints-down,metrics-api-availability,monitoring-statefulsets-recreation,pod-network-avalibility,legacy-test-framework-invariants,api-unreachable-from-client-metrics,clusteroperator-collector -f -
 rc=$?
 echo "${rc}" > /tmp/test-return
 set -e
