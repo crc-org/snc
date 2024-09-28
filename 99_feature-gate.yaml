@@ -1,0 +1,12 @@
+apiVersion: config.openshift.io/v1
+kind: FeatureGate
+metadata:
+  name: cluster
+spec:
+  customNoUpgrade:
+    enabled:
+    - NodeSwap
+    - BuildCSIVolumes
+  featureSet: CustomNoUpgrade
+status:
+  featureGates: null
