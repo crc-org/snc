@@ -223,6 +223,9 @@ retry ${OC} create secret generic htpass-secret --from-file=htpasswd=${HTPASSWD_
 retry ${OC} apply -f oauth_cr.yaml
 retry ${OC} create clusterrolebinding kubeadmin --clusterrole=cluster-admin --user=kubeadmin
 
+# Add role to give developer user access to 'default' namespace
+retry ${OC} apply -f developer_role.yaml
+
 # Remove temp kubeadmin user
 retry ${OC} delete secrets kubeadmin -n kube-system
 
