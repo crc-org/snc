@@ -1,0 +1,14 @@
+[Unit]
+Description=CRC Unit for configuring dnsmasq
+Requires=ovs-configuration.service
+After=ovs-configuration.service
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/bash -c "/usr/bin/ping -c1 gateway && echo 1 || echo 0"
+ExecStart=/usr/local/bin/crc-dnsmasq.sh
+ExecStartPost=/usr/bin/systemctl start dnsmasq.service
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

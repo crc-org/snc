@@ -1,0 +1,13 @@
+[Unit]
+Description=CRC Unit starting routes controller
+After=kubelet.service
+Requires=kubelet.service
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/bash -c "/usr/bin/ping -c1 gateway && echo 1 || echo 0"
+ExecStart=/usr/local/bin/crc-routes-controller.sh
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
