@@ -1,0 +1,16 @@
+[Unit]
+Description=CRC Unit for configuring dnsmasq
+Wants=network-online.target
+After=network-online.target ssh-access.target ovs-configuration.service
+StartLimitIntervalSec=30
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+Restart=on-failure
+EnvironmentFile=/etc/systemd/system/crc-env
+ExecStart=/usr/local/bin/crc-dnsmasq.sh
+ExecStartPost=/usr/bin/systemctl start dnsmasq.service
+
+[Install]
+WantedBy=multi-user.target
