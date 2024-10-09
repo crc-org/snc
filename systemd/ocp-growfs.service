@@ -1,0 +1,9 @@
+[Unit]
+Description=CRC Unit to grow the root filesystem
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ocp-growfs.sh
+
+[Install]
+WantedBy=multi-user.target

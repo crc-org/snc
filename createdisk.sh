@@ -137,6 +137,8 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods except openshift-multus (which have file for crio cni config)
