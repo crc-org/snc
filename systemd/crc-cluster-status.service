@@ -1,0 +1,13 @@
+[Unit]
+Description=CRC Unit checking if cluster is ready
+After=kubelet.service ocp-clusterid.service ocp-cluster-ca.service ocp-custom-domain.service
+After=crc-pullsecret.service
+
+[Service]
+Type=oneshot
+Restart=on-failure
+ExecStart=/usr/local/bin/crc-cluster-status.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
