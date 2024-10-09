@@ -223,6 +223,7 @@ function prepare_hyperV() {
             echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 }
+
 function prepare_qemu_guest_agent() {
     local vm_ip=$1
 
@@ -392,3 +393,37 @@ function remove_pull_secret_from_disk() {
     esac
 }
 
+function copy_systemd_units() {
+    case "${BUNDLE_TYPE}" in
+        "snc"|"okd")
+            export APPS_DOMAIN="apps-crc.testing"
+            envsubst '${APPS_DOMAIN}' < systemd/dnsmasq.sh.template > systemd/crc-dnsmasq.sh
+            unset APPS_DOMAIN
+            ;;
+        "microshift")
+            export APPS_DOMAIN="apps.crc.testing"
+            envsubst '${APPS_DOMAIN}' < systemd/dnsmasq.sh.template > systemd/crc-dnsmasq.sh
+            unset APPS_DOMAIN
+            ;;
+    esac
+
+    ${SSH} core@${VM_IP} -- 'mkdir -p /home/core/systemd-units && mkdir -p /home/core/systemd-scripts'
+    ${SCP} systemd/crc-*.service core@${VM_IP}:/home/core/systemd-units/
+    ${SCP} systemd/crc-*.sh core@${VM_IP}:/home/core/systemd-scripts/
+
+    case "${BUNDLE_TYPE}" in
+        "snc"|"okd")
+            ${SCP} systemd/ocp-*.service core@${VM_IP}:/home/core/systemd-units/
+            ${SCP} systemd/ocp-*.sh core@${VM_IP}:/home/core/systemd-scripts/
+            ;;
+    esac
+
+    ${SSH} core@${VM_IP} -- 'sudo cp /home/core/systemd-units/* /etc/systemd/system/ && sudo cp /home/core/systemd-scripts/* /usr/local/bin/'
+    ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-scripts/ | xargs -t -I % sudo chmod +x /usr/local/bin/%'
+    ${SSH} core@${VM_IP} -- 'sudo restorecon -rv /usr/local/bin'
+
+    # enable only the .path units
+    ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-units/*.service | xargs basename -a | xargs sudo systemctl enable'
+
+    ${SSH} core@${VM_IP} -- 'rm -rf /home/core/systemd-units /home/core/systemd-scripts'
+}
