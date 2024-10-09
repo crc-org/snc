@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit checking if cluster is ready
+After=kubelet.service
+Requires=kubelet.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/crc-cluster-status.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

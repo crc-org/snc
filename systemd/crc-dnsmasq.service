@@ -1,0 +1,13 @@
+[Unit]
+Description=CRC Unit for configuring dnsmasq
+Requires=ovs-configuration.service
+After=ovs-configuration.service
+
+[Service]
+Type=oneshot
+ExecCondition=/usr/bin/bash -c "/usr/sbin/ip link show dev tap0 && exit 1 || exit 0"
+ExecStart=/usr/local/bin/crc-dnsmasq.sh
+ExecStartPost=/usr/bin/systemctl start dnsmasq.service
+
+[Install]
+WantedBy=multi-user.target
