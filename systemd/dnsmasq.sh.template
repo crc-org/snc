@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -x
+
+if [[ ${CRC_NETWORK_MODE_USER} -eq 1 ]]; then
+    echo -n "network-mode 'user' detected: skipping dnsmasq configuration"
+    exit 0
+fi
+
+hostName=$(hostname)
+hostIp=$(hostname --all-ip-addresses | awk '{print $1}')
+
+cat << EOF > /etc/dnsmasq.d/crc-dnsmasq.conf
+listen-address=$hostIp
+expand-hosts
+log-queries
+local=/crc.testing/
+domain=crc.testing
+address=/${APPS_DOMAIN}/$hostIp
+address=/api.crc.testing/$hostIp
+address=/api-int.crc.testing/$hostIp
+address=/$hostName.crc.testing/$hostIp
+EOF
+
+/bin/systemctl enable --now dnsmasq.service
+/bin/nmcli conn modify --temporary ovs-if-br-ex ipv4.dns $hostIp,1.1.1.1

@@ -1,0 +1,11 @@
+[Unit]
+Description=CRC Unit setting random cluster ID
+After=kubelet.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ocp-clusterid.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
