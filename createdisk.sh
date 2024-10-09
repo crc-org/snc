@@ -130,6 +130,8 @@ if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install https://kojipkgs.fedoraproject.org//packages/qemu/8.2.6/3.fc40/aarch64/qemu-user-static-x86-8.2.6-3.fc40.aarch64.rpm"
 fi
 
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
