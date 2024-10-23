@@ -91,6 +91,7 @@ if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
 fi
 
 prepare_qemu_guest_agent ${VM_IP}
+copy_ready_systemd_units ${VM_IP}
 
 image_tag="latest"
 if podman manifest inspect quay.io/crcont/routes-controller:${OPENSHIFT_VERSION} >/dev/null 2>&1; then

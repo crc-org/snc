@@ -241,6 +241,17 @@ function prepare_qemu_guest_agent() {
     ${SSH} core@${vm_ip} 'sudo systemctl enable qemu-guest-agent.service'
 }
 
+function copy_ready_systemd_units() {
+    local vm_ip=$1
+
+    ${SCP} systemd/* core@${vm_ip}:
+    ${SSH} core@${vm_ip} 'sudo mv -Z *.service /etc/systemd/system/'
+    ${SSH} core@${vm_ip} 'sudo systemctl daemon-reload'
+    ${SSH} core@${vm_ip} 'sudo systemctl enable podman-ready-apple.service'
+    ${SSH} core@${vm_ip} 'sudo systemctl enable podman-ready-microsoft.service'
+    ${SSH} core@${vm_ip} 'sudo systemctl enable podman-ready-kvm.service'
+}
+
 function generate_vfkit_bundle {
     local srcDir=$1
     local destDir=$2

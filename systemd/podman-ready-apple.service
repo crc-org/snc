@@ -1,0 +1,14 @@
+[Unit]
+After=sshd.socket sshd.service
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+Requires=dev-virtio\x2dports-vsock.device
+ConditionVirtualization=apple
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/bin/echo Ready | socat - VSOCK-CONNECT:2:1025'
+
+[Install]
+RequiredBy=default.target
