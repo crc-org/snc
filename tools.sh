@@ -195,7 +195,7 @@ function create_libvirt_resources {
 function create_vm {
     local iso=$1
 
-    sudo virt-install \
+    sudo ${VIRT_INSTALL} \
         --name ${SNC_PRODUCT_NAME} \
         --vcpus ${SNC_CLUSTER_CPUS} \
         --memory ${SNC_CLUSTER_MEMORY} \
