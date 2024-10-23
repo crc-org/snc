@@ -203,7 +203,8 @@ function create_vm {
         --disk path=/var/lib/libvirt/${SNC_PRODUCT_NAME}/${SNC_PRODUCT_NAME}.qcow2,size=${CRC_VM_DISK_SIZE} \
         --network network="${SNC_PRODUCT_NAME}",mac=52:54:00:ee:42:e1 \
         --os-variant rhel9-unknown \
-        --nographics \
+        --graphics vnc \
+        --console pty,target.type=virtio \
         --cdrom /var/lib/libvirt/${SNC_PRODUCT_NAME}/${iso} \
         --events on_reboot=restart \
         --autoconsole none \
