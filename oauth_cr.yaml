@@ -4,7 +4,8 @@ metadata:
   name: cluster
 spec:
   tokenConfig:
-    accessTokenMaxAgeSeconds: 0
+    # token max age set to 365 days
+    accessTokenMaxAgeSeconds: 31536000
   identityProviders:
   - name: developer
     mappingMethod: claim 
