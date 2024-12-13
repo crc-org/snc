@@ -5,7 +5,7 @@ set -exuo pipefail
 sudo yum install -y make golang
 
 ./shellcheck.sh
-MICROSHIFT_PRERELEASE=yes ./microshift.sh
+./microshift.sh
 
 # Set the zstd compression level to 10 to have faster
 # compression while keeping a reasonable bundle size.
