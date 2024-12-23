@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit setting custom cluster ca
+After=kubelet.service
+Requires=kubelet.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/crc/crc-cloud
+ExecStart=/usr/local/bin/ocp-cluster-ca.sh
+
+[Install]
+WantedBy=multi-user.target

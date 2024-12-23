@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit setting nip.io domain for cluster
+After=kubelet.service
+Requires=kubelet.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/opt/crc/crc-cloud
+ExecStart=/usr/local/bin/ocp-custom-domain.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -141,6 +141,8 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
