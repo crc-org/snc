@@ -1,0 +1,18 @@
+[Unit]
+After=sshd.socket sshd.service systemd-user-sessions.service vsock-network.service
+OnFailure=emergency.target
+OnFailureJobMode=isolate
+Requires=sys-devices-virtual-net-vsock0.device
+ConditionVirtualization=microsoft
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+; XXXX is a port number, but podman-machine dynamically allocates it, so we can't hardcode it
+; https://github.com/containers/podman/blob/0712c18d9c6daef2f15e55e4c760c86a22588d03/pkg/machine/hyperv/vsock/vsock.go#L161-L187
+; Either we add that through ignition as podman is doing, or we could set it in a configuration file
+; and overwrite this file at startup, but this is kind of ugly/racy
+ExecStart=/bin/sh -c '/usr/bin/echo Ready | socat - VSOCK-CONNECT:2:XXXX'
+
+[Install]
+RequiredBy=default.target
