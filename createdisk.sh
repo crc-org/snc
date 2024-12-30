@@ -144,22 +144,6 @@ fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
 
-# Get the rhcos ostree Hash ID
-ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
-
-# Get the rhcos kernel release
-kernel_release=$(${SSH} core@${VM_IP} -- 'uname -r')
-
-# Get the kernel command line arguments
-kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
-
-# Get the vmlinux/initramfs to /tmp/kernel and change permission for initramfs
-${SSH} core@${VM_IP} -- "mkdir /tmp/kernel && sudo cp -r /boot/ostree/${BASE_OS}-${ostree_hash}/*${kernel_release}* /tmp/kernel && sudo chmod 644 /tmp/kernel/initramfs*"
-
-# SCP the vmlinuz/initramfs from VM to Host in provided folder.
-${SCP} -r core@${VM_IP}:/tmp/kernel/* $INSTALL_DIR
-${SSH} core@${VM_IP} -- "sudo rm -fr /tmp/kernel"
-
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
 
@@ -196,9 +180,5 @@ fi
 if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
     rm -fr ${vfkitDestDir} ${vfkitDestDir}.crcbundle
-    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
-
-    # Cleanup up vmlinux/initramfs files
-    rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir"
 fi
-
