@@ -9,7 +9,7 @@
   # - 1.3: remove of 'clusterInfo.kubeadminPasswordFile'
   # - 1.4: addition of 'arch'
   # - 1.5: remove of 'node[0].kernelCmdLine', 'node[0].initramfs', 'node[0].kernel'
-  "version": "1.4",
+  "version": "1.5",
   # Type of this bundle content
   # Currently the only valid type is 'snc' (which stands for 'single-node-cluster')
   "type": "snc",
