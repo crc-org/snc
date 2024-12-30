@@ -27,8 +27,7 @@ mkdir -p "$srcDir"
 mkdir -p "$srcDir/auth"
 touch "$srcDir"/auth/kubeconfig
 touch id_ecdsa_crc
-touch "$srcDir"/vmlinuz-0.0.0
-touch "$srcDir"/initramfs-0.0.0.img
+
 
 echo {} | ${JQ} '.version = "1.2"' \
     | ${JQ} '.type = "snc"' \
