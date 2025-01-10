@@ -72,9 +72,6 @@ EOF
     # also in case of microshift the ports like 2222, 443, 80 ..etc need to be manually added
     # and OCP/OKD/podman bundles have it disabled by default.
     ${SSH} core@${VM_IP} -- sudo systemctl disable firewalld
-    ${YQ} eval --inplace ".dns.baseDomain = \"${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\""  00-microshift-dns.yaml
-    ${SCP} 00-microshift-dns.yaml core@${VM_IP}:/home/core
-    ${SSH} core@${VM_IP} -- 'sudo mv /home/core/00-microshift-dns.yaml /etc/microshift/config.d/00-microshift-dns.yaml'
     # Make sure `baseDomain` is set to crc.testing
     ${SSH} core@${VM_IP} -- "grep '^\s\+baseDomain: ${SNC_PRODUCT_NAME}.${BASE_DOMAIN}' /etc/microshift/config.d/00-microshift-dns.yaml"
     # Remove the lvm system.device file since it have diskID and deviceName which changes
