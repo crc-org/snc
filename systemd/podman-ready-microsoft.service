@@ -1,7 +1,5 @@
 [Unit]
 After=sshd.socket sshd.service systemd-user-sessions.service vsock-network.service
-OnFailure=emergency.target
-OnFailureJobMode=isolate
 Requires=sys-devices-virtual-net-vsock0.device
 ConditionVirtualization=microsoft
 

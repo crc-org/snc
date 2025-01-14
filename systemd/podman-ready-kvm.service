@@ -1,7 +1,5 @@
 [Unit]
 After=sshd.socket sshd.service systemd-user-sessions.service 
-OnFailure=emergency.target
-OnFailureJobMode=isolate
 Requires=dev-virtio\x2dports-vport1p1.device
 ConditionVirtualization=kvm
 

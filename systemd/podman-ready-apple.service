@@ -1,7 +1,5 @@
 [Unit]
 After=sshd.socket sshd.service
-OnFailure=emergency.target
-OnFailureJobMode=isolate
 Requires=dev-virtio\x2dports-vsock.device
 ConditionVirtualization=apple
 
