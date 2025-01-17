@@ -1,0 +1,60 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-openshift-machineconfig-master-users-symlink
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    systemd:
+      units:
+      - contents: |
+          [Unit]
+          Description=Allow systemd to create mount points on /
+          DefaultDependencies=no
+          Before=remote-fs.target
+
+          [Service]
+          Type=oneshot
+          ExecStart=chattr -i /
+
+          [Install]
+          WantedBy=remote-fs.target
+        enabled: true
+        name: immutable-root-off.service
+      - contents: |
+          [Unit]
+          Description=Set / back to immutable after mounts are done
+          DefaultDependencies=no
+          After=remote-fs.target
+
+          [Service]
+          Type=oneshot
+          ExecStart=chattr +i /
+
+          [Install]
+          WantedBy=remote-fs.target
+        enabled: true
+        name: immutable-root-on.service
+      - contents: |
+          [Unit]
+          Description=Create Users directory and mount to var
+          After=immutable-root-off.service
+          Before=immutable-root-on.service
+
+          [Service]
+          Type=oneshot
+          ExecStartPre=rm -f /Users
+          ExecStartPre=mkdir -p /var/Users
+          ExecStart=ln -sf /var/Users /Users 
+
+          [Install]
+          WantedBy=multi-user.target
+        enabled: true
+        name: create-symlink-users.service
+    networkd: {}
+    passwd: {}
+    storage: {}
+    osImageURL: ""
