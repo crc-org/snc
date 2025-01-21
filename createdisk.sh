@@ -94,23 +94,38 @@ if podman manifest inspect quay.io/crcont/routes-controller:${OPENSHIFT_VERSION}
     image_tag=${OPENSHIFT_VERSION}
 fi
 
+# create the tap device interface with specified mac address
+# this mac address is used to allocate a specific IP to the VM
+# when tap device is in use.
+${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+  nmcli connection add type tun ifname tap0 con-name tap0 mode tap autoconnect yes 802-3-ethernet.cloned-mac-address 5A:94:EF:E4:0C:EE
+EOF
+
+
 # Add gvisor-tap-vsock service
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  podman pull quay.io/crcont/gvisor-tap-vsock:latest
-  cat > /etc/containers/systemd/gvisor-tap-vsock.container <<EOF1
+  podman create --name=gvisor-tap-vsock quay.io/crcont/gvisor-tap-vsock:latest
+  podman cp gvisor-tap-vsock:/vm /usr/local/bin/gvforwarder
+  podman rm gvisor-tap-vsock
+  tee /etc/systemd/system/gv-user-network@.service <<TEE
 [Unit]
-Description=gvisor-tap-vsock
-Before=nodeip-configuration.service
+Description=gvisor-tap-vsock Network Traffic Forwarder
+After=NetworkManager.service
+BindsTo=sys-devices-virtual-net-%i.device
+After=sys-devices-virtual-net-%i.device
 
-[Container]
-Image=quay.io/crcont/gvisor-tap-vsock:latest
-Network=host
-PodmanArgs=--interactive --privileged --tty
-Volume=/etc/resolv.conf:/etc/resolv.conf
+[Service]
+Restart=on-failure
+Environment="GV_VSOCK_PORT=1024"
+EnvironmentFile=-/etc/sysconfig/gv-user-network
+ExecStart=/usr/local/bin/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]
-WantedBy=default.target
-EOF1
+WantedBy=multi-user.target
+
+TEE
+  systemctl daemon-reload
+  systemctl enable gv-user-network@tap0.service
 EOF
 
 # Add dummy crio-wipe service to instance
