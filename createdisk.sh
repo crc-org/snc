@@ -153,6 +153,10 @@ fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
 
+# re-create ignition firstboot marker to rerun ignition
+${SSH} core@${VM_IP} -- 'sudo mount -o remount,rw /dev/vda3 /boot'
+${SSH} core@${VM_IP} -- 'sudo touch /boot/ignition.firstboot'
+
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
 
