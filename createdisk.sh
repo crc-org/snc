@@ -162,6 +162,10 @@ ${SSH} core@${VM_IP} -- "mkdir /tmp/kernel && sudo cp -r /boot/ostree/${BASE_OS}
 ${SCP} -r core@${VM_IP}:/tmp/kernel/* $INSTALL_DIR
 ${SSH} core@${VM_IP} -- "sudo rm -fr /tmp/kernel"
 
+# re-create ignition firstboot marker to rerun ignition
+${SSH} core@${VM_IP} -- 'sudo mount -o remount,rw /dev/vda3 /boot'
+${SSH} core@${VM_IP} -- 'sudo touch /boot/ignition.firstboot'
+
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
 
