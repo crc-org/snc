@@ -6,7 +6,7 @@ function get_dest_dir_suffix {
     local version=$1
     DEST_DIR_SUFFIX="${version}_${yq_ARCH}"
     if [ -n "${PULL_NUMBER-}" ]; then
-         DEST_DIR_SUFFIX="$DEST_DIR_SUFFIX.pr${PULL_NUMBER}"
+         DEST_DIR_SUFFIX="${DEST_DIR_SUFFIX}_${PULL_NUMBER}"
     fi
 }
 
@@ -258,26 +258,14 @@ function generate_macos_bundle {
     local bundleType=$1
     local srcDir=$2
     local destDir=$3
-    local tmpDir=$4
-    local kernel_release=$5
-    local kernel_cmd_line=$6
+
 
     mkdir -p "$destDir"
     cp $srcDir/kubeconfig $destDir/
     cp $srcDir/id_ecdsa_crc $destDir/
-    cp $tmpDir/vmlinuz-${kernel_release} $destDir/
-    cp $tmpDir/initramfs-${kernel_release}.img $destDir/
 
     # Copy oc client
     cp openshift-clients/mac/oc $destDir/
-
-    # aarch64 only supports uncompressed kernels, see
-    # https://github.com/code-ready/vfkit/commit/4aaa4fbdc76f9fc0ccec2b9fda25c5235664e7d6
-    # for more details
-    if [ "${ARCH}" == "aarch64" ]; then
-      mv $destDir/vmlinuz-${kernel_release} $destDir/vmlinuz-${kernel_release}.gz
-      gunzip $destDir/vmlinuz-${kernel_release}.gz
-    fi
 
     cp podman-remote/mac/podman $destDir/
 
@@ -290,9 +278,6 @@ function generate_macos_bundle {
     # Update the bundle metadata info
     cat $srcDir/crc-bundle-info.json \
         | ${JQ} ".name = \"${destDir}\"" \
-        | ${JQ} ".nodes[0].kernel = \"vmlinuz-${kernel_release}\"" \
-        | ${JQ} ".nodes[0].initramfs = \"initramfs-${kernel_release}.img\"" \
-        | ${JQ} ".nodes[0].kernelCmdLine = \"${kernel_cmd_line}\"" \
         | ${JQ} ".storage.fileList[0].name = \"oc\"" \
         | ${JQ} '.storage.fileList[0].type = "oc-executable"' \
         | ${JQ} ".storage.fileList[0].size = \"${ocSize}\"" \

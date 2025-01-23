@@ -124,10 +124,21 @@ EOF
 fi
 
 if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
-   # Install qemu-user-static-x86 package from fedora koji to run x86 image on M1
+   # Install qemu-user-static-x86 package from fedora-updates repo to run x86 image on M1
    # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
    # in any subscription repo.
-   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install https://kojipkgs.fedoraproject.org//packages/qemu/8.2.6/3.fc40/aarch64/qemu-user-static-x86-8.2.6-3.fc40.aarch64.rpm"
+   cat > /tmp/fedora-updates.repo <<'EOF'
+[fedora-updates]
+name=Fedora 41 - $basearch - Updates
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f41&arch=$basearch
+enabled=1
+type=rpm
+repo_gpgcheck=0
+gpgcheck=0
+EOF
+   ${SCP} /tmp/fedora-updates.repo core@${VM_IP}:/tmp
+   ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora-updates.repo /etc/yum.repos.d"
+   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
 copy_systemd_units
@@ -202,9 +213,5 @@ fi
 if [ "${SNC_GENERATE_MACOS_BUNDLE}" != "0" ]; then
     vfkitDestDir="${destDirPrefix}_vfkit_${destDirSuffix}"
     rm -fr ${vfkitDestDir} ${vfkitDestDir}.crcbundle
-    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir" "$INSTALL_DIR" "$kernel_release" "$kernel_cmd_line"
-
-    # Cleanup up vmlinux/initramfs files
-    rm -fr "$INSTALL_DIR/vmlinuz*" "$INSTALL_DIR/initramfs*"
+    generate_vfkit_bundle "$libvirtDestDir" "$vfkitDestDir"
 fi
-
