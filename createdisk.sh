@@ -141,6 +141,8 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
@@ -154,6 +156,26 @@ if [ ${BUNDLE_TYPE} != "microshift" ]; then
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
+
+# Get the rhcos ostree Hash ID
+ostree_hash=$(${SSH} core@${VM_IP} -- "cat /proc/cmdline | grep -oP \"(?<=${BASE_OS}-).*(?=/vmlinuz)\"")
+
+# Get the rhcos kernel release
+kernel_release=$(${SSH} core@${VM_IP} -- 'uname -r')
+
+# Get the kernel command line arguments
+kernel_cmd_line=$(${SSH} core@${VM_IP} -- 'cat /proc/cmdline')
+
+# Get the vmlinux/initramfs to /tmp/kernel and change permission for initramfs
+${SSH} core@${VM_IP} -- "mkdir /tmp/kernel && sudo cp -r /boot/ostree/${BASE_OS}-${ostree_hash}/*${kernel_release}* /tmp/kernel && sudo chmod 644 /tmp/kernel/initramfs*"
+
+# SCP the vmlinuz/initramfs from VM to Host in provided folder.
+${SCP} -r core@${VM_IP}:/tmp/kernel/* $INSTALL_DIR
+${SSH} core@${VM_IP} -- "sudo rm -fr /tmp/kernel"
+
+# re-create ignition firstboot marker to rerun ignition
+${SSH} core@${VM_IP} -- 'sudo mount -o remount,rw /dev/vda3 /boot'
+${SSH} core@${VM_IP} -- 'sudo touch /boot/ignition.firstboot'
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
