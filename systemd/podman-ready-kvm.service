@@ -1,0 +1,12 @@
+[Unit]
+After=sshd.socket sshd.service systemd-user-sessions.service 
+Requires=dev-virtio\x2dports-vport1p1.device
+ConditionVirtualization=kvm
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/bin/echo Ready >/dev/vport1p1'
+
+[Install]
+RequiredBy=default.target
