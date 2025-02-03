@@ -111,23 +111,23 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   podman cp gvisor-tap-vsock:/vm /usr/local/bin/gvforwarder
   podman rm gvisor-tap-vsock
   tee /etc/systemd/system/gv-user-network@.service <<TEE
-  [Unit]
-  Description=gvisor-tap-vsock Network Traffic Forwarder
-  After=NetworkManager.service
-  BindsTo=sys-devices-virtual-net-%i.device
-  After=sys-devices-virtual-net-%i.device
+[Unit]
+Description=gvisor-tap-vsock Network Traffic Forwarder
+After=NetworkManager.service
+BindsTo=sys-devices-virtual-net-%i.device
+After=sys-devices-virtual-net-%i.device
 
-  [Service]
-  Environment=GV_VSOCK_PORT="1024"
-  EnvironmentFile=-/etc/sysconfig/gv-user-network
-  ExecStart=/usr/local/bin/gvforwarder -preexisting -iface %i -url vsock://2:\\\${GV_VSOCK_PORT}/connect
+[Service]
+Environment=GV_VSOCK_PORT="1024"
+EnvironmentFile=-/etc/sysconfig/gv-user-network
+ExecStart=/usr/local/bin/gvforwarder -preexisting -iface %i -url vsock://2:\\\${GV_VSOCK_PORT}/connect
 
-  [Install]
-  WantedBy=multi-user.target
-  TEE
+[Install]
+WantedBy=multi-user.target
+TEE
   systemctl daemon-reload
   systemctl enable gv-user-network@tap0.service
-  systemctl daemon-reload
+  systemctl start gv-user-network@tap0.service
 
 EOF
 
