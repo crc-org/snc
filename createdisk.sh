@@ -143,12 +143,17 @@ fi
 
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
-# Delete all the pods and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
+# Delete all the pods except openshift-multus (which have file for crio cni config)
+# and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     etcd_image=$(${SSH} core@${VM_IP} -- "sudo jq -r '.spec.containers[] | select(.name == \"etcd\") | .image' /etc/kubernetes/manifests/etcd-pod.yaml")
     ${SSH} core@${VM_IP} -- "sudo podman run --rm --network=host --privileged --replace --name crc-etcd --detach --entrypoint etcd -v /var/lib/etcd:/store \"${etcd_image}\" --data-dir /store"
     sleep 5
-    ${SSH} core@${VM_IP} -- "sudo podman exec crc-etcd etcdctl del --prefix /kubernetes.io/pods"
+    ${SSH} core@${VM_IP} 'sudo bash -x -s' << EOF
+podman exec crc-etcd etcdctl get /kubernetes.io/pods/ --prefix --keys-only | \
+grep -v "^/kubernetes.io/pods/openshift-network" | \
+xargs -I {} podman exec crc-etcd etcdctl del "{}"
+EOF
     ${SSH} core@${VM_IP} -- "sudo podman exec crc-etcd etcdctl del --prefix /kubernetes.io/leases"
     ${SSH} core@${VM_IP} -- "sudo podman stop crc-etcd"
 fi
