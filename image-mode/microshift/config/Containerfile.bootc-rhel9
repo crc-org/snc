@@ -23,3 +23,4 @@ RUN dnf install -y firewalld microshift microshift-release-info cloud-utils-grow
 # and both are symlink to `var` already
 RUN rm -fr /opt && ln -sf var/opt /opt && mkdir /var/opt
 RUN ln -sf var/Users /Users && mkdir /var/Users
+RUN rm -fr /usr/local && ln -sf ../var/usrlocal /usr/local && mkdir /var/usrlocal
