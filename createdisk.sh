@@ -137,6 +137,8 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
@@ -150,6 +152,10 @@ if [ ${BUNDLE_TYPE} != "microshift" ]; then
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
+
+# re-create ignition firstboot marker to rerun ignition
+${SSH} core@${VM_IP} -- 'sudo mount -o remount,rw /dev/vda3 /boot'
+${SSH} core@${VM_IP} -- 'sudo touch /boot/ignition.firstboot'
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
