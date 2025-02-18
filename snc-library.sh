@@ -136,7 +136,6 @@ function create_json_description {
         tmp=$(mktemp)
         cat ${INSTALL_DIR}/crc-bundle-info.json \
             | ${JQ} ".buildInfo.openshiftInstallerVersion = \"${openshiftInstallerVersion}\"" \
-            | ${JQ} ".clusterInfo.appsDomain = \"apps-${SNC_PRODUCT_NAME}.${BASE_DOMAIN}\"" \
             > ${tmp} && mv ${tmp} ${INSTALL_DIR}/crc-bundle-info.json
     fi
 }
