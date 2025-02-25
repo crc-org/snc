@@ -135,7 +135,7 @@ cat < "${SCRIPTDIR}/config/config.toml.template" \
 
 title "Building bootc image for microshift"
 sudo podman build --authfile ${OCP_PULL_SECRET_FILE} -t ${IMGNAME}:${MICROSHIFT_VERSION}  \
-  --build-arg USHIFT_VER=${MICROSHIFT_VERSION} \
+  --build-arg MICROSHIFT_VER=${MICROSHIFT_VERSION} \
   --env UNRELEASED_MIRROR_REPO=${USE_UNRELEASED_MIRROR_REPO} \
   -f "${SCRIPTDIR}/config/Containerfile.bootc-rhel9"
 
