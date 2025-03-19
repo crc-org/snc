@@ -16,6 +16,7 @@ INSTALL_DIR=${1:-crc-tmp-install-data}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
 BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
+ADDITIONAL_PACKAGES=""
 
 case ${BUNDLE_TYPE} in
     microshift)
