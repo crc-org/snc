@@ -16,7 +16,7 @@ INSTALL_DIR=${1:-crc-tmp-install-data}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
 BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
-ADDITIONAL_PACKAGES=""
+ADDITIONAL_PACKAGES="cloud-init"
 
 case ${BUNDLE_TYPE} in
     microshift)
@@ -142,6 +142,9 @@ fi
 install_additional_packages ${VM_IP}
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
+# Enable cloud-init service
+${SSH} core@${VM_IP} -- "sudo systemctl enable cloud-init cloud-config cloud-final"
+
 # Delete all the pods except openshift-multus (which have file for crio cni config)
 # and lease from the etcd db so that when this bundle is use for the cluster provision, everything comes up in clean state.
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
@@ -158,6 +161,9 @@ EOF
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
+
+# Cleanup cloud-init config
+${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
