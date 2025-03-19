@@ -178,13 +178,13 @@ function install_additional_packages() {
     shift
     if [[ ${BASE_OS} = "fedora-coreos" ]]; then
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/g /etc/yum.repos.d/centos.repo'
-        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $ADDITIONAL_PACKAGES"
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/g /etc/yum.repos.d/centos.repo'
     else
         # Download the hyperV daemons dependency on host
         local pkgDir=$(mktemp -d tmp-rpmXXX)
         mkdir -p ${pkgDir}/packages
-        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages $* --resolve --alldeps
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages ${ADDITIONAL_PACKAGES} --resolve --alldeps
 
         # SCP the downloaded rpms to VM
         ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
@@ -203,7 +203,7 @@ function install_additional_packages() {
 function prepare_hyperV() {
     local vm_ip=$1
 
-    install_additional_packages ${vm_ip} hyperv-daemons
+    ADDITIONAL_PACKAGES+=" hyperv-daemons"
 
     # Adding Hyper-V vsock support
     ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
