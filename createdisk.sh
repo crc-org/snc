@@ -140,6 +140,8 @@ fi
 
 copy_systemd_units
 
+# Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
+install_additional_packages ${VM_IP}
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods except openshift-multus (which have file for crio cni config)

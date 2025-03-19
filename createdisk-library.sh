@@ -189,11 +189,24 @@ function install_additional_packages() {
         # SCP the downloaded rpms to VM
         ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
 
+        # Create local repo of downloaded RPMs in the VM
+        ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
+            podman run --rm -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
+            podman rmi quay.io/centos/centos:stream9
+EOF
+        ${SSH} core@${vm_ip} "sudo bash -c 'cat > /etc/yum.repos.d/local.repo << EOF
+[local]
+name=Local repo
+baseurl=file:///home/core/packages/
+enabled=1
+gpgcheck=0
+EOF'"
         # Install these rpms to VM
-        ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install $ADDITIONAL_PACKAGES"
 
-        # Remove the packages from VM
-        ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
+        # Remove the packages and repo from VM
+        ${SSH} core@${vm_ip} -- sudo rm -fr /home/core/packages
+        ${SSH} core@${vm_ip} -- sudo rm -fr /etc/yum.repos.d/local.repo
 
         # Cleanup up packages
         rm -fr ${pkgDir}
