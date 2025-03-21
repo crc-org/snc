@@ -178,44 +178,52 @@ function install_additional_packages() {
     shift
     if [[ ${BASE_OS} = "fedora-coreos" ]]; then
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/g /etc/yum.repos.d/centos.repo'
-        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $*"
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $ADDITIONAL_PACKAGES"
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/g /etc/yum.repos.d/centos.repo'
     else
         # Download the hyperV daemons dependency on host
         local pkgDir=$(mktemp -d tmp-rpmXXX)
         mkdir -p ${pkgDir}/packages
-        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages $* --resolve
+        sudo yum download --downloadonly --downloaddir ${pkgDir}/packages ${ADDITIONAL_PACKAGES} --resolve --alldeps
 
         # SCP the downloaded rpms to VM
         ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
 
+        # Create local repo of downloaded RPMs in the VM
+        ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
+            podman run --rm -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
+            podman rmi quay.io/centos/centos:stream9
+EOF
+        ${SSH} core@${vm_ip} "sudo bash -c 'cat > /etc/yum.repos.d/local.repo << EOF
+[local]
+name=Local repo
+baseurl=file:///home/core/packages/
+enabled=1
+gpgcheck=0
+EOF'"
         # Install these rpms to VM
-        ${SSH} core@${vm_ip} -- 'sudo rpm-ostree install /home/core/packages/*.rpm'
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install $ADDITIONAL_PACKAGES"
 
-        # Remove the packages from VM
-        ${SSH} core@${vm_ip} -- rm -fr /home/core/packages
+        # Remove the packages and repo from VM
+        ${SSH} core@${vm_ip} -- sudo rm -fr /home/core/packages
+        ${SSH} core@${vm_ip} -- sudo rm -fr /etc/yum.repos.d/local.repo
 
         # Cleanup up packages
         rm -fr ${pkgDir}
     fi
 }
 
-function prepare_cockpit() {
-    local vm_ip=$1
-
-    install_additional_packages ${vm_ip} cockpit-bridge cockpit-ws cockpit-podman
-}
-
 function prepare_hyperV() {
     local vm_ip=$1
 
-    install_additional_packages ${vm_ip} hyperv-daemons
+    ADDITIONAL_PACKAGES+=" hyperv-daemons"
 
     # Adding Hyper-V vsock support
     ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
             echo 'CONST{virt}=="microsoft", RUN{builtin}+="kmod load hv_sock"' > /etc/udev/rules.d/90-crc-vsock.rules
 EOF
 }
+
 function prepare_qemu_guest_agent() {
     local vm_ip=$1
 
@@ -385,3 +393,36 @@ function remove_pull_secret_from_disk() {
     esac
 }
 
+function copy_systemd_units() {
+    case "${BUNDLE_TYPE}" in
+        "snc"|"okd")
+            export APPS_DOMAIN="apps-crc.testing"
+            envsubst '${APPS_DOMAIN}' < systemd/dnsmasq.sh.template > systemd/crc-dnsmasq.sh
+            unset APPS_DOMAIN
+            ;;
+        "microshift")
+            export APPS_DOMAIN="apps.crc.testing"
+            envsubst '${APPS_DOMAIN}' < systemd/dnsmasq.sh.template > systemd/crc-dnsmasq.sh
+            unset APPS_DOMAIN
+            ;;
+    esac
+
+    ${SSH} core@${VM_IP} -- 'mkdir -p /home/core/systemd-units && mkdir -p /home/core/systemd-scripts'
+    ${SCP} systemd/crc-*.service core@${VM_IP}:/home/core/systemd-units/
+    ${SCP} systemd/crc-*.path core@${VM_IP}:/home/core/systemd-units/
+    ${SCP} systemd/crc-*.sh core@${VM_IP}:/home/core/systemd-scripts/
+
+    case "${BUNDLE_TYPE}" in
+        "snc"|"okd")
+            ${SCP} systemd/ocp-*.service core@${VM_IP}:/home/core/systemd-units/
+            ${SCP} systemd/ocp-*.path core@${VM_IP}:/home/core/systemd-units/
+            ${SCP} systemd/ocp-*.sh core@${VM_IP}:/home/core/systemd-scripts/
+            ;;
+    esac
+
+    ${SSH} core@${VM_IP} -- 'sudo cp /home/core/systemd-units/* /etc/systemd/system/ && sudo cp /home/core/systemd-scripts/* /usr/local/bin/'
+    ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-scripts/ | xargs -t -I % sudo chmod +x /usr/local/bin/%'
+    ${SSH} core@${VM_IP} -- 'sudo restorecon -rv /usr/local/bin'
+    ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-units/ | xargs sudo systemctl enable'
+    ${SSH} core@${VM_IP} -- 'rm -rf /home/core/systemd-units /home/core/systemd-scripts'
+}

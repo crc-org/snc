@@ -31,7 +31,7 @@ BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 USE_PATCHED_RELEASE_IMAGE=${SNC_USE_PATCHED_RELEASE_IMAGE:-disabled}
 HTPASSWD_FILE='users.htpasswd'
@@ -212,11 +212,11 @@ retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"
 # Set default route for registry CRD from false to true.
 retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
 
-# Add a tip in the login page
-secret_template=$(retry ${OC} get secrets -n openshift-authentication v4-0-config-system-ocp-branding-template -o json)
-${JQ} -r '.data["login.html"]' <(echo "${secret_template}") | base64 -d > login.html
-${PATCH} login.html < login.html.patch
-retry ${OC} create secret generic login-template --from-file=login.html -n openshift-config
+## Add a tip in the login page
+#secret_template=$(retry ${OC} get secrets -n openshift-authentication v4-0-config-system-ocp-branding-template -o json)
+#${JQ} -r '.data["login.html"]' <(echo "${secret_template}") | base64 -d > login.html
+#${PATCH} login.html < login.html.patch
+#retry ${OC} create secret generic login-template --from-file=login.html -n openshift-config
 
 # Generate the htpasswd file to have admin and developer user
 generate_htpasswd_file ${INSTALL_DIR} ${HTPASSWD_FILE}

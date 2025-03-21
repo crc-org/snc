@@ -16,6 +16,7 @@ INSTALL_DIR=${1:-crc-tmp-install-data}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
 BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
+ADDITIONAL_PACKAGES="cloud-init"
 
 case ${BUNDLE_TYPE} in
     microshift)
@@ -137,6 +138,10 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
 fi
 
+copy_systemd_units
+
+# Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
+install_additional_packages ${VM_IP}
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Delete all the pods except openshift-multus (which have file for crio cni config)
