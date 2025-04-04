@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit monitoring the ssh authorized_keys path
+Wants=kubelet.service
+After=kubelet.service
+
+[Path]
+PathExists=/opt/crc/id_rsa.pub
+TriggerLimitIntervalSec=1min
+TriggerLimitBurst=0
+
+[Install]
+WantedBy=multi-user.target

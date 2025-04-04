@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit for monitoring the external ip path
+Wants=kubelet.service
+After=kubelet.service
+
+[Path]
+PathExists=/opt/crc/eip
+TriggerLimitIntervalSec=1min
+TriggerLimitBurst=0
+
+[Install]
+WantedBy=multi-user.target

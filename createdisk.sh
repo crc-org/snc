@@ -140,6 +140,8 @@ fi
 
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
 install_additional_packages ${VM_IP}
+copy_systemd_units
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Enable cloud-init service
@@ -161,6 +163,14 @@ EOF
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
+
+# Disable cloud-init network config
+${SSH} core@${VM_IP} 'sudo bash -x -s' << EOF
+cat << EFF > /etc/cloud/cloud.cfg.d/05_disable-network.cfg
+network:
+    config: disabled
+EFF
+EOF
 
 # Cleanup cloud-init config
 ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"

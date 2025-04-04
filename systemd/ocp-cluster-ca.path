@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit monitoring custom-ca.crt file path
+Wants=kubelet.service
+After=kubelet.service
+
+[Path]
+PathExists=/opt/crc/custom-ca.crt
+TriggerLimitIntervalSec=1min
+TriggerLimitBurst=0
+
+[Install]
+WantedBy=multi-user.target
