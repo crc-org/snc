@@ -147,10 +147,6 @@ cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
 # Add dummy network unit file
 cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
-# Add unit file for creating /Users and symlink it to /var/Users
-# It is used for mounting shared directory on Mac
-# https://github.com/coreos/rpm-ostree/issues/337
-cp 99_master-create-users-symlink.yaml $INSTALL_DIR/openshift/
 # Add kubelet config resource to make change in kubelet
 DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-sizing-enabled-env.yaml.in > $INSTALL_DIR/openshift/99_master-node-sizing-enabled-env.yaml
 # Add codeReadyContainer as invoker to identify it with telemeter
