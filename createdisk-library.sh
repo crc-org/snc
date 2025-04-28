@@ -392,3 +392,17 @@ function remove_pull_secret_from_disk() {
     esac
 }
 
+function compile_and_extract_9pfs() {
+    ${SCP} -r 9pfs core@${VM_IP}:/home/core/
+    ${SSH} core@${VM_IP} 'sudo bash -e -x -s' <<EOF
+        cd 9pfs
+        podman build -t 9pfs-builder .
+        podman create --name extract-temp 9pfs-builder
+        podman cp extract-temp:/src/9pfs/9pfs ./9pfs
+        podman rm extract-temp
+        sudo cp 9pfs /usr/local/bin
+        cd ..
+        rm -rf 9pfs
+        podman rmi 9pfs-builder:latest registry.access.redhat.com/ubi9:9.5
+EOF
+}
