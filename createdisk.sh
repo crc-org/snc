@@ -200,6 +200,12 @@ ${SSH} core@${VM_IP} -- 'sudo sed -i "s/^preserve_hostname: false$/preserve_host
 # Cleanup cloud-init config
 ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"
 
+if [ "${ARCH}" == "x86_64" ] && [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
+    # compile 9pfs binary using UBI image and extract the binary
+    # so that it can be used to set up a 9p filesystem on Windows
+    compile_and_extract_9pfs
+fi
+
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
 
