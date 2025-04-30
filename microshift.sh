@@ -15,7 +15,7 @@ SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-2048}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-2}
 CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-4.18}
 MIRROR_REPO=${MIRROR_REPO:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/microshift/ocp-dev-preview/latest-${MICROSHIFT_VERSION}/el9/os}
 
