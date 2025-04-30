@@ -37,7 +37,7 @@ function check_pull_secret() {
 check_pull_secret
 
 HOST_ARCH=$(uname -m)
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp-dev-preview}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$HOST_ARCH/clients/ocp}
 
 # If user defined the OPENSHIFT_VERSION environment variable then use it.
 if test -n "${OPENSHIFT_VERSION-}"; then
