@@ -100,6 +100,7 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   cat > /etc/containers/systemd/gvisor-tap-vsock.container <<EOF1
 [Unit]
 Description=gvisor-tap-vsock
+Before=nodeip-configuration.service
 
 [Container]
 Image=quay.io/crcont/gvisor-tap-vsock:latest
