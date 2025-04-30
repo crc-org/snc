@@ -96,10 +96,20 @@ fi
 
 # Add gvisor-tap-vsock service
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  podman create --name=gvisor-tap-vsock --privileged --net=host -v /etc/resolv.conf:/etc/resolv.conf -it quay.io/crcont/gvisor-tap-vsock:latest
-  podman generate systemd --restart-policy=no gvisor-tap-vsock > /etc/systemd/system/gvisor-tap-vsock.service
-  systemctl daemon-reload
-  systemctl enable gvisor-tap-vsock.service
+  podman pull quay.io/crcont/gvisor-tap-vsock:latest
+  cat > /etc/containers/systemd/gvisor-tap-vsock.container <<EOF1
+[Unit]
+Description=gvisor-tap-vsock
+
+[Container]
+Image=quay.io/crcont/gvisor-tap-vsock:latest
+Network=host
+PodmanArgs=--interactive --privileged --tty
+Volume=/etc/resolv.conf:/etc/resolv.conf
+
+[Install]
+WantedBy=default.target
+EOF1
 EOF
 
 # Add dummy crio-wipe service to instance
