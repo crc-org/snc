@@ -1,0 +1,12 @@
+[Unit]
+Description=CRC Unit setting nip.io domain for cluster
+After=kubelet.service ocp-clusterid.service ocp-cluster-ca.service
+
+[Service]
+Type=oneshot
+Restart=on-failure
+EnvironmentFile=/etc/systemd/system/crc-env
+ExecStart=/usr/local/bin/ocp-custom-domain.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=CRC Unit patching the MachineConfig to add new ssh key
+After=kubelet.service
+StartLimitIntervalSec=1min
+StartLimitBurst=1
+
+[Service]
+Type=oneshot
+Restart=on-failure
+ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

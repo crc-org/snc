@@ -1,0 +1,11 @@
+[Unit]
+Description=CRC Unit setting custom cluster ca
+After=kubelet.service ocp-clusterid.service
+
+[Service]
+Type=oneshot
+Restart=on-failure
+ExecStart=/usr/local/bin/ocp-cluster-ca.sh
+
+[Install]
+WantedBy=multi-user.target
