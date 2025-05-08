@@ -50,7 +50,7 @@ wait_for_ssh ${VM_NAME} ${VM_IP}
 
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Disable kubelet service
-    ${SSH} core@${VM_IP} -- sudo systemctl disable kubelet
+    ${SSH} core@${VM_IP} -- sudo systemctl disable kubelet nodeip-configuration
     
     # Stop the kubelet service so it will not reprovision the pods
     ${SSH} core@${VM_IP} -- sudo systemctl stop kubelet
@@ -100,7 +100,6 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   cat > /etc/containers/systemd/gvisor-tap-vsock.container <<EOF1
 [Unit]
 Description=gvisor-tap-vsock
-Before=nodeip-configuration.service
 
 [Container]
 Image=quay.io/crcont/gvisor-tap-vsock:latest
