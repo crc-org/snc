@@ -16,7 +16,7 @@ INSTALL_DIR=${1:-crc-tmp-install-data}
 OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bundle-info.json)
 BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
-ADDITIONAL_PACKAGES="cloud-init"
+ADDITIONAL_PACKAGES="cloud-init gvisor-tap-vsock-gvforwarder"
 
 case ${BUNDLE_TYPE} in
     microshift)
@@ -104,9 +104,6 @@ EOF
 
 # Add gvisor-tap-vsock service
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  podman create --name=gvisor-tap-vsock quay.io/crcont/gvisor-tap-vsock:latest
-  podman cp gvisor-tap-vsock:/vm /usr/local/bin/gvforwarder
-  podman rm gvisor-tap-vsock
   tee /etc/systemd/system/gv-user-network@.service <<TEE
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
@@ -118,7 +115,7 @@ After=sys-devices-virtual-net-%i.device
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
-ExecStart=/usr/local/bin/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
+ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]
 WantedBy=multi-user.target
