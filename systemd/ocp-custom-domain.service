@@ -6,6 +6,7 @@ After=kubelet.service ocp-clusterid.service ocp-cluster-ca.service
 Type=oneshot
 Restart=on-failure
 EnvironmentFile=/etc/systemd/system/crc-env
+ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-custom-domain.sh
 
 [Install]
