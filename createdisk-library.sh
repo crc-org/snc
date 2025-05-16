@@ -422,7 +422,6 @@ function copy_systemd_units() {
     ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-scripts/ | xargs -t -I % sudo chmod +x /usr/local/bin/%'
     ${SSH} core@${VM_IP} -- 'sudo restorecon -rv /usr/local/bin'
 
-    # enable only the .path units
     ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-units/*.service | xargs basename -a | xargs sudo systemctl enable'
 
     ${SSH} core@${VM_IP} -- 'rm -rf /home/core/systemd-units /home/core/systemd-scripts'
