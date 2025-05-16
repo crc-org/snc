@@ -10,6 +10,7 @@ Type=oneshot
 Restart=on-failure
 EnvironmentFile=/etc/systemd/system/crc-env
 ExecStartPre=/bin/systemctl start ovs-configuration.service
+ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-dnsmasq.sh
 ExecStartPost=/usr/bin/systemctl restart NetworkManager.service
 ExecStartPost=/usr/bin/systemctl restart dnsmasq.service
