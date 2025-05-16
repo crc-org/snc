@@ -5,6 +5,7 @@ After=kubelet.service ocp-clusterid.service
 [Service]
 Type=oneshot
 Restart=on-failure
+ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-cluster-ca.sh
 
 [Install]
