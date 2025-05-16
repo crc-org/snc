@@ -7,6 +7,7 @@ StartLimitBurst=1
 [Service]
 Type=oneshot
 Restart=on-failure
+ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
 RemainAfterExit=true
 
