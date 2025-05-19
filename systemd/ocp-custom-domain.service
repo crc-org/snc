@@ -3,6 +3,7 @@ Description=CRC Unit setting nip.io domain for cluster
 After=crc-wait-apiserver-up.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
+ConditionPathExists=!/opt/crc/%n.done
 
 [Service]
 Type=oneshot
@@ -11,6 +12,7 @@ RestartSec=40
 EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-custom-domain.sh
+ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
 WantedBy=multi-user.target
