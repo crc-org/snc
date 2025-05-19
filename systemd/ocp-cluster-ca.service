@@ -3,6 +3,7 @@ Description=CRC Unit setting custom cluster ca
 After=crc-wait-apiserver-up.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
+ConditionPathExists=!/opt/crc/%n.done
 
 [Service]
 Type=oneshot
@@ -10,6 +11,7 @@ Restart=on-failure
 RestartSec=40
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-cluster-ca.sh
+ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
 WantedBy=multi-user.target
