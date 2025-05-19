@@ -64,7 +64,7 @@ popd
 
 crc config set bundle crc_libvirt_*.crcbundle
 crc setup
-crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret
+crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret --log-level debug
 
 mkdir -p crc-tmp-install-data/test-artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
