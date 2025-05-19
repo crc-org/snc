@@ -25,7 +25,7 @@ popd
 crc config set bundle crc_microshift_libvirt_*.crcbundle
 crc config set preset microshift
 crc setup
-crc start -p "${HOME}"/pull-secret
+crc start -p "${HOME}"/pull-secret --log-level debug
 
 rc=$?
 echo "${rc}" > /tmp/test-return
