@@ -87,7 +87,7 @@ function patch_and_push_image() {
     version=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.version')
     release=$(${OC} image info -a ${OPENSHIFT_PULL_SECRET_PATH} ${image} -ojson | jq -r '.config.config.Labels.release')
     # If brew build already exist for the release don't rebuild it again
-    if ! brew buildinfo crc-${image_name}-container-${version}-${release}; then
+    if ! brew buildinfo crc-${image_name}-container-${version}-${release} | grep "State: COMPLETE" ; then
         rhpkg clone containers/crc-${image_name}
         pushd crc-${image_name}
         git remote add upstream https://pkgs.devel.redhat.com/git/containers/ose-${image_name}
