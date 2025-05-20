@@ -98,7 +98,7 @@ fi
 # this mac address is used to allocate a specific IP to the VM
 # when tap device is in use.
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  nmcli connection add type tun ifname tap0 con-name tap0 mode tap autoconnect yes 802-3-ethernet.cloned-mac-address 5A:94:EF:E4:0C:EE
+  nmcli connection add type tun ifname tap0 con-name tap0 mode tap autoconnect yes 802-3-ethernet.cloned-mac-address 5A:94:EF:E4:0C:EE ipv6.method "disabled"
 EOF
 
 
