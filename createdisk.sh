@@ -107,14 +107,13 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
   tee /etc/systemd/system/gv-user-network@.service <<TEE
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
-After=NetworkManager.service
-BindsTo=sys-devices-virtual-net-%i.device
 After=sys-devices-virtual-net-%i.device
 
 [Service]
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
+ExecStartPre=/bin/sh -c 'for i in {1..10}; do ip link show "\\\$1" && exit 0; sleep 1; done; exit 1' _ %i
 ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]
