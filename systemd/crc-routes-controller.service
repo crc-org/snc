@@ -5,7 +5,7 @@ After=sys-class-net-tap0.device network-online.target kubelet.service gvisor-tap
 
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/systemd/system/crc-env
+EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-routes-controller.sh
 
