@@ -104,25 +104,24 @@ EOF
 
 # Add gvisor-tap-vsock service
 ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-  tee /etc/systemd/system/gv-user-network@.service <<TEE
+  tee /etc/systemd/system/gvisor-tap-vsock.service <<TEE
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
 After=NetworkManager.service
-BindsTo=sys-devices-virtual-net-%i.device
-After=sys-devices-virtual-net-%i.device
 
 [Service]
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
-ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
+ExecStartPre=/bin/sh -c 'for i in {1..10}; do ip link show tap0 && exit 0; sleep 1; done; exit 1'
+ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface tap0 -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]
 WantedBy=multi-user.target
 
 TEE
   systemctl daemon-reload
-  systemctl enable gv-user-network@tap0.service
+  systemctl enable gvisor-tap-vsock.service
 EOF
 
 # Add dummy crio-wipe service to instance
@@ -163,8 +162,6 @@ fi
 
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
 install_additional_packages ${VM_IP}
-copy_systemd_units
-
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Enable cloud-init service
@@ -186,17 +183,6 @@ EOF
 fi
 
 podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
-
-# Disable cloud-init network config
-${SSH} core@${VM_IP} 'sudo bash -x -s' << EOF
-cat << EFF > /etc/cloud/cloud.cfg.d/05_disable-network.cfg
-network:
-    config: disabled
-EFF
-EOF
-
-# Disable cloud-init hostname update
-${SSH} core@${VM_IP} -- 'sudo sed -i "s/^preserve_hostname: false$/preserve_hostname: true/" /etc/cloud/cloud.cfg'
 
 # Cleanup cloud-init config
 ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"

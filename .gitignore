@@ -11,4 +11,3 @@ podman-remote/
 .sw[a-p]
 crc-cluster-kube-apiserver-operator
 crc-cluster-kube-controller-manager-operator
-systemd/crc-dnsmasq.sh
