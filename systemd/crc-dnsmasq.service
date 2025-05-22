@@ -8,7 +8,7 @@ StartLimitIntervalSec=30
 [Service]
 Type=oneshot
 Restart=on-failure
-EnvironmentFile=/etc/systemd/system/crc-env
+EnvironmentFile=-/etc/sysconfig/crc-env
 ExecStartPre=/bin/systemctl start ovs-configuration.service
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-dnsmasq.sh
