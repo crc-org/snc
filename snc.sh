@@ -160,8 +160,20 @@ cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' 
 # Download the image
 # https://docs.openshift.com/container-platform/latest/installing/installing_sno/install-sno-installing-sno.html#install-sno-installing-sno-manually
 # (Step retrieve the RHCOS iso url)
-ISO_URL=$(OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} coreos print-stream-json | grep location | grep $ARCH | grep iso | cut -d\" -f4)
-curl -L ${ISO_URL} -o ${INSTALL_DIR}/rhcos-live.iso
+ISO_URL=$(OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} coreos print-stream-json | jq -r ".architectures.${ARCH}.artifacts.metal.formats.iso.disk.location")
+ISO_CACHE_DIR=${ISO_CACHE_DIR:-$INSTALL_DIR}
+if [[ "$ISO_CACHE_DIR" != "$INSTALL_DIR" ]]; then
+    mkdir -p "$ISO_CACHE_DIR"
+
+    ISO_SHA256=$(OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} coreos print-stream-json | jq -r ".architectures.${ARCH}.artifacts.metal.formats.iso.disk.sha256")
+    if [[ ! -f "${ISO_CACHE_DIR}/$(basename $ISO_URL)" || "${ISO_SHA256}" != $(sha256sum "${ISO_CACHE_DIR}/$(basename $ISO_URL)" | cut -d' ' -f1) ]]; then
+        curl -L ${ISO_URL} -o "${ISO_CACHE_DIR}/$(basename $ISO_URL)"
+    fi
+
+    cp "${ISO_CACHE_DIR}/$(basename $ISO_URL)" "${INSTALL_DIR}/rhcos-live.iso"
+else
+    curl -L ${ISO_URL} -o ${INSTALL_DIR}/rhcos-live.iso
+fi
 
 podman run --privileged --pull always --rm \
       -v /dev:/dev -v /run/udev:/run/udev -v $PWD:/data \
