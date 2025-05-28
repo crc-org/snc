@@ -1,10 +1,10 @@
 [Unit]
 Description=CRC Unit starting routes controller
-Wants=network-online.target gvisor-tap-vsock.service sys-class-net-tap0.device
-After=sys-class-net-tap0.device network-online.target kubelet.service gvisor-tap-vsock.service
+After=kubelet.service
 
 [Service]
 Type=oneshot
+Restart=on-failure
 EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-routes-controller.sh
