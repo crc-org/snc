@@ -31,7 +31,7 @@ BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
 SCP="scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
-MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
+MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp}
 CERT_ROTATION=${SNC_DISABLE_CERT_ROTATION:-enabled}
 USE_PATCHED_RELEASE_IMAGE=${SNC_USE_PATCHED_RELEASE_IMAGE:-disabled}
 HTPASSWD_FILE='users.htpasswd'
@@ -175,6 +175,12 @@ create_vm rhcos-live.iso
 
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS} || ${OC} adm must-gather --dest-dir ${INSTALL_DIR}
 
+# Steps from https://www.redhat.com/en/blog/enabling-openshift-4-clusters-to-stop-and-resume-cluster-vms
+# which provide details how to rotate certs without wait for 24h
+retry ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
+retry ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
+retry ${OC} adm wait-for-stable-cluster
+
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
     renew_certificates
@@ -182,6 +188,10 @@ fi
 
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+
+# Remove the bootstrap-cred-manager daemonset and wait till it get deleted
+retry ${OC} delete daemonset.apps/kubelet-bootstrap-cred-manager -n openshift-machine-config-operator
+retry ${OC} wait --for=delete daemonset.apps/kubelet-bootstrap-cred-manager --timeout=60s -n openshift-machine-config-operator
 
 # Set the VM static hostname to crc-xxxxx-master-0 instead of localhost.localdomain
 HOSTNAME=$(${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} hostnamectl status --transient)
