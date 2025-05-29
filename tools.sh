@@ -195,6 +195,11 @@ function create_libvirt_resources {
 function create_vm {
     local iso=$1
 
+    bootOption=""
+    if ${BUNDLE_TYPE} != "okd"; then
+        bootOption="--boot uefi"
+    fi
+
     sudo virt-install \
         --name ${SNC_PRODUCT_NAME} \
         --vcpus ${SNC_CLUSTER_CPUS} \
@@ -207,7 +212,7 @@ function create_vm {
         --cdrom /var/lib/libvirt/${SNC_PRODUCT_NAME}/${iso} \
         --events on_reboot=restart \
         --autoconsole none \
-        --boot uefi \
+        ${bootOption} \
         --wait
 }
 
