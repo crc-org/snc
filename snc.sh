@@ -271,7 +271,11 @@ wait_till_cluster_stable
 # Unsetting KUBECONFIG is required because it has default `system:admin` user which doesn't able to create
 # token to login to registry and kubeadmin user is required for that.
 unset KUBECONFIG
-RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=rhel-coreos)
+if [[ ${BUNDLE_TYPE} == "okd" ]]; then
+     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=stream-coreos)
+else
+     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=rhel-coreos)
+fi
 cat << EOF > ${INSTALL_DIR}/Containerfile
 FROM scratch
 RUN ln -sf var/Users /Users && mkdir /var/Users
