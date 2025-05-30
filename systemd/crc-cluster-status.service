@@ -1,7 +1,9 @@
 [Unit]
 Description=CRC Unit checking if cluster is ready
-After=kubelet.service ocp-clusterid.service ocp-cluster-ca.service ocp-custom-domain.service
-After=crc-pullsecret.service
+After=crc-wait-apiserver-up.service crc-pullsecret.service
+After=ocp-mco-sshkey.service ocp-cluster-ca.service
+After=ocp-custom-domain.service ocp-userpasswords.service
+After=ocp-clusterid.service
 
 [Service]
 Type=oneshot
