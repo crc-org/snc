@@ -1,6 +1,6 @@
 [Unit]
 Description=CRC Unit starting routes controller
-After=kubelet.service
+After=crc-wait-apiserver-up.service
 
 [Service]
 Type=oneshot
