@@ -43,14 +43,7 @@ function download_oc() {
     fi
     if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
         mkdir -p openshift-clients/windows
-        if [ "${BUNDLE_TYPE}" == "okd" ]; then
-            # Extract oc client for windows until it is fixed on scos side and part of artifacts like mac and Linux
-            # https://github.com/okd-project/okd-scos/issues/17
-            ${OC} adm release extract --tools --command-os windows --to openshift-clients/windows  quay.io/okd/scos-release:${OPENSHIFT_RELEASE_VERSION}
-            mv openshift-clients/windows/*.zip openshift-clients/windows/oc.zip
-        else
-            curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
-        fi
+        curl -L "${MIRROR}/${OPENSHIFT_RELEASE_VERSION}/openshift-client-windows-${OPENSHIFT_RELEASE_VERSION}.zip" > openshift-clients/windows/oc.zip
         ${UNZIP} -o -d openshift-clients/windows/ openshift-clients/windows/oc.zip
     fi
 }
