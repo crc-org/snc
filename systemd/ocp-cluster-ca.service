@@ -1,6 +1,6 @@
 [Unit]
 Description=CRC Unit setting custom cluster ca
-After=kubelet.service ocp-clusterid.service
+After=crc-wait-apiserver-up.service
 
 [Service]
 Type=oneshot
