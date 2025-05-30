@@ -1,6 +1,6 @@
 [Unit]
 Description=CRC Unit setting nip.io domain for cluster
-After=kubelet.service ocp-clusterid.service ocp-cluster-ca.service
+After=crc-wait-apiserver-up.service
 
 [Service]
 Type=oneshot

@@ -1,6 +1,6 @@
 [Unit]
 Description=CRC Unit setting random cluster ID
-After=kubelet.service
+After=crc-wait-apiserver-up.service
 
 [Service]
 Type=oneshot

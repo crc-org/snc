@@ -1,6 +1,6 @@
 [Unit]
 Description=CRC Unit patching the MachineConfig to add new ssh key
-After=kubelet.service
+After=crc-wait-apiserver-up.service
 StartLimitIntervalSec=1min
 StartLimitBurst=1
 
