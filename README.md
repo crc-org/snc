@@ -37,6 +37,9 @@ EOF
 export OKD_VERSION=4.5.0-0.okd-2020-08-12-020541
 export OPENSHIFT_PULL_SECRET_PATH="/tmp/pull_secret.json"
 
+# Optionally cache the iso somewhere
+export ISO_CACHE_DIR=$HOME/.local/share/libvirt/images
+
 # Build the Single Node cluster
 ./snc.sh
 ```
