@@ -15,11 +15,8 @@ custom_ca_path=/opt/crc/custom-ca.crt
 external_ip_path=/opt/crc/eip
 
 if [ ! -f ${custom_ca_path} ]; then
-    echo "Cert bundle /opt/crc/custom-ca.crt not found, generating one..."
-    # generate a ca bundle and use it, overwrite custom_ca_path
-    CA_SUBJ="/OU=openshift/CN=admin-kubeconfig-signer-custom"
-    openssl genrsa -out /tmp/custom-ca.key 4096
-    openssl req -x509 -new -nodes -key /tmp/custom-ca.key -sha256 -days 365 -out "${custom_ca_path}" -subj "${CA_SUBJ}"
+    echo "Cert bundle /opt/crc/custom-ca.crt not found, exiting..."
+    exit 1
 fi
 
 if [ ! -f /opt/crc/pass_kubeadmin ]; then
@@ -33,8 +30,6 @@ oc patch apiserver cluster --type=merge -p '{"spec": {"clientCA": {"name": "clie
 oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${custom_ca_path} \
     --dry-run=client -o yaml | oc replace -f -
 
-rm -f /opt/crc/custom-ca.crt
-
 # create CSR
 openssl req -new -newkey rsa:4096 -nodes -keyout /tmp/newauth-access.key -out /tmp/newauth-access.csr -subj "/CN=system:admin"
 
@@ -47,7 +42,7 @@ spec:
   signerName: kubernetes.io/kube-apiserver-client
   groups:
   - system:authenticated
-  request: $(cat /tmp/newauth-access.csr | base64 -w0)
+  request: $(base64 -w0 < /tmp/newauth-access.csr)
   usages:
   - client auth
 EOF

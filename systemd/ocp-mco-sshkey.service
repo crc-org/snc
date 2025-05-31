@@ -1,12 +1,13 @@
 [Unit]
 Description=CRC Unit patching the MachineConfig to add new ssh key
 After=crc-wait-apiserver-up.service
-StartLimitIntervalSec=1min
-StartLimitBurst=1
+StartLimitIntervalSec=450
+StartLimitBurst=10
 
 [Service]
 Type=oneshot
 Restart=on-failure
+RestartSec=40
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
 RemainAfterExit=true
