@@ -1,5 +1,6 @@
 [Unit]
 Description=CRC Unit to grow the root filesystem
+Before=crc-dnsmasq.service
 
 [Service]
 Type=oneshot
