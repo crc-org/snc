@@ -15,5 +15,8 @@ fi
 echo "Updating the public key resource for machine config operator"
 pub_key=$(tr -d '\n\r' < ${pub_key_path})
 wait_for_resource machineconfig
-oc patch machineconfig 99-master-ssh -p "{\"spec\": {\"config\": {\"passwd\": {\"users\": [{\"name\": \"core\", \"sshAuthorizedKeys\": [\"${pub_key}\"]}]}}}}" --type merge
-[ "$?" != 0 ] && echo "failed to update public key to machine config operator" && exit 1
+if ! oc patch machineconfig 99-master-ssh -p "{\"spec\": {\"config\": {\"passwd\": {\"users\": [{\"name\": \"core\", \"sshAuthorizedKeys\": [\"${pub_key}\"]}]}}}}" --type merge;
+then
+    echo "failed to update public key to machine config operator"
+    exit 1
+fi
