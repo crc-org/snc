@@ -1,10 +1,13 @@
 [Unit]
 Description=CRC Unit starting routes controller
 After=crc-wait-apiserver-up.service
+StartLimitIntervalSec=450
+StartLimitBurst=10
 
 [Service]
 Type=oneshot
 Restart=on-failure
+RestartSec=40
 EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-routes-controller.sh
