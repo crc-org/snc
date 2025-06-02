@@ -4,10 +4,13 @@ After=crc-wait-apiserver-up.service crc-pullsecret.service
 After=ocp-mco-sshkey.service ocp-cluster-ca.service
 After=ocp-custom-domain.service ocp-userpasswords.service
 After=ocp-clusterid.service
+StartLimitIntervalSec=450
+StartLimitBurst=10
 
 [Service]
 Type=oneshot
 Restart=on-failure
+RestartSec=40
 ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-cluster-status.sh
 RemainAfterExit=true
