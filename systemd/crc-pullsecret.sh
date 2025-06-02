@@ -14,7 +14,7 @@ existingPs=$(echo "${existingPsB64}" | base64 -d)
 echo "${existingPs}" | jq -e '.auths'
 
 if [[ $? != 0 ]]; then
-    pullSecretB64=$(cat /opt/crc/pull-secret | base64 -w0)
+    pullSecretB64=$(base64 -w0 < /opt/crc/pull-secret)
     oc patch secret pull-secret -n openshift-config --type merge -p "{\"data\":{\".dockerconfigjson\":\"${pullSecretB64}\"}}"
 fi
 
