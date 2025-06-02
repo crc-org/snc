@@ -33,8 +33,6 @@ oc patch apiserver cluster --type=merge -p '{"spec": {"clientCA": {"name": "clie
 oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${custom_ca_path} \
     --dry-run=client -o yaml | oc replace -f -
 
-rm -f /opt/crc/custom-ca.crt
-
 # create CSR
 openssl req -new -newkey rsa:4096 -nodes -keyout /tmp/newauth-access.key -out /tmp/newauth-access.csr -subj "/CN=system:admin"
 
