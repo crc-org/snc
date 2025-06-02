@@ -11,73 +11,76 @@ export KUBECONFIG="/opt/kubeconfig"
 
 wait_for_resource configmap
 
-custom_ca_path=/opt/crc/custom-ca.crt
 external_ip_path=/opt/crc/eip
-
-if [ ! -f ${custom_ca_path} ]; then
-    echo "Cert bundle /opt/crc/custom-ca.crt not found, generating one..."
-    # generate a ca bundle and use it, overwrite custom_ca_path
-    CA_SUBJ="/OU=openshift/CN=admin-kubeconfig-signer-custom"
-    openssl genrsa -out /tmp/custom-ca.key 4096
-    openssl req -x509 -new -nodes -key /tmp/custom-ca.key -sha256 -days 365 -out "${custom_ca_path}" -subj "${CA_SUBJ}"
-fi
 
 if [ ! -f /opt/crc/pass_kubeadmin ]; then
     echo "kubeadmin password file not found"
     exit 1
 fi
 
+if oc get configmap client-ca-custom -n openshift-config; then
+    echo "API Server Client CA already rotated..."
+    exit 0
+fi
+
+# generate CA
+CA_FILE_PATH="/tmp/custom-ca.crt"
+CA_KEY_FILE_PATH="/tmp/custom-ca.key"
+CLIENT_CA_FILE_PATH="/tmp/client-ca.crt"
+CLIENT_CA_KEY_FILE_PATH="/tmp/client-ca.key"
+CLIENT_CSR_FILE_PATH="/tmp/client-csr.csr"
+CA_SUBJ="/OU=openshift/CN=admin-kubeconfig-signer-custom"
+CLIENT_SUBJ="/O=system:masters/CN=system:admin"
+VALIDITY=365
 PASS_KUBEADMIN="$(cat /opt/crc/pass_kubeadmin)"
-oc create configmap client-ca-custom -n openshift-config --from-file=ca-bundle.crt=${custom_ca_path}
-oc patch apiserver cluster --type=merge -p '{"spec": {"clientCA": {"name": "client-ca-custom"}}}'
-oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${custom_ca_path} \
-    --dry-run=client -o yaml | oc replace -f -
 
+# generate the CA private key
+openssl genrsa -out ${CA_KEY_FILE_PATH} 4096
+# Create the CA certificate
+openssl req -x509 -new -nodes -key ${CA_KEY_FILE_PATH} -sha256 -days $VALIDITY -out ${CA_FILE_PATH} -subj "${CA_SUBJ}"
 # create CSR
-openssl req -new -newkey rsa:4096 -nodes -keyout /tmp/newauth-access.key -out /tmp/newauth-access.csr -subj "/CN=system:admin"
+openssl req -new -newkey rsa:4096 -nodes -keyout ${CLIENT_CA_KEY_FILE_PATH} -out ${CLIENT_CSR_FILE_PATH} -subj "${CLIENT_SUBJ}"
+# sign the CSR with above CA
+openssl x509 -extfile <(printf "extendedKeyUsage = clientAuth") -req -in ${CLIENT_CSR_FILE_PATH} -CA ${CA_FILE_PATH} \
+    -CAkey ${CA_KEY_FILE_PATH} -CAcreateserial -out ${CLIENT_CA_FILE_PATH} -days $VALIDITY -sha256
 
-cat << EOF >> /tmp/newauth-access-csr.yaml
-apiVersion: certificates.k8s.io/v1
-kind: CertificateSigningRequest
-metadata:
-  name: newauth-access
-spec:
-  signerName: kubernetes.io/kube-apiserver-client
-  groups:
-  - system:authenticated
-  request: $(base64 -w0 < /tmp/newauth-access.csr)
-  usages:
-  - client auth
-EOF
-
-oc create -f /tmp/newauth-access-csr.yaml
-
-until `oc adm certificate approve newauth-access > /dev/null 2>&1`
-do
-    echo "Unable to approve the csr newauth-access"
-    sleep 5
-done
+oc create configmap client-ca-custom -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH}
+oc patch apiserver cluster --type=merge -p '{"spec": {"clientCA": {"name": "client-ca-custom"}}}'
 
 cluster_name=$(oc config view -o jsonpath='{.clusters[0].name}')
 apiserver_url=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
 
 if [ -f "${external_ip_path}" ]; then
-    apiserver_url=api.$(cat "${external_ip_path}").nip.io
+    apiserver_url=https://api.$(cat "${external_ip_path}").nip.io:6443
 fi
 
 updated_kubeconfig_path=/opt/crc/kubeconfig
+rm -rf "${updated_kubeconfig_path}"
 
-oc get csr newauth-access -o jsonpath='{.status.certificate}' | base64 -d > /tmp/newauth-access.crt
-oc config set-credentials system:admin --client-certificate=/tmp/newauth-access.crt --client-key=/tmp/newauth-access.key --embed-certs --kubeconfig="${updated_kubeconfig_path}"
+oc config set-credentials system:admin --client-certificate=${CLIENT_CA_FILE_PATH} --client-key=${CLIENT_CA_KEY_FILE_PATH} \
+    --embed-certs --kubeconfig="${updated_kubeconfig_path}"
 oc config set-context system:admin --cluster="${cluster_name}" --namespace=default --user=system:admin --kubeconfig="${updated_kubeconfig_path}"
-oc get secret localhost-recovery-client-token -n openshift-kube-controller-manager -ojsonpath='{.data.ca\.crt}'| base64 -d > /tmp/bundle-ca.crt
-oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --certificate-authority=/tmp/bundle-ca.crt \
-    --kubeconfig="${updated_kubeconfig_path}" --embed-certs
+oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --insecure-skip-tls-verify=true --kubeconfig="${updated_kubeconfig_path}"
+
+COUNTER=0
+until oc get co --context system:admin --kubeconfig="${updated_kubeconfig_path}";
+do
+    if [ $COUNTER == 30 ]; then
+        echo "Unable to access API server using new client certitificate..."
+        exit 1
+    fi
+    echo "Acess API server with new client cert, try $COUNTER, hang on...."
+    sleep 2
+    ((COUNTER++))
+done
+
+oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH} \
+    --dry-run=client -o yaml | oc replace -f -
 
 echo "Logging in again to update $KUBECONFIG with kubeadmin token"
 COUNTER=0
 MAXIMUM_LOGIN_RETRY=500
-until `oc login --insecure-skip-tls-verify=true -u kubeadmin -p "$PASS_KUBEADMIN" https://api.crc.testing:6443 --kubeconfig /opt/crc/newkubeconfig > /dev/null 2>&1`
+until `oc login --insecure-skip-tls-verify=true -u kubeadmin -p "$PASS_KUBEADMIN" https://api.crc.testing:6443 --kubeconfig "${updated_kubeconfig_path}" > /dev/null 2>&1`
 do
     if [ $COUNTER == $MAXIMUM_LOGIN_RETRY ]; then
         echo "Unable to login to the cluster..., installation failed."
@@ -87,3 +90,8 @@ do
     sleep 5
     ((COUNTER++))
 done
+
+# copy the new kubeconfig to /opt/kubeconfig
+rm -rf /opt/kubeconfig
+cp /opt/crc/kubeconfig /opt/kubeconfig
+chmod 0666 /opt/kubeconfig
