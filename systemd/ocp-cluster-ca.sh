@@ -45,7 +45,7 @@ spec:
   signerName: kubernetes.io/kube-apiserver-client
   groups:
   - system:authenticated
-  request: $(cat /tmp/newauth-access.csr | base64 -w0)
+  request: $(base64 -w0 < /tmp/newauth-access.csr)
   usages:
   - client auth
 EOF
