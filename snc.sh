@@ -69,7 +69,7 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
-    if [[ ! -f "$OPENSHIFT_INSTALL" || $("$OPENSHIFT_INSTALL" version | grep -oP "${OPENSHIFT_INSTALL} \\K\\S+") != "$OPENSHIFT_VERSION" ]]; then
+    if [[ ! -f "$OPENSHIFT_INSTALL" || $("$OPENSHIFT_INSTALL" version | grep -oP "${OPENSHIFT_INSTALL} \\K\\S+") != "$OPENSHIFT_RELEASE_VERSION" ]]; then
         echo "Extracting OpenShift installer binary"
         ${OC} adm release extract -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-install --to .
     fi
