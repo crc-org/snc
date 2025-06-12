@@ -335,6 +335,10 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
+# Create the /var/Users directory so it can become writeable
+# todo: remove it once custom image able to perform it
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /var/Users'
+
 # Check /Users directory is writeable
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
 
