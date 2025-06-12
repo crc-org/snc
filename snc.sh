@@ -283,7 +283,7 @@ EOF
 podman build --from ${RHCOS_IMAGE} --authfile ${OPENSHIFT_PULL_SECRET_PATH} -t default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest --file ${INSTALL_DIR}/Containerfile .
 retry ${OC} login -u kubeadmin -p $(cat ${INSTALL_DIR}/auth/kubeadmin-password) --insecure-skip-tls-verify=true api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:6443
 retry ${OC} registry login -a ${INSTALL_DIR}/reg.json
-podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
+retry podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
 cat << EOF > ${INSTALL_DIR}/custom-os-mc.yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
