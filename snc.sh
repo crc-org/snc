@@ -69,7 +69,7 @@ echo "Setting OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE to ${OPENSHIFT_INSTALL_RE
 # Extract openshift-install binary if not present in current directory
 if test -z ${OPENSHIFT_INSTALL-}; then
     OPENSHIFT_INSTALL=./openshift-install
-    if [[ ! -f "$OPENSHIFT_INSTALL" || $("$OPENSHIFT_INSTALL" version | grep -oP "${OPENSHIFT_INSTALL} \\K\\S+") != "$OPENSHIFT_VERSION" ]]; then
+    if [[ ! -f "$OPENSHIFT_INSTALL" || $("$OPENSHIFT_INSTALL" version | grep -oP "${OPENSHIFT_INSTALL} \\K\\S+") != "$OPENSHIFT_RELEASE_VERSION" ]]; then
         echo "Extracting OpenShift installer binary"
         ${OC} adm release extract -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --command=openshift-install --to .
     fi
@@ -283,7 +283,7 @@ EOF
 podman build --from ${RHCOS_IMAGE} --authfile ${OPENSHIFT_PULL_SECRET_PATH} -t default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest --file ${INSTALL_DIR}/Containerfile .
 retry ${OC} login -u kubeadmin -p $(cat ${INSTALL_DIR}/auth/kubeadmin-password) --insecure-skip-tls-verify=true api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:6443
 retry ${OC} registry login -a ${INSTALL_DIR}/reg.json
-podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
+retry podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
 cat << EOF > ${INSTALL_DIR}/custom-os-mc.yaml
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
@@ -335,4 +335,14 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
+# Create the /var/Users directory so it can become writeable
+# todo: remove it once custom image able to perform it
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /var/Users'
+
+# Check /Users directory is writeable
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
+
+# Remove the image stream of custom image
+retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
+retry ${OC} adm prune images --confirm --registry-url default-route-openshift-image-registry.apps-crc.testing
 
