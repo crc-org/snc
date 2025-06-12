@@ -196,7 +196,7 @@ function create_vm {
     local iso=$1
 
     bootOption=""
-    if ${BUNDLE_TYPE} != "okd"; then
+    if [[ ${BUNDLE_TYPE} != "okd" ]]; then
         bootOption="--boot uefi"
     fi
 
