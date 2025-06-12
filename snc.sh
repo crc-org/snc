@@ -335,4 +335,7 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
+# Remove the image stream of custom image
+retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
+retry ${OC} adm prune images --confirm --registry-url default-route-openshift-image-registry.apps-crc.testing
 
