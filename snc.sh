@@ -266,9 +266,9 @@ wait_till_cluster_stable
 # This section is used to create a custom-os image which have `/Users`
 # For more details check https://github.com/crc-org/snc/issues/1041#issuecomment-2785928976
 # This should be performed before removing pull secret
-# Unsetting KUBECONFIG is required because it has default `system:admin` user which doesn't able to create
+# Set tmp KUBECONFIG because default kubeconfig have `system:admin` user which doesn't able to create
 # token to login to registry and kubeadmin user is required for that.
-unset KUBECONFIG
+export KUBECONFIG=/tmp/kubeconfig
 if [[ ${BUNDLE_TYPE} == "okd" ]]; then
      RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=stream-coreos)
 else
@@ -299,7 +299,6 @@ while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Upda
     echo "Machine config still in updating/degrading state"
 done
 
-export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 mc_before_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
