@@ -217,10 +217,8 @@ retry ${OC} scale --replicas=1 ingresscontroller/default -n openshift-ingress-op
 
 # Set managementState Image Registry Operator configuration from Removed to Managed
 # because https://docs.openshift.com/container-platform/latest/registry/configuring_registry_storage/configuring-registry-storage-baremetal.html#registry-removed_configuring-registry-storage-baremetal
-retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"managementState":"Managed"}}' --type=merge
-
 # Set default route for registry CRD from false to true.
-retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+retry ${OC} patch config.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"managementState":"Managed","defaultRoute":true}}' --type=merge
 
 # Generate the htpasswd file to have admin and developer user
 generate_htpasswd_file ${INSTALL_DIR} ${HTPASSWD_FILE}
