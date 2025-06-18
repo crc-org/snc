@@ -4,7 +4,7 @@ FROM scratch AS builder
 WORKDIR /code-ready/snc
 COPY . .
 
-FROM centos:8
+FROM registry.access.redhat.com/ubi9/ubi
 COPY --from=builder /code-ready/snc /opt/snc
 COPY --from=builder /code-ready/snc/images/openshift-ci/mock-nss.sh /bin/mock-nss.sh
 COPY --from=builder /code-ready/snc/images/openshift-ci/google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
