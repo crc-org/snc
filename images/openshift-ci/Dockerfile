@@ -12,7 +12,7 @@ COPY --from=builder /code-ready/snc/images/openshift-ci/google-cloud-sdk.repo /e
 RUN yum update -y && \
     yum install --setopt=tsflags=nodocs -y \
     gettext \
-    google-cloud-sdk-365.0.1 \
+    google-cloud-cli \
     nss_wrapper \
     openssh-clients && \
     yum clean all && rm -rf /var/cache/yum/*
