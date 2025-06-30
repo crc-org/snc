@@ -16,7 +16,7 @@ SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-2}
 CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
-MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-4.19}
+MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-4.20}
 MIRROR_REPO=${MIRROR_REPO:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/microshift/ocp-dev-preview/latest-${MICROSHIFT_VERSION}/el9/os}
 
 echo "Check if system is registered"
