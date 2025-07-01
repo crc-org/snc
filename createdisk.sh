@@ -157,8 +157,9 @@ gpgcheck=0
 EOF
    ${SCP} /tmp/fedora-updates.repo core@${VM_IP}:/tmp
    ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora-updates.repo /etc/yum.repos.d"
-   ${SSH} core@${VM_IP} -- "sudo rpm-ostree install qemu-user-static-x86"
+   ${SSH} core@${VM_IP} -- "mkdir -p ~/packages && dnf download --downloadonly --downloaddir ~/packages qemu-user-static-x86 --resolve"
    ${SSH} core@${VM_IP} -- "sudo rm -fr /etc/yum.repos.d/fedora-updates.repo"
+   ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
 fi
 
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
