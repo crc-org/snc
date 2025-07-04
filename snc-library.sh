@@ -86,11 +86,13 @@ function run_preflight_checks() {
  			echo "The host arch is ${ARCH}. This is not supported by SNC!";;
 	esac
 
-        # check for availability of a hypervisor using kvm
-        if ! sudo virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
-                preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
-                return
-        fi
+	if [[ "${DISABLE_VIRT_CAPABILITIES_CHECKS}" == "true" ]]; then
+            # check for availability of a hypervisor using kvm
+            if ! sudo virsh -c ${LIBVIRT_URI} capabilities | ${XMLLINT} --xpath "/capabilities/guest/arch[@name='${ARCH}']/domain[@type='kvm']" - &>/dev/null; then
+                    preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
+                    return
+            fi
+	fi
 	if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
         # check that api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.11
         local ping_status

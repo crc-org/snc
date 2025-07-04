@@ -5,6 +5,9 @@ set -exuo pipefail
 sudo yum install -y make golang
 
 ./shellcheck.sh
+if [[ "$(uname -m)" == "aarch64" ]]; then
+   export SNC_DISABLE_VIRT_CAPABILITIES_CHECK=true
+fi
 MICROSHIFT_PRERELEASE=yes ./microshift.sh
 
 # Set the zstd compression level to 10 to have faster
