@@ -14,7 +14,7 @@ RUN if [ -z "${UNRELEASED_MIRROR_REPO}" ]; then \
           --set-enabled "fast-datapath-for-rhel-9-$(uname -m)-rpms"; \
       dnf config-manager --save --setopt="${repoID}".gpgcheck=0 --setopt=*-el9-beta.gpgcheck=0; \
     fi
-RUN dnf install -y firewalld microshift microshift-release-info cloud-utils-growpart qemu-guest-agent dnsmasq && \
+RUN dnf install -y firewalld microshift microshift-release-info qemu-guest-agent dnsmasq && \
     dnf clean all && rm -fr /etc/yum.repos.d/*
 
 # https://github.com/containers/bootc/discussions/1036
