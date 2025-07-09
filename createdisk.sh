@@ -166,7 +166,17 @@ EOF
    PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
 fi
 
-# Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
+# install 9pfs binary from COPR repo so that it can be used to
+# set up 9p file sharing on Windows
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
+    ${SSH} core@${VM_IP} -- "sudo dnf -y copr enable mskvarla/9pfs"
+    ${SSH} core@${VM_IP} -- "mkdir -p ~/packages && dnf download --downloadonly --downloaddir ~/packages 9pfs --resolve"
+    ${SSH} core@${VM_IP} -- "sudo dnf -y copr disable mskvarla/9pfs"
+    PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" 9pfs"
+fi
+
+# Beyond this point, packages added to the ADDITIONAL_PACKAGES and PRE_DOWNLOADED_ADDITIONAL_PACKAGES
+# variables won’t be installed in the guest
 install_additional_packages ${VM_IP}
 copy_systemd_units
 
