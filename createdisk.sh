@@ -162,6 +162,13 @@ EOF
    ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
 fi
 
+# install 9pfs binary from COPR repo so that it can be used to
+# set up 9p file sharing on Windows
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
+    sudo dnf -y copr enable mskvarla/9pfs
+    ADDITIONAL_PACKAGES+=" 9pfs"
+fi
+
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
 install_additional_packages ${VM_IP}
 copy_systemd_units
@@ -201,12 +208,6 @@ ${SSH} core@${VM_IP} -- 'sudo sed -i "s/^preserve_hostname: false$/preserve_host
 
 # Cleanup cloud-init config
 ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"
-
-if [ "${ARCH}" == "x86_64" ] && [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
-    # compile 9pfs binary using UBI image and extract the binary
-    # so that it can be used to set up a 9p filesystem on Windows
-    compile_and_extract_9pfs
-fi
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
