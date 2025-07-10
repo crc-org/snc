@@ -17,6 +17,7 @@ OPENSHIFT_VERSION=$(${JQ} -r .clusterInfo.openshiftVersion $INSTALL_DIR/crc-bund
 BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json)
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
 ADDITIONAL_PACKAGES="cloud-init gvisor-tap-vsock-gvforwarder"
+PRE_DOWNLOADED_ADDITIONAL_PACKAGES=""
 
 case ${BUNDLE_TYPE} in
     microshift)
@@ -159,7 +160,7 @@ EOF
    ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora-updates.repo /etc/yum.repos.d"
    ${SSH} core@${VM_IP} -- "mkdir -p ~/packages && dnf download --downloadonly --downloaddir ~/packages qemu-user-static-x86 --resolve"
    ${SSH} core@${VM_IP} -- "sudo rm -fr /etc/yum.repos.d/fedora-updates.repo"
-   ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
+   PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
 fi
 
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES variable won’t be installed in the guest
