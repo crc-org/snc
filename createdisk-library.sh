@@ -202,7 +202,7 @@ enabled=1
 gpgcheck=0
 EOF'"
         # Install these rpms to VM
-        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install $ADDITIONAL_PACKAGES"
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install $ADDITIONAL_PACKAGES $PRE_DOWNLOADED_ADDITIONAL_PACKAGES"
 
         # Remove the packages and repo from VM
         ${SSH} core@${vm_ip} -- sudo rm -fr /home/core/packages
