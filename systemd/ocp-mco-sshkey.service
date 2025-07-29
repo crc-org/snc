@@ -13,4 +13,4 @@ ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
 RemainAfterExit=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target
