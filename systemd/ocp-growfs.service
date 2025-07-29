@@ -1,5 +1,6 @@
 [Unit]
 Description=CRC Unit to grow the root filesystem
+Requires=crc-custom.target
 
 [Service]
 Type=oneshot
