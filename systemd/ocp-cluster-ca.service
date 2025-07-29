@@ -14,4 +14,4 @@ ExecStart=/usr/local/bin/ocp-cluster-ca.sh
 ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target
