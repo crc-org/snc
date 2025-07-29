@@ -15,4 +15,4 @@ ExecStart=/usr/local/bin/ocp-custom-domain.sh
 ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target

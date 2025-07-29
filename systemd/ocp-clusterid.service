@@ -12,4 +12,4 @@ ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/ocp-clusterid.sh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target

@@ -16,4 +16,4 @@ ExecStart=/usr/local/bin/crc-cluster-status.sh
 RemainAfterExit=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target
