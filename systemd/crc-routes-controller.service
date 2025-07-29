@@ -13,4 +13,4 @@ ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
 ExecStart=/usr/local/bin/crc-routes-controller.sh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=crc-custom.target
