@@ -409,6 +409,7 @@ function copy_systemd_units() {
 
     ${SSH} core@${VM_IP} -- 'mkdir -p /home/core/systemd-units && mkdir -p /home/core/systemd-scripts'
     ${SCP} systemd/crc-*.service core@${VM_IP}:/home/core/systemd-units/
+    ${SCP} systemd/crc-*.target core@${VM_IP}:/home/core/systemd-units/
     ${SCP} systemd/crc-*.sh core@${VM_IP}:/home/core/systemd-scripts/
 
     case "${BUNDLE_TYPE}" in
