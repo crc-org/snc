@@ -65,7 +65,7 @@ oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --insecure-s
 COUNTER=0
 until oc get co --context system:admin --kubeconfig="${updated_kubeconfig_path}";
 do
-    if [ $COUNTER == 30 ]; then
+    if [ $COUNTER == 90 ]; then
         echo "Unable to access API server using new client certitificate..."
         exit 1
     fi
