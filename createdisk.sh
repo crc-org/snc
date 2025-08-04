@@ -18,6 +18,7 @@ BASE_DOMAIN=$(${JQ} -r .clusterInfo.baseDomain $INSTALL_DIR/crc-bundle-info.json
 BUNDLE_TYPE=$(${JQ} -r .type $INSTALL_DIR/crc-bundle-info.json)
 ADDITIONAL_PACKAGES="cloud-init gvisor-tap-vsock-gvforwarder"
 PRE_DOWNLOADED_ADDITIONAL_PACKAGES=""
+AWSCLI_VERSION=2.28.1
 
 case ${BUNDLE_TYPE} in
     microshift)
@@ -134,6 +135,9 @@ ${SSH} core@${VM_IP} -- "sudo podman pull quay.io/crcont/routes-controller:${ima
 TAG=${image_tag} envsubst < routes-controller.yaml.in > $INSTALL_DIR/routes-controller.yaml
 ${SCP} $INSTALL_DIR/routes-controller.yaml core@${VM_IP}:/home/core/
 ${SSH} core@${VM_IP} -- 'sudo mkdir -p /opt/crc && sudo mv /home/core/routes-controller.yaml /opt/crc/'
+
+# Preload aws-cli image
+${SSH} core@${VM_IP} -- "sudo podman pull docker.io/amazon/aws-cli:${AWSCLI_VERSION}"
 
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Add internalIP as node IP for kubelet systemd unit file
