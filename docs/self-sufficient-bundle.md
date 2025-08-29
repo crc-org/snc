@@ -30,5 +30,5 @@ The systemd services are heavily based on the [`clustersetup.sh`](https://github
 ## Naming convention for the systemd unit files
 
 Systemd units that are needed for both 'OpenShift' and 'MicroShift' are named as `crc-*.service`, units that are needed only for 'OpenShift' are named
-as `ocp-*.service` and when we add units that are only needed for 'MicroShift' they should be named as `ucp-*.service`
+as `ocp-*.service` and when we add units that are only needed for 'MicroShift' they should be named as `ucp-*.service`.
 
