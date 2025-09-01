@@ -18,7 +18,7 @@ sudo virsh undefine crc --nvram
 
 git clone https://github.com/crc-org/crc.git
 pushd crc
-podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-8-release-golang-1.23-openshift-4.19 /bin/bash -c "cd /data && make cross"
+podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 /bin/bash -c "cd /data && make cross"
 sudo mv out/linux-amd64/crc /usr/local/bin/
 popd
 
