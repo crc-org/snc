@@ -6,7 +6,7 @@ export KUBECONFIG=/opt/kubeconfig
 
 rm -rf /tmp/.crc-cluster-ready
 
-if ! oc adm wait-for-stable-cluster --minimum-stable-period=3m --timeout=10m; then
+if ! oc adm wait-for-stable-cluster --minimum-stable-period=1m --timeout=10m; then
     exit 1
 fi
 
