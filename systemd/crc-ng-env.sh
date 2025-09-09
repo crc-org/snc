@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ -z $CRC_CLOUD ]; then
-    exit 1
+if [ -n "$CRC_NG" ] || [ -n "$CRC_CLOUD" ]; then
+    exit 0
 fi
-exit 0
+exit 1

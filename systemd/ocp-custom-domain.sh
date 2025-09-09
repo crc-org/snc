@@ -2,7 +2,7 @@
 
 set -x
 
-if [ -z $CRC_CLOUD ]; then
+if [ -z $CRC_NG ]; then
     echo "Not running in crc-cloud mode"
     exit 0
 fi
