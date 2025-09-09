@@ -12,9 +12,9 @@ services to do their work.
 |    `crc-pullsecret.service`    |               both               |         /opt/crc/pull-secret         |         none         |
 |      `crc-dnsmasq.service`     |               both               |                 none                 |         none         |
 | `crc-routes-controller.service`|               both               |                 none                 |         none         |
-|    `ocp-cluster-ca.service`    |               ocp                |        /opt/crc/custom-ca.crt        |     CRC_CLOUD=1      |
+|    `ocp-cluster-ca.service`    |               ocp                |        /opt/crc/custom-ca.crt        | CRC_SELF_SUFFICIENT=1|
 |     `ocp-clusterid.service`    |               ocp                |                 none                 |         none         |
-|   `ocp-custom-domain.service`  |               ocp                |                 none                 |     CRC_CLOUD=1      |
+|   `ocp-custom-domain.service`  |               ocp                |                 none                 | CRC_SELF_SUFFICIENT=1|
 |      `ocp-growfs.service`      |               ocp                |                 none                 |         none         |
 |   `ocp-userpasswords.service`  |               ocp                | /opt/crc/pass_{kubeadmin, developer} |         none         |
 
@@ -22,8 +22,8 @@ In addition to the above services we have `ocp-cluster-ca.path`, `crc-pullsecret
 related to their `*.service` counterparts and starts the service when the paths become available.
 
 > [!NOTE]
-> "Marker env variable" is set using an env file, if the required env variable is not set then unit is skipped
-> some units are run only when CRC_CLOUD=1 is set, these are only needed when using the bundles with crc-cloud
+> "Marker env variable" is set using an env file (/etc/sysconfig/crc.env), if the required env variable is not set then unit is skipped
+> some units are run only when CRC_SELF_SUFFICIENT=1 is set, these are only needed when using self-sufficient functionality.
 
 The systemd services are heavily based on the [`clustersetup.sh`](https://github.com/crc-org/crc-cloud/blob/main/pkg/bundle/setup/clustersetup.sh) script found in the `crc-cloud` project.
 
