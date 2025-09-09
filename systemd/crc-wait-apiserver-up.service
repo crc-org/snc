@@ -7,7 +7,8 @@ Before=ocp-delete-mco-leases.service
 [Service]
 Type=oneshot
 Restart=on-failure
-ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
+EnvironmentFile=-/etc/sysconfig/crc-env
+ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/crc-wait-apiserver-up.sh
 
 [Install]
