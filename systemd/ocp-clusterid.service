@@ -8,7 +8,8 @@ StartLimitBurst=10
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
+EnvironmentFile=-/etc/sysconfig/crc-env
+ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/ocp-clusterid.sh
 
 [Install]
