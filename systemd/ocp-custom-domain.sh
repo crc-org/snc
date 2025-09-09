@@ -2,8 +2,8 @@
 
 set -x
 
-if [ -z $CRC_CLOUD ]; then
-    echo "Not running in crc-cloud mode"
+if [ -z $CRC_SELF_SUFFICIENT ]; then
+    echo "Not running in crc-self-sufficient mode"
     exit 0
 fi
 
