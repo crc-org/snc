@@ -2,11 +2,6 @@
 
 set -x
 
-if [ -z $CRC_SELF_SUFFICIENT ]; then
-    echo "Not running in crc-self-sufficient mode"
-    exit 0
-fi
-
 source /usr/local/bin/crc-systemd-common.sh
 export KUBECONFIG="/opt/kubeconfig"
 
