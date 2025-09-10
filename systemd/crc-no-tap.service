@@ -1,13 +1,13 @@
 [Unit]
 Description=Ensure that tap0 network configuration is absent on Apple Virtualization
 Before=NetworkManager.service
-ConditionVirtualization=apple
 After=local-fs.target
 RequiresMountsFor=/etc/NetworkManager/system-connections
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rm -f /etc/NetworkManager/system-connections/tap0.nmconnection
+EnvironmentFile=-/etc/sysconfig/crc-env
+ExecStart=/usr/local/bin/crc-no-tap.sh
 
 [Install]
 WantedBy=NetworkManager.service
