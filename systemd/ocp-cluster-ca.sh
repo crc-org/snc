@@ -55,9 +55,10 @@ oc config set-credentials system:admin --client-certificate=${CLIENT_CA_FILE_PAT
     --embed-certs --kubeconfig="${updated_kubeconfig_path}"
 oc config set-context system:admin --cluster="${cluster_name}" --namespace=default --user=system:admin --kubeconfig="${updated_kubeconfig_path}"
 oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --insecure-skip-tls-verify=true --kubeconfig="${updated_kubeconfig_path}"
+oc config use-context system:admin --kubeconfig="${updated_kubeconfig_path}"
 
 COUNTER=0
-until oc get co --context system:admin --kubeconfig="${updated_kubeconfig_path}";
+until oc get co --kubeconfig="${updated_kubeconfig_path}";
 do
     if [ $COUNTER == 90 ]; then
         echo "Unable to access API server using new client certitificate..."
@@ -67,6 +68,7 @@ do
     sleep 2
     ((COUNTER++))
 done
+
 
 oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH} \
     --dry-run=client -o yaml | oc replace -f -
