@@ -8,7 +8,7 @@ StartLimitBurst=10
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-ExecCondition=/usr/local/bin/crc-check-cloud-env.sh
+ExecCondition=/usr/local/bin/crc-ng-env.sh
 ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
 RemainAfterExit=true
 

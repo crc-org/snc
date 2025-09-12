@@ -13,11 +13,6 @@ wait_for_resource configmap
 
 external_ip_path=/opt/crc/eip
 
-if [ ! -f /opt/crc/pass_kubeadmin ]; then
-    echo "kubeadmin password file not found"
-    exit 1
-fi
-
 if oc get configmap client-ca-custom -n openshift-config; then
     echo "API Server Client CA already rotated..."
     exit 0
@@ -32,7 +27,6 @@ CLIENT_CSR_FILE_PATH="/tmp/client-csr.csr"
 CA_SUBJ="/OU=openshift/CN=admin-kubeconfig-signer-custom"
 CLIENT_SUBJ="/O=system:masters/CN=system:admin"
 VALIDITY=365
-PASS_KUBEADMIN="$(cat /opt/crc/pass_kubeadmin)"
 
 # generate the CA private key
 openssl genrsa -out ${CA_KEY_FILE_PATH} 4096
@@ -61,9 +55,10 @@ oc config set-credentials system:admin --client-certificate=${CLIENT_CA_FILE_PAT
     --embed-certs --kubeconfig="${updated_kubeconfig_path}"
 oc config set-context system:admin --cluster="${cluster_name}" --namespace=default --user=system:admin --kubeconfig="${updated_kubeconfig_path}"
 oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --insecure-skip-tls-verify=true --kubeconfig="${updated_kubeconfig_path}"
+oc config use-context system:admin --kubeconfig="${updated_kubeconfig_path}"
 
 COUNTER=0
-until oc get co --context system:admin --kubeconfig="${updated_kubeconfig_path}";
+until oc get co --kubeconfig="${updated_kubeconfig_path}";
 do
     if [ $COUNTER == 90 ]; then
         echo "Unable to access API server using new client certitificate..."
@@ -74,22 +69,9 @@ do
     ((COUNTER++))
 done
 
+
 oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH} \
     --dry-run=client -o yaml | oc replace -f -
-
-echo "Logging in again to update $KUBECONFIG with kubeadmin token"
-COUNTER=0
-MAXIMUM_LOGIN_RETRY=500
-until `oc login --insecure-skip-tls-verify=true -u kubeadmin -p "$PASS_KUBEADMIN" https://api.crc.testing:6443 --kubeconfig "${updated_kubeconfig_path}" > /dev/null 2>&1`
-do
-    if [ $COUNTER == $MAXIMUM_LOGIN_RETRY ]; then
-        echo "Unable to login to the cluster..., installation failed."
-        exit 1
-    fi
-    echo "Logging into OpenShift with updated credentials try $COUNTER, hang on...."
-    sleep 5
-    ((COUNTER++))
-done
 
 # copy the new kubeconfig to /opt/kubeconfig
 rm -rf /opt/kubeconfig

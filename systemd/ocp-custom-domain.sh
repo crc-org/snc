@@ -2,11 +2,6 @@
 
 set -x
 
-if [ -z $CRC_CLOUD ]; then
-    echo "Not running in crc-cloud mode"
-    exit 0
-fi
-
 source /usr/local/bin/crc-systemd-common.sh
 export KUBECONFIG="/opt/kubeconfig"
 
