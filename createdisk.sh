@@ -109,6 +109,7 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
 After=sys-devices-virtual-net-%i.device
+ConditionVirtualization=!apple
 
 [Service]
 Restart=on-failure
