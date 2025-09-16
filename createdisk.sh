@@ -114,7 +114,6 @@ After=sys-devices-virtual-net-%i.device
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
-ExecCondition=/bin/sh -c '! /usr/local/bin/crc-check-cloud-env.sh'
 ExecStartPre=/bin/sh -c 'for i in {1..10}; do ip link show "\\\$1" && exit 0; sleep 1; done; exit 1' _ %i
 ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
