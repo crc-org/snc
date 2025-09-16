@@ -9,8 +9,7 @@ COPY --from=builder /code-ready/snc /opt/snc
 COPY --from=builder /code-ready/snc/images/openshift-ci/mock-nss.sh /bin/mock-nss.sh
 COPY --from=builder /code-ready/snc/images/openshift-ci/google-cloud-sdk.repo /etc/yum.repos.d/google-cloud-sdk.repo
 
-RUN yum update -y && \
-    yum install --setopt=tsflags=nodocs -y \
+RUN yum install --setopt=tsflags=nodocs -y \
     gettext \
     google-cloud-cli \
     nss_wrapper \
