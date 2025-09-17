@@ -9,7 +9,7 @@ EnvironmentFile=/etc/sysconfig/qemu-ga
 ExecStart=/usr/bin/qemu-ga \
   --method=vsock-listen \
   --path=3:1234 \
-  --blacklist=${BLACKLIST_RPC} \
+  $FILTER_RPC_ARGS \
   -F${FSFREEZE_HOOK_PATHNAME}
 Restart=always
 RestartSec=0
