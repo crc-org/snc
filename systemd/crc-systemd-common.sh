@@ -6,7 +6,7 @@ function wait_for_resource() {
     local wait_sec=${3:-5}
     until oc get "$1" > /dev/null 2>&1
     do
-        [ $retry == $max_retry ] && exit 1
+        [[ "$retry" -ge "$max_retry" ]] && exit 1
         sleep $wait_sec
         ((retry++))
     done
