@@ -10,4 +10,6 @@ function wait_for_resource() {
         sleep $wait_sec
         ((retry++))
     done
+
+    return 0
 }
