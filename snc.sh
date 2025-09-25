@@ -149,6 +149,7 @@ cp cluster-network-03-config.yaml ${INSTALL_DIR}/manifests/
 cp 99_master-chronyd-mask.yaml $INSTALL_DIR/openshift/
 # Add dummy network unit file
 cp 99-openshift-machineconfig-master-dummy-networks.yaml $INSTALL_DIR/openshift/
+cp 99-openshift-machineconfig-master-console.yaml $INSTALL_DIR/openshift/
 # Add kubelet config resource to make change in kubelet
 DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-sizing-enabled-env.yaml.in > $INSTALL_DIR/openshift/99_master-node-sizing-enabled-env.yaml
 # Add codeReadyContainer as invoker to identify it with telemeter
@@ -342,4 +343,3 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && 
 # Remove the image stream of custom image
 retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
 retry ${OC} adm prune images --confirm --registry-url default-route-openshift-image-registry.apps-crc.testing --keep-younger-than=0s
-
