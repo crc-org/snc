@@ -219,7 +219,10 @@ function create_vm {
 function generate_htpasswd_file {
    local auth_file_dir=$1
    local pass_file=$2
-   random_password=$(cat $1/auth/kubeadmin-password)
-   ${HTPASSWD} -c -B -b ${pass_file} developer developer
-   ${HTPASSWD} -B -b ${pass_file} kubeadmin ${random_password}
+   (
+       set +x # use a subshell to avoid leaking the password
+       local random_password=$(cat $1/auth/kubeadmin-password)
+       ${HTPASSWD} -c -B -i "${pass_file}" developer <<<"developer"
+       ${HTPASSWD} -B -i "${pass_file}" kubeadmin <<<"${random_password}"
+   )
 }
