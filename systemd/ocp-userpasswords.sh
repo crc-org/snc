@@ -1,14 +1,21 @@
 #!/bin/bash
 
+set -o pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
 set -x
 
 source /usr/local/bin/crc-systemd-common.sh
 export KUBECONFIG="/opt/kubeconfig"
 
 function gen_htpasswd() {
-    if [ ! -z "${1}" ] && [ ! -z "${2}" ]; then
-        podman run --rm -ti xmartlabs/htpasswd $1 $2 >> /tmp/htpasswd.txt
+    if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
+        echo "gen_htpasswd needs two arguments: username password" 1>&2
+        return 1
     fi
+
+    podman run --rm docker.io/xmartlabs/htpasswd "$1" "$2"
 }
 
 wait_for_resource secret
@@ -19,20 +26,24 @@ if [ ! -f /opt/crc/pass_developer ]; then
 fi
 
 if [ ! -f /opt/crc/pass_kubeadmin ]; then
-    echo "developer password does not exist"
+    echo "kubeadmin password does not exist"
     exit 1
 fi
 
-PASS_DEVELOPER=$(cat /opt/crc/pass_developer)
-PASS_KUBEADMIN=$(cat /opt/crc/pass_kubeadmin)
+echo "generating the kubeadmin and developer passwords ..."
 
-rm -f /tmp/htpasswd.txt
-gen_htpasswd developer "${PASS_DEVELOPER}"
-gen_htpasswd kubeadmin "${PASS_KUBEADMIN}"
+set +x # /!\ disable the logging to avoid leaking the passwords
 
-if [ -f /tmp/htpasswd.txt ]; then
-    sed -i '/^\s*$/d' /tmp/htpasswd.txt
+dev_pass=$(gen_htpasswd developer "$(cat /opt/crc/pass_developer)")
+adm_pass=$(gen_htpasswd kubeadmin "$(cat /opt/crc/pass_kubeadmin)")
 
-    oc create secret generic htpass-secret  --from-file=htpasswd=/tmp/htpasswd.txt -n openshift-config --dry-run=client -o yaml > /tmp/htpass-secret.yaml
-    oc replace -f /tmp/htpass-secret.yaml
-fi
+echo "creating the password secret ..."
+# use bash <() to use a temporary fd file
+# use sed to remove the empty lines
+oc create secret generic htpass-secret  \
+   --from-file=htpasswd=<(printf '%s\n%s\n' "$dev_pass" "$adm_pass") \
+   -n openshift-config \
+   --dry-run=client -oyaml \
+    | oc apply -f-
+
+echo "all done"
