@@ -280,7 +280,14 @@ FROM scratch
 RUN ln -sf var/Users /Users && mkdir /var/Users
 EOF
 podman build --from ${RHCOS_IMAGE} --authfile ${OPENSHIFT_PULL_SECRET_PATH} -t default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest --file ${INSTALL_DIR}/Containerfile .
-retry ${OC} login -u kubeadmin -p $(cat ${INSTALL_DIR}/auth/kubeadmin-password) --insecure-skip-tls-verify=true api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:6443
+(
+    set +x # disable the logging in the subshell to prevent the password leakage
+    kubeadmin_pass=$(cat ${INSTALL_DIR}/auth/kubeadmin-password)
+    retry ${OC} login -u kubeadmin -p "$kubeadmin_pass" --insecure-skip-tls-verify=true api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:6443
+    rm -f ${INSTALL_DIR}/auth/kubeadmin-password
+    esc_pw="$(printf '%s' "$kubeadmin_pass" | sed -e 's/[\/&|\\]/\\&/g')"
+    sed -i "s|$esc_pw|REDACTED|g" "${INSTALL_DIR}/.openshift_install.log"
+)
 retry ${OC} registry login -a ${INSTALL_DIR}/reg.json
 retry podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
 cat << EOF > ${INSTALL_DIR}/custom-os-mc.yaml
