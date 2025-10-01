@@ -9,7 +9,6 @@ StartLimitIntervalSec=30
 [Service]
 Type=oneshot
 Restart=on-failure
-EnvironmentFile=-/etc/sysconfig/crc-env
 ExecStartPre=/bin/systemctl start ovs-configuration.service
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/crc-dnsmasq.sh
