@@ -4,19 +4,27 @@
 # https://access.redhat.com/solutions/5286371
 # https://access.redhat.com/solutions/6054981
 
+set -o pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
 set -x
+
+source /etc/sysconfig/crc-env || echo "WARNING: crc-env not found"
 
 source /usr/local/bin/crc-systemd-common.sh
 export KUBECONFIG="/opt/kubeconfig"
 
-wait_for_resource configmap
+wait_for_resource_or_die configmap
 
-external_ip_path=/opt/crc/eip
+CRC_EXTERNAL_IP_FILE_PATH=/opt/crc/eip # may or may not be there. See below ...
 
-if oc get configmap client-ca-custom -n openshift-config; then
+if oc get configmap client-ca-custom -n openshift-config 2>/dev/null; then
     echo "API Server Client CA already rotated..."
     exit 0
 fi
+
+echo "API Server Client CA not rotated. Doing it now ..."
 
 # generate CA
 CA_FILE_PATH="/tmp/custom-ca.crt"
@@ -28,52 +36,78 @@ CA_SUBJ="/OU=openshift/CN=admin-kubeconfig-signer-custom"
 CLIENT_SUBJ="/O=system:masters/CN=system:admin"
 VALIDITY=365
 
-# generate the CA private key
-openssl genrsa -out ${CA_KEY_FILE_PATH} 4096
-# Create the CA certificate
-openssl req -x509 -new -nodes -key ${CA_KEY_FILE_PATH} -sha256 -days $VALIDITY -out ${CA_FILE_PATH} -subj "${CA_SUBJ}"
-# create CSR
-openssl req -new -newkey rsa:4096 -nodes -keyout ${CLIENT_CA_KEY_FILE_PATH} -out ${CLIENT_CSR_FILE_PATH} -subj "${CLIENT_SUBJ}"
-# sign the CSR with above CA
-openssl x509 -extfile <(printf "extendedKeyUsage = clientAuth") -req -in ${CLIENT_CSR_FILE_PATH} -CA ${CA_FILE_PATH} \
-    -CAkey ${CA_KEY_FILE_PATH} -CAcreateserial -out ${CLIENT_CA_FILE_PATH} -days $VALIDITY -sha256
+cleanup() {
+    rm -f "$CA_FILE_PATH" "$CA_KEY_FILE_PATH" \
+       "$CLIENT_CA_FILE_PATH" "$CLIENT_CA_KEY_FILE_PATH" "$CLIENT_CSR_FILE_PATH"
+    echo "Temp files cleanup complete."
+}
 
-oc create configmap client-ca-custom -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH}
-oc patch apiserver cluster --type=merge -p '{"spec": {"clientCA": {"name": "client-ca-custom"}}}'
+# keep cleanup bound to EXIT; no need to clear ERR early
+trap cleanup ERR EXIT
+
+# generate the CA private key
+openssl genrsa -out "$CA_KEY_FILE_PATH" 4096
+# Create the CA certificate
+openssl req -x509 -new -nodes -key "$CA_KEY_FILE_PATH" -sha256 -days "$VALIDITY" -out "$CA_FILE_PATH" -subj "$CA_SUBJ"
+# create CSR
+openssl req -new -newkey rsa:4096 -nodes -keyout "$CLIENT_CA_KEY_FILE_PATH" -out "$CLIENT_CSR_FILE_PATH" -subj "$CLIENT_SUBJ"
+# sign the CSR with above CA
+openssl x509 -extfile <(printf "extendedKeyUsage = clientAuth") -req -in "$CLIENT_CSR_FILE_PATH" -CA "$CA_FILE_PATH" \
+    -CAkey "$CA_KEY_FILE_PATH" -CAcreateserial -out "$CLIENT_CA_FILE_PATH" -days "$VALIDITY" -sha256
+
+oc create configmap client-ca-custom \
+   -n openshift-config \
+   --from-file=ca-bundle.crt="$CA_FILE_PATH" \
+   --dry-run=client -o yaml \
+    | oc apply -f -
+
+jq -n '
+{
+  "spec": {
+    "clientCA": {
+      "name": "client-ca-custom"
+    }
+  }
+}' | oc patch apiserver cluster --type=merge --patch-file=/dev/stdin
 
 cluster_name=$(oc config view -o jsonpath='{.clusters[0].name}')
-apiserver_url=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
 
-if [ -f "${external_ip_path}" ]; then
-    apiserver_url=https://api.$(cat "${external_ip_path}").nip.io:6443
+if [[ -r "$CRC_EXTERNAL_IP_FILE_PATH" ]]; then
+    external_ip=$(tr -d '\r\n' < "$CRC_EXTERNAL_IP_FILE_PATH")
+    apiserver_url=https://api.${external_ip}.nip.io:6443
+    echo "INFO: CRC external IP file found. Using apiserver_url='$apiserver_url'."
+else
+    apiserver_url=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
+    echo "INFO: CRC external IP file does not exist ($CRC_EXTERNAL_IP_FILE_PATH). Using apiserver_url='$apiserver_url'."
 fi
 
-updated_kubeconfig_path=/opt/crc/kubeconfig
-rm -rf "${updated_kubeconfig_path}"
+export KUBECONFIG=/opt/crc/kubeconfig
+rm -rf "$KUBECONFIG"
 
-oc config set-credentials system:admin --client-certificate=${CLIENT_CA_FILE_PATH} --client-key=${CLIENT_CA_KEY_FILE_PATH} \
-    --embed-certs --kubeconfig="${updated_kubeconfig_path}"
-oc config set-context system:admin --cluster="${cluster_name}" --namespace=default --user=system:admin --kubeconfig="${updated_kubeconfig_path}"
-oc config set-cluster "${cluster_name}" --server="${apiserver_url}" --insecure-skip-tls-verify=true --kubeconfig="${updated_kubeconfig_path}"
-oc config use-context system:admin --kubeconfig="${updated_kubeconfig_path}"
+oc config set-credentials system:admin \
+   --client-certificate="$CLIENT_CA_FILE_PATH" \
+   --client-key="$CLIENT_CA_KEY_FILE_PATH" \
+   --embed-certs
 
-COUNTER=0
-until oc get co --kubeconfig="${updated_kubeconfig_path}";
-do
-    if [ $COUNTER == 90 ]; then
-        echo "Unable to access API server using new client certitificate..."
-        exit 1
-    fi
-    echo "Acess API server with new client cert, try $COUNTER, hang on...."
-    sleep 2
-    ((COUNTER++))
-done
+oc config set-context system:admin --cluster="$cluster_name" --namespace=default --user=system:admin
+oc config set-cluster "$cluster_name" --server="$apiserver_url" --insecure-skip-tls-verify=true
+oc config use-context system:admin
 
+wait_for_resource_or_die clusteroperators 90 2
 
-oc create configmap admin-kubeconfig-client-ca -n openshift-config --from-file=ca-bundle.crt=${CA_FILE_PATH} \
-    --dry-run=client -o yaml | oc replace -f -
+oc create configmap admin-kubeconfig-client-ca \
+   -n openshift-config \
+   --from-file=ca-bundle.crt="$CA_FILE_PATH" \
+   --dry-run=client -oyaml \
+    | oc apply -f-
 
 # copy the new kubeconfig to /opt/kubeconfig
-rm -rf /opt/kubeconfig
+rm -f /opt/kubeconfig
 cp /opt/crc/kubeconfig /opt/kubeconfig
-chmod 0666 /opt/kubeconfig
+chmod 0666 /opt/kubeconfig # keep the file readable by everyone in the system, this is safe
+
+# cleanup will apply here
+
+echo "All done"
+
+exit 0
