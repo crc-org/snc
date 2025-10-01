@@ -1,13 +1,15 @@
 [Unit]
-Description=Ensure that tap0 network configuration is absent on Apple Virtualization
+Description=Ensure that tap0 network configuration is disabled when not necessary
 Before=NetworkManager.service
+Before=gv-user-network@tap0.service
 After=local-fs.target
 After=crc-env-file-exists.service
 RequiresMountsFor=/etc/NetworkManager/system-connections
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/crc-no-tap.sh
+ExecStart=/usr/local/bin/crc-conditionally-disable-tap.sh
 
 [Install]
 WantedBy=NetworkManager.service
+WantedBy=gv-user-network@tap0.service
