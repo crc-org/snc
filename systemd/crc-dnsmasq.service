@@ -1,6 +1,7 @@
 [Unit]
 Description=CRC Unit for configuring dnsmasq
 Wants=ovs-configuration.service
+After=crc-env-file-exists.service
 After=ovs-configuration.service
 Before=kubelet-dependencies.target
 StartLimitIntervalSec=30

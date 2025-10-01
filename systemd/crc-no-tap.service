@@ -2,6 +2,7 @@
 Description=Ensure that tap0 network configuration is absent on Apple Virtualization
 Before=NetworkManager.service
 After=local-fs.target
+After=crc-env-file-exists.service
 RequiresMountsFor=/etc/NetworkManager/system-connections
 
 [Service]
