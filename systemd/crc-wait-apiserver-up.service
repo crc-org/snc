@@ -2,6 +2,7 @@
 Description=CRC Unit waiting till k8s API server is up
 Requires=kubelet.service
 After=kubelet.service
+After=crc-env-file-exists.service
 Before=ocp-delete-mco-leases.service
 
 [Service]
