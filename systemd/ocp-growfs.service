@@ -5,7 +5,6 @@ After=crc-env-file-exists.service
 
 [Service]
 Type=oneshot
-EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/ocp-growfs.sh
 
