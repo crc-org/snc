@@ -52,7 +52,7 @@ wait_for_ssh ${VM_NAME} ${VM_IP}
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Disable kubelet service
     ${SSH} core@${VM_IP} -- sudo systemctl disable kubelet
-    
+
     # Stop the kubelet service so it will not reprovision the pods
     ${SSH} core@${VM_IP} -- sudo systemctl stop kubelet
 fi
