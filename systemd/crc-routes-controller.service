@@ -1,5 +1,6 @@
 [Unit]
 Description=CRC Unit starting routes controller
+After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
