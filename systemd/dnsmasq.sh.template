@@ -1,11 +1,32 @@
 #!/bin/bash
 
+set -o pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
 set -x
 
-if [[ ${CRC_NETWORK_MODE_USER} -eq 1 ]]; then
+source /etc/sysconfig/crc-env || echo "WARNING: crc-env not found"
+
+
+if (( ${CRC_NETWORK_MODE_USER:-0} == 1 )); then
     echo -n "network-mode 'user' detected: skipping dnsmasq configuration"
     exit 0
 fi
+
+# The value of APPS_DOMAIN is set by the
+# createdisk-library.sh::copy_systemd_units script during the template
+# instantiation. So in the end system, the test below should be a
+# tautologie (ie, always true if correctly set up)
+
+# disable this to properly reach the error block (cannot use ${var:-}
+# here because of the envsubst instantiating the template)
+set +o nounset
+if [[ -z "${APPS_DOMAIN}" ]]; then
+    echo "ERROR: APPS_DOMAIN must be defined to use this script"
+    exit 1
+fi
+set -o nounset
 
 hostName=$(hostname)
 hostIp=$(hostname --all-ip-addresses | awk '{print $1}')
