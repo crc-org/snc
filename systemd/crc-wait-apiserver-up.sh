@@ -1,9 +1,19 @@
 #!/bin/bash
 
-set -x
+set -o pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
 
 source /usr/local/bin/crc-systemd-common.sh
 export KUBECONFIG=/opt/kubeconfig
 
+echo "Waiting for the node resource to be available ..."
 # $1 resource, $2 retry count, $3 wait time
-wait_for_resource node 4 60
+wait_for_resource_or_die node 4 60
+
+echo "node resource available, APIServer is ready."
+
+echo "All done"
+
+exit 0
