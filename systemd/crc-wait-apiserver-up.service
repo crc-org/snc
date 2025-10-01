@@ -8,7 +8,6 @@ Before=ocp-delete-mco-leases.service
 [Service]
 Type=oneshot
 Restart=on-failure
-EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/crc-wait-apiserver-up.sh
 

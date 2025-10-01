@@ -9,7 +9,6 @@ StartLimitBurst=10
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-EnvironmentFile=-/etc/sysconfig/crc-env
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
 RemainAfterExit=true

@@ -7,7 +7,6 @@ RequiresMountsFor=/etc/NetworkManager/system-connections
 
 [Service]
 Type=oneshot
-EnvironmentFile=-/etc/sysconfig/crc-env
 ExecStart=/usr/local/bin/crc-no-tap.sh
 
 [Install]
