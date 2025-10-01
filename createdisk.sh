@@ -109,11 +109,15 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
 After=sys-devices-virtual-net-%i.device
+After=crc-check-tap.service
 
 [Service]
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
+# if CRC doesn't need tap, mark the unit as 'skipped'
+ExecCondition=/usr/local/bin/crc-needs-tap.sh
+
 ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]
