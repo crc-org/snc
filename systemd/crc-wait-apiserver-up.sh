@@ -6,7 +6,6 @@ set -o nounset
 set -o errtrace
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG=/opt/kubeconfig
 
 echo "Waiting for the node resource to be available ..."
 # $1 resource, $2 retry count, $3 wait time
