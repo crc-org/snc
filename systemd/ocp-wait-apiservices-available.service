@@ -1,0 +1,21 @@
+[Unit]
+Description=Wait for all Kubernetes APIServices to be Available
+
+# This service needs network to talk to the k8s API server
+Wants=network-online.target
+After=network-online.target
+After=crc-wait-apiserver-up.service
+StartLimitIntervalSec=450
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+Restart=on-failure
+RestartSec=20
+ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
+ExecStart=/usr/local/bin/ocp-wait-apiservices-available.sh
+
+Environment=KUBECONFIG=/opt/kubeconfig
+
+[Install]
+WantedBy=crc-custom.target
