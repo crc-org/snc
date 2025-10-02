@@ -9,6 +9,7 @@ StartLimitBurst=10
 Type=oneshot
 Restart=on-failure
 RestartSec=40
+Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-user-mode-networking.sh
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/crc-routes-controller.sh
