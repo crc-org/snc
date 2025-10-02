@@ -7,7 +7,6 @@ set -o errtrace
 set -x
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 PULL_SECRETS_FILE="/opt/crc/pull-secret"
 

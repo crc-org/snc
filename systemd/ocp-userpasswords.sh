@@ -7,7 +7,6 @@ set -o errtrace
 set -x
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 CRC_PASS_DEVELOPER_PATH=/opt/crc/pass_developer
 CRC_PASS_KUBEADMIN_PATH=/opt/crc/pass_kubeadmin

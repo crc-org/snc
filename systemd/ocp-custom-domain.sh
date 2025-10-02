@@ -7,7 +7,6 @@ set -o errtrace
 set -x
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 CRC_EXTERNAL_IP_FILE_PATH=/opt/crc/eip
 

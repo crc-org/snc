@@ -6,7 +6,6 @@ set -o nounset
 set -o errtrace
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 wait_for_resource_or_die clusterversion
 
