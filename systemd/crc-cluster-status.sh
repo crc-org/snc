@@ -6,7 +6,6 @@ set -o nounset
 set -o errtrace
 set -x
 
-export KUBECONFIG=/opt/kubeconfig
 MAXIMUM_LOGIN_RETRY=10
 RETRY_DELAY=5
 
