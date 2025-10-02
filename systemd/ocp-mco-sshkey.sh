@@ -7,7 +7,6 @@ set -o errtrace
 set -x
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 CRC_PUB_KEY_PATH="/opt/crc/id_rsa.pub"
 

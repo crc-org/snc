@@ -13,7 +13,6 @@ set -x
 source /etc/sysconfig/crc-env || echo "WARNING: crc-env not found"
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG="/opt/kubeconfig"
 
 wait_for_resource_or_die configmap
 
