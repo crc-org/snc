@@ -5,6 +5,7 @@ After=crc-wait-apiserver-up.service crc-pullsecret.service
 After=ocp-mco-sshkey.service ocp-cluster-ca.service
 After=ocp-custom-domain.service ocp-userpasswords.service
 After=ocp-clusterid.service
+After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 
