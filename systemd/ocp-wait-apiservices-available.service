@@ -5,6 +5,8 @@ Description=Wait for all Kubernetes APIServices to be Available
 Wants=network-online.target
 After=network-online.target
 After=crc-wait-apiserver-up.service
+After=crc-wait-node-ready.service
+Requires=crc-wait-node-ready.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 

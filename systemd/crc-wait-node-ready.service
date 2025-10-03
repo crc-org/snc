@@ -1,0 +1,19 @@
+[Unit]
+Description=CRC Unit waiting till k8s node is ready
+Requires=kubelet.service
+After=kubelet.service
+After=crc-env-file-exists.service
+After=crc-wait-apiserver-up.service
+StartLimitIntervalSec=450
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+Restart=on-failure
+RestartSec=10
+Environment=KUBECONFIG=/opt/kubeconfig
+ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
+ExecStart=/usr/local/bin/crc-wait-node-ready.sh
+
+[Install]
+WantedBy=crc-custom.target
