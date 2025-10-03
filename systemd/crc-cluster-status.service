@@ -6,6 +6,7 @@ After=ocp-mco-sshkey.service ocp-cluster-ca.service
 After=ocp-custom-domain.service ocp-userpasswords.service
 After=ocp-clusterid.service
 After=ocp-wait-apiservices-available.service
+After=crc-wait-node-ready.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 
