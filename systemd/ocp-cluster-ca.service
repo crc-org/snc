@@ -1,6 +1,7 @@
 [Unit]
 Description=CRC Unit setting custom cluster ca
 After=crc-wait-apiserver-up.service
+After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 ConditionPathExists=!/opt/crc/%n.done
@@ -9,7 +10,7 @@ ConditionPathExists=!/opt/crc/%n.done
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-EnvironmentFile=-/etc/sysconfig/crc-env
+Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/ocp-cluster-ca.sh
 ExecStartPost=-touch /opt/crc/%n.done

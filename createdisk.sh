@@ -52,7 +52,7 @@ wait_for_ssh ${VM_NAME} ${VM_IP}
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Disable kubelet service
     ${SSH} core@${VM_IP} -- sudo systemctl disable kubelet
-    
+
     # Stop the kubelet service so it will not reprovision the pods
     ${SSH} core@${VM_IP} -- sudo systemctl stop kubelet
 fi
@@ -109,12 +109,13 @@ ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
 [Unit]
 Description=gvisor-tap-vsock Network Traffic Forwarder
 After=sys-devices-virtual-net-%i.device
+After=crc-check-tap.service
 
 [Service]
 Restart=on-failure
 Environment="GV_VSOCK_PORT=1024"
 EnvironmentFile=-/etc/sysconfig/gv-user-network
-ExecStartPre=/bin/sh -c 'for i in {1..10}; do ip link show "\\\$1" && exit 0; sleep 1; done; exit 1' _ %i
+ExecCondition=/usr/local/bin/crc-needs-tap.sh
 ExecStart=/usr/libexec/podman/gvforwarder -preexisting -iface %i -url vsock://2:"\\\${GV_VSOCK_PORT}"/connect
 
 [Install]

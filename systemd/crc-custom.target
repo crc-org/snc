@@ -1,4 +1,5 @@
 [Unit]
 Description=crc custom target
 Requires=kubelet-dependencies.target
+Requires=crc-env-file-exists.service
 After=kubelet-dependencies.target

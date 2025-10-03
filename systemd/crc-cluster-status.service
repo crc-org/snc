@@ -1,9 +1,15 @@
 [Unit]
 Description=CRC Unit checking if cluster is ready
+After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service crc-pullsecret.service
 After=ocp-mco-sshkey.service ocp-cluster-ca.service
 After=ocp-custom-domain.service ocp-userpasswords.service
 After=ocp-clusterid.service
+After=ocp-wait-apiservices-available.service
+After=crc-wait-node-ready.service
+Requires=crc-check-tap.service
+# should be removed before merging. Not 'installed' currently
+Requires=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 
@@ -11,7 +17,7 @@ StartLimitBurst=10
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-EnvironmentFile=-/etc/sysconfig/crc-env
+Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
 ExecStart=/usr/local/bin/crc-cluster-status.sh
 RemainAfterExit=true
