@@ -89,6 +89,7 @@ save_secret() {
     if ! podman run \
            --name "cloud-init-fetch-$name" \
            --env AWS_REGION="$(< /tmp/aws-region)" \
+           --log-driver=none \
            --rm \
            "$AWS_CLI_IMG" \
            ssm get-parameter \
