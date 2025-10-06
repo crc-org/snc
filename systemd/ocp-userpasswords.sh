@@ -8,8 +8,14 @@ set -x
 
 source /usr/local/bin/crc-systemd-common.sh
 
-CRC_PASS_DEVELOPER_PATH=/opt/crc/pass_developer
-CRC_PASS_KUBEADMIN_PATH=/opt/crc/pass_kubeadmin
+CRC_PASS_KUBEADMIN_PATH=${1:-}
+CRC_PASS_DEVELOPER_PATH=${2:-}
+
+if [[ -z "$CRC_PASS_KUBEADMIN_PATH" || -z "$CRC_PASS_DEVELOPER_PATH" ]]; then
+    echo "ERROR: expected to receive the kubeadmin password file as 1st arg and the dev password file as 2nd arg. Got '$CRC_PASS_KUBEADMIN_PATH' and '$CRC_PASS_DEVELOPER_PATH'"
+    exit 1
+fi
+
 CRC_HTPASSWD_IMAGE=registry.access.redhat.com/ubi10/httpd-24
 
 function gen_htpasswd() {
@@ -21,11 +27,13 @@ function gen_htpasswd() {
     podman run --rm "$CRC_HTPASSWD_IMAGE" htpasswd -nb "$1" "$2"
 }
 
+# enforced by systemd
 if [[ ! -r "$CRC_PASS_DEVELOPER_PATH" ]]; then
     echo "ERROR: CRC developer password does not exist ($CRC_PASS_DEVELOPER_PATH)"
     exit 1
 fi
 
+# enforced by systemd
 if [[ ! -r "$CRC_PASS_KUBEADMIN_PATH" ]]; then
     echo "ERROR: CRC kubeadmin password does not exist ($CRC_PASS_KUBEADMIN_PATH)"
     exit 1
