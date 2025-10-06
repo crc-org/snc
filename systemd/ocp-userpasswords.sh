@@ -24,7 +24,9 @@ function gen_htpasswd() {
         return 1
     fi
 
-    podman run --rm "$CRC_HTPASSWD_IMAGE" htpasswd -nb "$1" "$2"
+    # --log-driver=none avoids that the journal captures the stdout
+    # logs of podman and leaks the passwords in the journal ...
+    podman run --log-driver=none --rm "$CRC_HTPASSWD_IMAGE" htpasswd -nb "$1" "$2"
 }
 
 # enforced by systemd
