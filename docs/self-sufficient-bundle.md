@@ -15,7 +15,6 @@ services to do their work.
 |    `ocp-cluster-ca.service`    |               ocp                |        /opt/crc/custom-ca.crt        |         none         |
 |     `ocp-clusterid.service`    |               ocp                |                 none                 |         none         |
 |   `ocp-custom-domain.service`  |               ocp                |                 none                 |         none         |
-|      `ocp-growfs.service`      |               ocp                |                 none                 |         none         |
 |   `ocp-userpasswords.service`  |               ocp                | /opt/crc/pass_{kubeadmin, developer} |         none         |
 
 In addition to the above services we have `ocp-cluster-ca.path`, `crc-pullsecret.path` and `ocp-userpasswords.path` that monitors the filesystem paths
