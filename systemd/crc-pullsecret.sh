@@ -8,7 +8,7 @@ set -x
 
 source /usr/local/bin/crc-systemd-common.sh
 
-PULL_SECRETS_FILE="/opt/crc/pull-secret"
+PULL_SECRETS_FILE="${1:-}"
 
 wait_for_resource_or_die secret
 
@@ -28,6 +28,7 @@ fi
 
 echo "Cluster doesn't have the pull secrets. Setting them from $PULL_SECRETS_FILE ..."
 
+# enforced by systemd
 if [[ ! -r "$PULL_SECRETS_FILE" ]];
 then
     echo "ERROR: $PULL_SECRETS_FILE is missing or unreadable" 1>&2
