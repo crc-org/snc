@@ -16,6 +16,9 @@ function wait_for_resource_or_die() {
         exit 1 # this is wait_for_resource_or_die, so die ...
     fi
 
+    local start_time
+    start_time=$(date +%s)
+
     # Loop from 1 up to max_retry
     for (( retry=1; retry<=max_retry; retry++ )); do
         # Try the command. If it succeeds, exit the loop.
