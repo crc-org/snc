@@ -8,8 +8,14 @@ set -x
 
 source /usr/local/bin/crc-systemd-common.sh
 
-CRC_EXTERNAL_IP_FILE_PATH=/opt/crc/eip
+CRC_EXTERNAL_IP_FILE_PATH="${1:-}"
 
+if [[ -z "$CRC_EXTERNAL_IP_FILE_PATH" ]]; then
+    echo "ERROR: expected to receive the external IP file as first argument ..."  >&2
+    exit 1
+fi
+
+# enforced by systemd
 if [[ ! -r "$CRC_EXTERNAL_IP_FILE_PATH" ]]; then
     echo "ERROR: CRC external ip file not found ($CRC_EXTERNAL_IP_FILE_PATH)"  >&2
     exit 1
