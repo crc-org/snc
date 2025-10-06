@@ -6,6 +6,7 @@ After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 ConditionPathExists=!/opt/crc/%n.done
+AssertPathExists=/opt/crc/eip
 
 [Service]
 Type=oneshot
@@ -13,7 +14,7 @@ Restart=on-failure
 RestartSec=40
 Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
-ExecStart=/usr/local/bin/ocp-custom-domain.sh
+ExecStart=/usr/local/bin/ocp-custom-domain.sh /opt/crc/eip
 ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
