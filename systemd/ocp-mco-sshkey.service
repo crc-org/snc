@@ -2,8 +2,10 @@
 Description=CRC Unit patching the MachineConfig to add new ssh key
 After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service
+After=cloud-final.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
+AssertPathExists=/opt/crc/id_rsa.pub
 
 [Service]
 Type=oneshot
@@ -11,7 +13,7 @@ Restart=on-failure
 RestartSec=40
 Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
-ExecStart=/usr/local/bin/ocp-mco-sshkey.sh
+ExecStart=/usr/local/bin/ocp-mco-sshkey.sh /opt/crc/id_rsa.pub
 RemainAfterExit=true
 
 [Install]

@@ -8,8 +8,14 @@ set -x
 
 source /usr/local/bin/crc-systemd-common.sh
 
-CRC_PUB_KEY_PATH="/opt/crc/id_rsa.pub"
+CRC_PUB_KEY_PATH="${1:-}"
 
+if [[ -z "$CRC_PUB_KEY_PATH" ]]; then
+    echo "ERROR: expected to receive the path to the pub key file as first argument."
+    exit 1
+fi
+
+# enforced by systemd
 if [[ ! -r "$CRC_PUB_KEY_PATH" ]]; then
     echo "ERROR: CRC pubkey file does not exist ($CRC_PUB_KEY_PATH)"
     exit 1
