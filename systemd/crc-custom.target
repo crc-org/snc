@@ -1,5 +1,5 @@
 [Unit]
-Description=crc custom target
-Requires=kubelet-dependencies.target
-Requires=crc-env-file-exists.service
-After=kubelet-dependencies.target
+Description=CRC custom target
+Requires=crc-wait-apiserver-up.service
+Requires=crc-cluster-status.service
+After=crc-wait-apiserver-up.service crc-cluster-status.service
