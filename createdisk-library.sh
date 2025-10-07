@@ -410,6 +410,7 @@ function copy_systemd_units() {
     ${SSH} core@${VM_IP} -- 'mkdir -p /home/core/systemd-units && mkdir -p /home/core/systemd-scripts'
     ${SCP} systemd/crc-*.service core@${VM_IP}:/home/core/systemd-units/
     ${SCP} systemd/crc-*.target core@${VM_IP}:/home/core/systemd-units/
+    ${SCP} -r systemd/*.d core@${VM_IP}:/home/core/systemd-units/
     ${SCP} systemd/crc-*.sh core@${VM_IP}:/home/core/systemd-scripts/
 
     case "${BUNDLE_TYPE}" in
@@ -419,7 +420,7 @@ function copy_systemd_units() {
             ;;
     esac
 
-    ${SSH} core@${VM_IP} -- 'sudo cp /home/core/systemd-units/* /etc/systemd/system/ && sudo cp /home/core/systemd-scripts/* /usr/local/bin/'
+    ${SSH} core@${VM_IP} -- 'sudo cp -r /home/core/systemd-units/* /etc/systemd/system/ && sudo cp /home/core/systemd-scripts/* /usr/local/bin/'
     ${SSH} core@${VM_IP} -- 'ls /home/core/systemd-scripts/ | xargs -t -I % sudo chmod +x /usr/local/bin/%'
     ${SSH} core@${VM_IP} -- 'sudo restorecon -rv /usr/local/bin'
 
