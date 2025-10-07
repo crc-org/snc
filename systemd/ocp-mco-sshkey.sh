@@ -24,9 +24,12 @@ fi
 wait_for_resource_or_die machineconfig/99-master-ssh
 
 echo "Updating the public key resource for machine config operator"
-pub_key=$(cat "$CRC_PUB_KEY_PATH" | tr -d '\n\r')
 
-jq -n --arg key "${pub_key}" '
+# Use --rawfile to read the key file directly into a jq variable named 'pub_key'.
+# The key's content is never exposed as a command-line argument.
+# We use jq's rtrimstr function to remove any trailing newlines from the file.
+
+jq -n --rawfile pub_key "$CRC_PUB_KEY_PATH" '
 {
   "spec": {
     "config": {
@@ -34,7 +37,10 @@ jq -n --arg key "${pub_key}" '
         "users": [
           {
             "name": "core",
-            "sshAuthorizedKeys": [ $key ]
+            "sshAuthorizedKeys": [
+              # Trim trailing newlines and carriage returns from the slurped file content
+              $pub_key | rtrimstr("\n") | rtrimstr("\r")
+            ]
           }
         ]
       }
