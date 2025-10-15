@@ -3,9 +3,7 @@ Description=Ensure that tap0 network configuration is disabled when not necessar
 Before=NetworkManager.service
 Before=gv-user-network@tap0.service
 After=local-fs.target
-After=crc-env-file-exists.service
 RequiresMountsFor=/etc/NetworkManager/system-connections
-Requires=crc-env-file-exists.service
 
 [Service]
 Type=oneshot

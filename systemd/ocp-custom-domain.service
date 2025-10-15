@@ -1,6 +1,5 @@
 [Unit]
 Description=CRC Unit setting nip.io domain for cluster
-After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service
 After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
