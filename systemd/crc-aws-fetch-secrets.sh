@@ -24,14 +24,37 @@ if [[ -z "$PULL_SECRETS_KEY" || -z "$KUBEADM_PASS_KEY" || -z "$DEVELOPER_PASS_KE
     exit 1
 fi
 
+DELAY=5
+TOTAL_PERIOD=$(( 3*60 ))
+ATTEMPTS=$(( TOTAL_PERIOD / DELAY))
+function retry_compact() {
+    for i in $(seq 1 $ATTEMPTS); do
+        # If the command succeeds (returns 0), exit the function with success.
+        if "$@"; then
+            echo "'$*' succeeded after $i attempts "
+            return 0
+        fi
+        echo "'$*' still failing after $i/$ATTEMPTS attempts ..."
+        sleep "$DELAY"
+    done
+    echo "'$*' didn't succeed after $i attempt ..."
+    # If the loop finishes, the command never succeeded.
+    return 1
+}
+
+cleanup() {
+    rm -f /tmp/aws-region /opt/crc/pull-secret.tmp /opt/crc/pass_kubeadmin.tmp /opt/crc/pass_developer.tmp
+    echo "Temp files cleanup complete."
+}
+
+# Cleanup happens automatically via trap on error or at script end
+trap cleanup ERR EXIT
+
 SECONDS=0
 podman pull --quiet "$AWS_CLI_IMG"
 echo "Took $SECONDS seconds to pull the $AWS_CLI_IMG"
 
-wait_imds_available_and_get_region() {
-    total_timeout_minutes=5
-    retry_interval_seconds=5
-
+check_imds_available_and_get_region() {
     IMDS_TOKEN_COMMAND=(
         curl
         --connect-timeout 1
@@ -40,25 +63,9 @@ wait_imds_available_and_get_region() {
         -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"
         -Ssf
     )
-    success=false
-    deadline=$(( $(date +%s) + (total_timeout_minutes * 60) ))
-    while [[ $(date +%s) -lt $deadline ]]; do
-        # By placing the command in an 'if' condition, we can test its exit code
-        # without triggering 'set -e'. The output is still captured.
-        if TOKEN=$("${IMDS_TOKEN_COMMAND[@]}"); then
-            # This block only runs if the curl command succeeds (exit code 0)
-            success=true
-            echo "Successfully fetched token." >&2
-            break # Exit the loop on success
-        fi
 
-        # This block runs if the curl command fails
-        echo "Failed to connect. Retrying in $retry_interval_seconds seconds..." >&2
-        sleep "$retry_interval_seconds"
-    done
-
-    if [[ "$success" != "true" ]]; then
-        echo "ERROR: Could not fetch token after $total_timeout_minutes minutes." >&2
+    if ! TOKEN=$("${IMDS_TOKEN_COMMAND[@]}"); then
+        echo "Couldn't fetch the token..." >&2
         return 1
     fi
 
@@ -73,11 +80,9 @@ wait_imds_available_and_get_region() {
     set +x # disable the xtrace as the token would be leaked
     echo "Waiting for the AWS IMDS service to be available ..."
     SECONDS=0
-    wait_imds_available_and_get_region
+    retry_compact check_imds_available_and_get_region
     echo "Took $SECONDS for the IMDS service to become available."
 )
-
-missing_secrets=0
 
 save_secret() {
     name=$1
@@ -101,27 +106,23 @@ save_secret() {
     then
         rm -f "${dest}.tmp"
         echo "ERROR: failed to get the '$name' secret ... (fetched from $key)"
-        ((missing_secrets += 1))
-        return
+        return 1
     fi
     char_count=$(wc -c < "${dest}.tmp")
     if (( char_count < MIN_CHAR_COUNT )); then
         echo "ERROR: the content of the '$name' secret is too short ... (fetched from $key)"
         rm -f "${dest}.tmp"
-        ((missing_secrets += 1))
-        return
+        return 1
     fi
 
     mv "${dest}.tmp" "${dest}" # atomic creation of the file
+
+    return 0
 }
 
-save_secret "pull-secrets" "$PULL_SECRETS_KEY" /opt/crc/pull-secret
-save_secret "kubeadmin-pass" "$KUBEADM_PASS_KEY" /opt/crc/pass_kubeadmin
-save_secret "developer-pass" "$DEVELOPER_PASS_KEY" /opt/crc/pass_developer
-
-if (( missing_secrets != 0 )); then
-    echo "ERROR: failed to fetch $missing_secrets secrets ..."
-    exit 1
-fi
+# execution will abort if 'retry_compact' fails.
+retry_compact save_secret "pull-secrets" "$PULL_SECRETS_KEY" /opt/crc/pull-secret
+retry_compact save_secret "kubeadmin-pass" "$KUBEADM_PASS_KEY" /opt/crc/pass_kubeadmin
+retry_compact save_secret "developer-pass" "$DEVELOPER_PASS_KEY" /opt/crc/pass_developer
 
 exit 0
