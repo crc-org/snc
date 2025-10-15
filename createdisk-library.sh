@@ -412,6 +412,7 @@ function copy_systemd_units() {
     ${SCP} systemd/crc-*.target core@${VM_IP}:/home/core/systemd-units/
     ${SCP} -r systemd/*.d core@${VM_IP}:/home/core/systemd-units/
     ${SCP} systemd/crc-*.sh core@${VM_IP}:/home/core/systemd-scripts/
+    ${SCP} systemd/crc-*.py core@${VM_IP}:/home/core/systemd-scripts/
 
     case "${BUNDLE_TYPE}" in
         "snc"|"okd")

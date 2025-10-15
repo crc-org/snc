@@ -36,7 +36,7 @@ fi
 # no value --> error
 if [[ -z "${CRC_NETWORK_MODE_USER:-}" ]]; then
     echo "ERROR: CRC_NETWORK_MODE_USER not set. Assuming user networking." >&2
-    exit "$EXIT_ERROR"
+    exit "$EXIT_USER_MODE"
 fi
 
 # value not in [0, 1] --> error
