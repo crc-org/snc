@@ -1,6 +1,5 @@
 [Unit]
 Description=CRC Unit patching the MachineConfig to add new ssh key
-After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service
 After=cloud-final.service
 StartLimitIntervalSec=450
