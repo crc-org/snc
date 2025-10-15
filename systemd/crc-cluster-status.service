@@ -1,6 +1,5 @@
 [Unit]
 Description=CRC Unit checking if cluster is ready
-After=crc-env-file-exists.service
 After=crc-wait-apiserver-up.service crc-pullsecret.service
 After=ocp-mco-sshkey.service ocp-cluster-ca.service
 After=ocp-custom-domain.service ocp-userpasswords.service
