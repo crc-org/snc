@@ -29,16 +29,17 @@ fi
 
 virt="$(systemd-detect-virt || true)"
 
-if [[ -z "$virt" ]]; then
-    echo "ERROR: systemd couldn't detect the virtualization :/" >&2
-    exit "$EXIT_ERROR"
-fi
-
-if [[ "${virt}" == apple ]] ; then
+case "${virt}" in
+  apple)
     echo "Running with vfkit ($virt) virtualization. Don't need tap0."
     exit "$EXIT_DONT_NEED_TAP"
-fi
-
-echo "Running with '$virt' virtualization. Need tap0."
-
-exit "$EXIT_NEED_TAP"
+    ;;
+  none)
+    echo "Bare metal detected. Don't need tap0."
+    exit "$EXIT_DONT_NEED_TAP"
+    ;;
+  *)
+    echo "Running with '$virt' virtualization. Need tap0."
+    exit "$EXIT_NEED_TAP"
+    ;;
+esac
