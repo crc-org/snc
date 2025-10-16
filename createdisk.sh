@@ -196,6 +196,17 @@ network:
 EFF
 EOF
 
+# Add file resize cloud-init config
+# Taken from https://gitlab.com/fedora/bootc/examples/-/blob/main/cloud-init/10_bootc.cfg
+${SSH} core@${VM_IP} 'sudo bash -x -s' << EOF
+cat << EFF > /etc/cloud/cloud.cfg.d/10_disk_resize.cfg
+growpart:
+  mode: auto
+  devices: ["/sysroot"]
+
+resize_rootfs: false
+EOF
+
 # Disable cloud-init hostname update
 ${SSH} core@${VM_IP} -- 'sudo sed -i "s/^preserve_hostname: false$/preserve_hostname: true/" /etc/cloud/cloud.cfg'
 
