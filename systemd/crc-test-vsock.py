@@ -17,7 +17,7 @@ def main():
         raise SystemExit(errno.EINVAL)
 
     port = int(sys.argv[1])
-    tries = 60
+    tries = 5
     while not VSOCK_DEV.exists():
         tries -= 1
 

@@ -12,6 +12,10 @@ timeout "$TEST_TIMEOUT" python3 /usr/local/bin/crc-test-vsock.py "$VSOCK_COMM_PO
 returncode=$?
 
 case "$returncode" in
+    19) # ENODEV
+        echo "vsock device doesn't exist, not running self-sufficient bundle" >&2
+        exit 1
+        ;;
     124)
         echo "ERROR: vsock/${VSOCK_COMM_PORT} test timed out after $TEST_TIMEOUT seconds :/" >&2
         exit 124
