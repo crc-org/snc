@@ -1,16 +1,20 @@
 #!/bin/bash
 
+set -o pipefail
+set -o errexit
+set -o nounset
+set -o errtrace
 set -x
 
-if [[ ${CRC_NETWORK_MODE_USER} -eq 0 ]]; then
-    echo -n "network-mode 'system' detected: skipping routes-controller pod deployment"
-    exit 0
-fi
+ROUTE_CONTROLLER=/opt/crc/routes-controller.yaml
 
 source /usr/local/bin/crc-systemd-common.sh
-export KUBECONFIG=/opt/kubeconfig
 
-wait_for_resource pods
+wait_for_resource_or_die pods
+wait_for_resource_or_die deployments
 
-oc apply -f /opt/crc/routes-controller.yaml
+oc apply -f "$ROUTE_CONTROLLER"
 
+echo "All done."
+
+exit 0

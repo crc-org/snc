@@ -1,15 +1,18 @@
 [Unit]
-Description=CRC Unit waiting till k8s API server is up
+Description=CRC Unit waiting till k8s node is ready
 Requires=kubelet.service
 After=kubelet.service
-Before=ocp-delete-mco-leases.service
+After=crc-wait-apiserver-up.service
+StartLimitIntervalSec=450
+StartLimitBurst=10
 
 [Service]
 Type=oneshot
 Restart=on-failure
+RestartSec=10
 Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
-ExecStart=/usr/local/bin/crc-wait-apiserver-up.sh
+ExecStart=/usr/local/bin/crc-wait-node-ready.sh
 
 [Install]
 WantedBy=crc-custom.target

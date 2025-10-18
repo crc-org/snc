@@ -221,8 +221,10 @@ function generate_htpasswd_file {
    local pass_file=$2
    (
        set +x # use a subshell to avoid leaking the password
-       local random_password=$(cat $1/auth/kubeadmin-password)
-       ${HTPASSWD} -c -B -i "${pass_file}" developer <<<"developer"
-       ${HTPASSWD} -B -i "${pass_file}" kubeadmin <<<"${random_password}"
+
+       local random_password
+       random_password=$(cat "$auth_file_dir/auth/kubeadmin-password")
+       "${HTPASSWD}" -c -B -i "${pass_file}" developer <<< "developer" # use -c to create the file
+       "${HTPASSWD}" -B -i "${pass_file}" kubeadmin <<< "${random_password}" # append to the existing password file
    )
 }

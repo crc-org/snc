@@ -1,6 +1,7 @@
 [Unit]
 Description=CRC Unit setting nip.io domain for cluster
 After=crc-wait-apiserver-up.service
+After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
 StartLimitBurst=10
 ConditionPathExists=!/opt/crc/%n.done
@@ -9,9 +10,10 @@ ConditionPathExists=!/opt/crc/%n.done
 Type=oneshot
 Restart=on-failure
 RestartSec=40
-EnvironmentFile=-/etc/sysconfig/crc-env
+Environment=KUBECONFIG=/opt/kubeconfig
 ExecCondition=/usr/local/bin/crc-self-sufficient-env.sh
-ExecStart=/usr/local/bin/ocp-custom-domain.sh
+ExecStartPre=/usr/bin/test -f /opt/crc/eip
+ExecStart=/usr/local/bin/ocp-custom-domain.sh /opt/crc/eip
 ExecStartPost=-touch /opt/crc/%n.done
 
 [Install]
