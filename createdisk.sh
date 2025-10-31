@@ -170,6 +170,16 @@ fi
 install_additional_packages ${VM_IP}
 copy_systemd_units
 
+# Create marker file with default value expected by systemd units
+# CRC_SELF_SUFFICIENT=0 to ensure bundle works with CRC without a
+# cloud-init configuration
+${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+  tee /etc/sysconfig/crc-env <<TEE
+CRC_SELF_SUFFICIENT=0
+TEE
+EOF
+
+
 cleanup_vm_image ${VM_NAME} ${VM_IP}
 
 # Enable cloud-init service
