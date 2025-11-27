@@ -30,6 +30,7 @@ try_login() {
         set +x
         set +e # don't abort on error in this subshell
         oc login --insecure-skip-tls-verify=true \
+	   --kubeconfig=/tmp/kubeconfig \
            -u kubeadmin \
            -p "$(cat /opt/crc/pass_kubeadmin)" \
            https://api.crc.testing:6443 > /dev/null 2>&1
