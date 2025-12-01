@@ -56,6 +56,10 @@ unset KUBECONFIG
 sudo rm -fr /etc/NetworkManager/dnsmasq.d/*
 sudo systemctl reload NetworkManager
 
+export CRC_BUNDLE_PATH=./crc_libvirt_*.crcbundle
+export PULL_SECRET_PATH="${HOME}/pull-secret"
+./run-with-macadam.sh
+
 git clone https://github.com/code-ready/crc.git
 pushd crc
 podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 /bin/bash -c "cd /data && make cross"
