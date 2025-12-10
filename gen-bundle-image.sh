@@ -82,7 +82,7 @@ function sign_bundle_files {
 }
 
 if [[ $# -ne 2 ]]; then
-   echo "You need to provide the bundle version and preset (openshift/podman/okd/microshift)"
+   echo "You need to provide the bundle version and preset (openshift/okd/microshift)"
    exit 1
 fi
 
