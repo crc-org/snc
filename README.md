@@ -56,7 +56,7 @@ export BUNDLED_PULL_SECRET_PATH="/tmp/pull_secret.json"
 After running snc.sh/createdisk.sh, the generated bundles can be uploaded to a container registry using this command:
 
 ```
-./gen-bundle-image.sh <version> <openshift/okd/podman>
+./gen-bundle-image.sh <version> <openshift/okd/microshift>
 ```
 
 Note: a GPG key is needed to sign the bundles before they are wrapped in a container image.
