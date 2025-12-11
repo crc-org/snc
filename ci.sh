@@ -56,15 +56,20 @@ unset KUBECONFIG
 sudo rm -fr /etc/NetworkManager/dnsmasq.d/*
 sudo systemctl reload NetworkManager
 
-git clone https://github.com/code-ready/crc.git
-pushd crc
-podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 /bin/bash -c "cd /data && make cross"
-sudo mv out/linux-amd64/crc /usr/local/bin/
-popd
+# run-with-macadam smoke test
+export CRC_BUNDLE_PATH=$(ls ./crc_libvirt_*.crcbundle)
+export PULL_SECRET_PATH="${HOME}/pull-secret"
+./run-with-macadam.sh
 
-crc config set bundle crc_libvirt_*.crcbundle
-crc setup
-crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret --log-level debug
+# git clone https://github.com/code-ready/crc.git
+# pushd crc
+# podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 /bin/bash -c "cd /data && make cross"
+# sudo mv out/linux-amd64/crc /usr/local/bin/
+# popd
+
+# crc config set bundle crc_libvirt_*.crcbundle
+# crc setup
+# crc start --disk-size 80 -m 24000 -c 10 -p "${HOME}"/pull-secret --log-level debug
 
 mkdir -p crc-tmp-install-data/test-artifacts
 export KUBECONFIG="${HOME}"/.crc/machines/crc/kubeconfig
