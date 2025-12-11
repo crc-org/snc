@@ -210,8 +210,6 @@ EOF
     ${SSH} core@${VM_IP} -- "sudo podman stop crc-etcd"
 fi
 
-podman_version=$(${SSH} core@${VM_IP} -- 'rpm -q --qf %{version} podman')
-
 # Disable cloud-init network config
 ${SSH} core@${VM_IP} 'sudo bash -x -s' << EOF
 cat << EFF > /etc/cloud/cloud.cfg.d/05_disable-network.cfg
@@ -239,9 +237,6 @@ ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}
-
-# Download podman clients
-download_podman $podman_version ${yq_ARCH}
 
 # libvirt image generation
 get_dest_dir_suffix "${OPENSHIFT_VERSION}"
