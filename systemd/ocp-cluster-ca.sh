@@ -83,14 +83,14 @@ fi
 export KUBECONFIG=/opt/crc/kubeconfig
 rm -rf "$KUBECONFIG"
 
-oc config set-credentials system:admin \
+oc config set-credentials admin \
    --client-certificate="$CLIENT_CA_FILE_PATH" \
    --client-key="$CLIENT_CA_KEY_FILE_PATH" \
    --embed-certs
 
-oc config set-context system:admin --cluster="$cluster_name" --namespace=default --user=system:admin
+oc config set-context admin --cluster="$cluster_name" --namespace=default --user=admin
 oc config set-cluster "$cluster_name" --server="$apiserver_url" --insecure-skip-tls-verify=true
-oc config use-context system:admin
+oc config use-context admin
 
 wait_for_resource_or_die clusteroperators 90 2
 
