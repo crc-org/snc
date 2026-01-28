@@ -207,6 +207,7 @@ function create_vm {
         --arch=${ARCH} \
         --disk path=/var/lib/libvirt/${SNC_PRODUCT_NAME}/${SNC_PRODUCT_NAME}.qcow2,size=${CRC_VM_DISK_SIZE} \
         --network network="${SNC_PRODUCT_NAME}",mac=52:54:00:ee:42:e1 \
+        --rng /dev/urandom,model=virtio \
         --os-variant rhel9-unknown \
         --nographics \
         --cdrom /var/lib/libvirt/${SNC_PRODUCT_NAME}/${iso} \
