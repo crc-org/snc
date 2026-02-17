@@ -3,7 +3,7 @@ resources:
 images:
   - name: quay.io/kubevirt/hostpath-csi-driver
     newName: registry.redhat.io/container-native-virtualization/hostpath-csi-driver-rhel9
-    newTag: v4.20
+    newTag: v4.21
   - name: registry.k8s.io/sig-storage/csi-node-driver-registrar
     newName: registry.redhat.io/openshift4/ose-csi-node-driver-registrar
     newTag: latest
