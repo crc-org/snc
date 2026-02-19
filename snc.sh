@@ -307,6 +307,11 @@ while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Upda
     echo "Machine config still in updating/degrading state"
 done
 
+# Create a container from baremetal-runtimecfg image which consumed by nodeip-configuration service so it is
+# not deleted by `crictl rmi --prune` command
+BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman create --authfile /var/lib/kubelet/config.json --name baremetal_runtimecfg ${BAREMETAL_RUNTIMECFG}"
+
 mc_before_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
@@ -328,11 +333,6 @@ ${OC} adm prune renderedmachineconfigs --confirm
 while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Updated")].status}' | grep True; do
     echo "Machine config still in updating/degrading state"
 done
-
-# Create a container from baremetal-runtimecfg image which consumed by nodeip-configuration service so it is
-# not deleted by `crictl rmi --prune` command
-BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
-${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman create --name baremetal_runtimecfg ${BAREMETAL_RUNTIMECFG}"
 
 # Remove unused images from container storage
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
