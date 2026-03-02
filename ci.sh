@@ -58,9 +58,13 @@ sudo systemctl reload NetworkManager
 
 git clone https://github.com/code-ready/crc.git
 pushd crc
-podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.24-openshift-4.20 /bin/bash -c "cd /data && make cross"
+podman run --rm -v ${PWD}:/data:Z registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.25-openshift-4.21 /bin/bash -c "cd /data && make cross"
 sudo mv out/linux-amd64/crc /usr/local/bin/
 popd
+
+export CRC_BUNDLE_PATH=$(pwd)/$(ls crc_libvirt_*.crcbundle)
+export PULL_SECRET_PATH="${HOME}/pull-secret"
+./run-with-macadam.py
 
 crc config set bundle crc_libvirt_*.crcbundle
 crc setup
