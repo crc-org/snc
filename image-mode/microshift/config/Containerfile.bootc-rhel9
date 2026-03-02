@@ -1,6 +1,6 @@
 FROM registry.redhat.io/rhel9/rhel-bootc:9.6
 
-ARG MICROSHIFT_VER=4.18
+ARG MICROSHIFT_VER=4.22
 RUN if [ -z "${UNRELEASED_MIRROR_REPO}" ]; then \
       dnf config-manager --set-enabled "rhocp-${MICROSHIFT_VER}-for-rhel-9-$(uname -m)-rpms" \
           --set-enabled "fast-datapath-for-rhel-9-$(uname -m)-rpms"; \
