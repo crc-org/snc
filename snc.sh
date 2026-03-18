@@ -26,7 +26,7 @@ INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
-CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-35}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
