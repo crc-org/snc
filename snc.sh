@@ -156,7 +156,8 @@ DYNAMIC_DATA=$(base64 -w0 node-sizing-enabled.env) envsubst < 99_master-node-siz
 export OPENSHIFT_INSTALL_INVOKER="codeReadyContainers"
 export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 
-OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create single-node-ignition-config ${OPENSHIFT_INSTALL_EXTRA_ARGS}
+OPENSHIFT_INSTALL_EXPERIMENTAL_DISABLE_IMAGE_POLICY=true OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE \
+	${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create single-node-ignition-config ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 # mask the chronyd service on the bootstrap node
 cat <<< $(${JQ} '.systemd.units += [{"mask": true, "name": "chronyd.service"}]' ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign) > ${INSTALL_DIR}/bootstrap-in-place-for-live-iso.ign
 
