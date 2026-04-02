@@ -157,7 +157,7 @@ metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f44&ar
 enabled=1
 type=rpm
 repo_gpgcheck=0
-gpgcheck=0
+gpgcheck=1
 EOF
    ${SCP} /tmp/fedora-updates.repo core@${VM_IP}:/tmp
    ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora-updates.repo /etc/yum.repos.d"
