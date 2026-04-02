@@ -152,8 +152,8 @@ if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
    # in any subscription repo.
    cat > /tmp/fedora-updates.repo <<'EOF'
 [fedora-updates]
-name=Fedora 41 - $basearch - Updates
-metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f41&arch=$basearch
+name=Fedora 44 - $basearch - Updates
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f44&arch=$basearch
 enabled=1
 type=rpm
 repo_gpgcheck=0
