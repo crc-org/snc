@@ -2,4 +2,4 @@
 name=microshift repo for mirror
 baseurl=https://mirror.openshift.com/pub/openshift-v4/$basearch/microshift/ocp-dev-preview/latest-4.20/el9/os/
 enabled=1
-gpgcheck=0
+gpgcheck=1
