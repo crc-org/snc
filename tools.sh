@@ -107,6 +107,16 @@ if ! which ${PATCH}; then
     sudo yum -y install /usr/bin/patch
 fi
 
+function check_libvirt_service {
+    if ! grep -qE "^(ID=|ID_LIKE=).*(rhel|fedora|centos)" /etc/os-release 2>/dev/null; then
+        echo "Skipping libvirt service check for non-RHEL/Fedora/CentOS system"
+        return
+    fi
+    # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_and_managing_virtualization/assembly_enabling-virtualization-in-rhel-9_configuring-and-managing-virtualization#proc_enabling-virtualization-in-rhel-9_assembly_enabling-virtualization-in-rhel-9
+    # only start the required socket for virsh to work
+    for drv in qemu network secret storage; do sudo systemctl start virt${drv}d{,-ro,-admin}.socket; done
+}
+
 function retry {
     # total wait time = 2 ^ (retries - 1) - 1 seconds
     local retries=14
