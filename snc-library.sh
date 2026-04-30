@@ -59,6 +59,7 @@ function run_preflight_checks() {
         fi
 
         echo "Checking libvirt and DNS configuration"
+	check_libvirt_service
 
 	LIBVIRT_URI=qemu:///system
         # check if we can connect to ${LIBVIRT_URI}

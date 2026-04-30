@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-sudo yum install -y podman make golang rsync
+sudo yum install -y git-core podman make golang rsync
 
 ./shellcheck.sh
 ./snc.sh
