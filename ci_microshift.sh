@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-sudo yum install -y git-core virtiofsd make golang
+sudo yum install -y git-core virtiofsd podman make golang
 
 ./shellcheck.sh
 MICROSHIFT_PRERELEASE=yes ./microshift.sh
