@@ -337,8 +337,3 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_
 # Create the /var/Users directory so it can become writeable
 # todo: remove it once custom image able to perform it
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /var/Users'
-
-
-# Remove the image stream of custom image
-retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
-retry ${OC} adm prune images --confirm --registry-url default-route-openshift-image-registry.apps-crc.testing
