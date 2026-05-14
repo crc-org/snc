@@ -267,9 +267,9 @@ wait_till_cluster_stable
 # This section is used to create a custom-os image which have `/Users`
 # For more details check https://github.com/crc-org/snc/issues/1041#issuecomment-2785928976
 # This should be performed before removing pull secret
-# Set tmp KUBECONFIG because default kubeconfig have `system:admin` user which doesn't able to create
+# Unsetting KUBECONFIG is required because it has default `system:admin` user which doesn't able to create
 # token to login to registry and kubeadmin user is required for that.
-export KUBECONFIG=/tmp/kubeconfig
+unset KUBECONFIG
 if [[ ${BUNDLE_TYPE} == "okd" ]]; then
      RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=stream-coreos)
 else
@@ -305,6 +305,7 @@ done
 BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman create --authfile /var/lib/kubelet/config.json --name baremetal_runtimecfg ${BAREMETAL_RUNTIMECFG}"
 
+export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 mc_before_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
