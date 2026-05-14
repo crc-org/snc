@@ -1,0 +1,47 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 99-enable-transient-ro
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+      - name: enable-transient-ro.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Enable transient-ro in ostree prepare-root config
+          ConditionPathExists=!/var/lib/transient-ro-configured
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/bin/rpm-ostree usroverlay
+          ExecStart=/bin/bash -c 'sed -i "s/enabled = maybe/enabled = yes/" /usr/lib/ostree/prepare-root.conf'
+          ExecStart=/bin/bash -c 'echo -e "\\n[root]\\ntransient-ro = true" >> /usr/lib/ostree/prepare-root.conf'
+          ExecStart=/bin/mount -o remount,rw /boot
+          ExecStart=/bin/bash -c 'dracut -f $(grep -h initrd /boot/loader/entries/*.conf | awk "{print \\$2}") $(uname -r)'
+          ExecStart=/bin/mkdir -p /var/Users
+          ExecStartPost=/bin/touch /var/lib/transient-ro-configured
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: create-users-mount.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Create /Users mountpoint using transient-ro
+          After=local-fs-pre.target
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/bin/mkdir -p /var/Users
+          ExecStart=-/bin/bash -c 'unshare -m -- /bin/sh -c "mount -o remount,rw / && ln -sf var/Users /Users"'
+
+          [Install]
+          WantedBy=local-fs.target
