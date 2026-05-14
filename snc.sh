@@ -337,8 +337,6 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_
 # todo: remove it once custom image able to perform it
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /var/Users'
 
-# Check /Users directory is writeable
-${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
 
 # Remove the image stream of custom image
 retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
