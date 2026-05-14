@@ -264,6 +264,16 @@ retry ${OC} delete mc chronyd-mask
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
+# Enable transient-ro in ostree to allow creating /Users top-level directory
+# This modifies prepare-root.conf and regenerates the initramfs, which takes
+# effect on the next reboot (triggered by pull secret removal below).
+retry ${OC} apply -f 99-enable-transient-ro.yaml
+sleep 60
+# Wait till machine config pool is updated correctly
+while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Updated")].status}' | grep True; do
+    echo "Machine config still in updating/degrading state"
+done
+
 # Create a container from baremetal-runtimecfg image which consumed by nodeip-configuration service so it is
 # not deleted by `crictl rmi --prune` command
 BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
@@ -298,4 +308,5 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
-
+# Verify /Users is writable via transient-ro
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
