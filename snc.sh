@@ -197,6 +197,16 @@ retry ${OC} apply -f kubelet-bootstrap-cred-manager-ds.yaml
 retry ${OC} delete secrets/csr-signer-signer secrets/csr-signer -n openshift-kube-controller-manager-operator
 retry ${OC} adm wait-for-stable-cluster
 
+# Enable transient-ro in ostree to allow creating /Users top-level directory
+# This modifies prepare-root.conf and regenerates the initramfs, which takes
+# effect on the next reboot (triggered by pull secret removal below).
+retry ${OC} apply -f 99-enable-transient-ro.yaml
+sleep 60
+# Wait till machine config pool is updated correctly
+while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Updated")].status}' | grep True; do
+    echo "Machine config still in updating/degrading state"
+done
+
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
     renew_certificates
@@ -299,4 +309,5 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
-
+# Verify /Users is writable via transient-ro
+${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
