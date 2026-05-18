@@ -2,15 +2,15 @@
 
 set -exuo pipefail
 
-sudo yum install -y podman make golang rsync
+sudo yum install -y git-core virtiofsd podman make golang rsync
 
 ./shellcheck.sh
 ./snc.sh
 
 echo "### Extracting openshift-tests binary"
 mkdir /tmp/os-test
-export TESTS_IMAGE=$(oc --kubeconfig=crc-tmp-install-data/auth/kubeconfig adm release info -a "${HOME}"/pull-secret --image-for=tests)
-oc image extract -a "${HOME}"/pull-secret "${TESTS_IMAGE}" --path=/usr/bin/openshift-tests:/tmp/os-test/.
+export TESTS_IMAGE=$(./openshift-clients/oc --kubeconfig=crc-tmp-install-data/auth/kubeconfig adm release info -a "${HOME}"/pull-secret --image-for=tests)
+./openshift-clients/oc image extract -a "${HOME}"/pull-secret "${TESTS_IMAGE}" --path=/usr/bin/openshift-tests:/tmp/os-test/.
 chmod +x /tmp/os-test/openshift-tests
 sudo mv /tmp/os-test/openshift-tests /usr/local/bin/
 
