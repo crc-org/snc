@@ -264,43 +264,10 @@ retry ${OC} delete mc chronyd-mask
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
 
-# This section is used to create a custom-os image which have `/Users`
-# For more details check https://github.com/crc-org/snc/issues/1041#issuecomment-2785928976
-# This should be performed before removing pull secret
-# Set tmp KUBECONFIG because default kubeconfig have `system:admin` user which doesn't able to create
-# token to login to registry and kubeadmin user is required for that.
-export KUBECONFIG=/tmp/kubeconfig
-if [[ ${BUNDLE_TYPE} == "okd" ]]; then
-     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=stream-coreos)
-else
-     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=rhel-coreos)
-fi
-cat << EOF > ${INSTALL_DIR}/Containerfile
-FROM scratch
-RUN ln -sf var/Users /Users && mkdir /var/Users
-EOF
-podman build --from ${RHCOS_IMAGE} --authfile ${OPENSHIFT_PULL_SECRET_PATH} -t default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest --file ${INSTALL_DIR}/Containerfile .
-(
-    set +x # disable the logging in the subshell to prevent the password leakage
-    kubeadmin_pass=$(cat ${INSTALL_DIR}/auth/kubeadmin-password)
-    retry ${OC} login -u kubeadmin -p "$kubeadmin_pass" --insecure-skip-tls-verify=true api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}:6443
-    rm -f ${INSTALL_DIR}/auth/kubeadmin-password
-    esc_pw="$(printf '%s' "$kubeadmin_pass" | sed -e 's/[\/&|\\]/\\&/g')"
-    sed -i "s|$esc_pw|REDACTED|g" "${INSTALL_DIR}/.openshift_install.log"
-)
-retry ${OC} registry login -a ${INSTALL_DIR}/reg.json
-retry podman push --authfile ${INSTALL_DIR}/reg.json --tls-verify=false default-route-openshift-image-registry.apps-crc.testing/openshift-machine-config-operator/rhcos:latest
-cat << EOF > ${INSTALL_DIR}/custom-os-mc.yaml
-apiVersion: machineconfiguration.openshift.io/v1
-kind: MachineConfig
-metadata:
-  labels:
-    machineconfiguration.openshift.io/role: master
-  name: custom-image
-spec:
-  osImageURL: image-registry.openshift-image-registry.svc:5000/openshift-machine-config-operator/rhcos:latest
-EOF
-retry ${OC} apply -f ${INSTALL_DIR}/custom-os-mc.yaml
+# Enable transient-ro in ostree to allow creating /Users top-level directory
+# This modifies prepare-root.conf and regenerates the initramfs, which takes
+# effect on the next reboot (triggered by pull secret removal below).
+retry ${OC} apply -f 99-enable-transient-ro.yaml
 sleep 60
 # Wait till machine config pool is updated correctly
 while retry ${OC} get mcp master -ojsonpath='{.status.conditions[?(@.type!="Updated")].status}' | grep True; do
@@ -312,6 +279,7 @@ done
 BAREMETAL_RUNTIMECFG=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=baremetal-runtimecfg)
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman create --authfile /var/lib/kubelet/config.json --name baremetal_runtimecfg ${BAREMETAL_RUNTIMECFG}"
 
+export KUBECONFIG=${INSTALL_DIR}/auth/kubeconfig
 mc_before_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 # Replace pull secret with a null json string '{}'
 retry ${OC} replace -f pull-secret.yaml
@@ -340,13 +308,5 @@ ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo crictl rmi --prune'
 # Remove the baremetal_runtimecfg container which is temp created
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- "sudo podman rm baremetal_runtimecfg"
 
-# Create the /var/Users directory so it can become writeable
-# todo: remove it once custom image able to perform it
-${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /var/Users'
-
-# Check /Users directory is writeable
+# Verify /Users is writable via transient-ro
 ${SSH} core@api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} -- 'sudo mkdir /Users/foo && sudo rm -fr /Users/foo'
-
-# Remove the image stream of custom image
-retry ${OC} delete imagestream rhcos -n openshift-machine-config-operator
-retry ${OC} adm prune images --confirm --registry-url default-route-openshift-image-registry.apps-crc.testing --keep-younger-than=0s
