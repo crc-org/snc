@@ -10,6 +10,9 @@ sudo yum install -y git-core virtiofsd podman make golang rsync
 echo "### Extracting openshift-tests binary"
 mkdir /tmp/os-test
 sudo cp ./openshift-clients/linux/oc /usr/local/bin/
+# openshift-tests binary uses kubelet command to run test because some of those
+# tests comes from upstream
+sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 export TESTS_IMAGE=$(oc --kubeconfig=crc-tmp-install-data/auth/kubeconfig adm release info -a "${HOME}"/pull-secret --image-for=tests)
 oc image extract -a "${HOME}"/pull-secret "${TESTS_IMAGE}" --path=/usr/bin/openshift-tests:/tmp/os-test/.
 chmod +x /tmp/os-test/openshift-tests
