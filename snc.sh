@@ -273,7 +273,7 @@ export KUBECONFIG=/tmp/kubeconfig
 if [[ ${BUNDLE_TYPE} == "okd" ]]; then
      RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=stream-coreos)
 else
-     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=rhel-coreos)
+     RHCOS_IMAGE=$(${OC} adm release info -a ${OPENSHIFT_PULL_SECRET_PATH} ${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE} --image-for=rhel-coreos-10)
 fi
 cat << EOF > ${INSTALL_DIR}/Containerfile
 FROM scratch
