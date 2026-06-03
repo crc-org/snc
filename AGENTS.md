@@ -78,5 +78,9 @@ The build pipeline has two phases, each with a library of shared functions:
 - VM IP is `192.168.126.11` on the `crc` libvirt network; DNS is configured via NetworkManager dnsmasq overlay
 - Bundle metadata lives in `crc-tmp-install-data/crc-bundle-info.json`
 
+# compare-bundle-size
+- **compare-bundle-size** (`.agents/skills/compare-bundle-size/SKILL.md`) - Compare last-layer image sizes between two OpenShift release bundles. Trigger: `/compare-bundle-size`
+When the user types `/compare-bundle-size`, invoke the Skill tool with `skill: "compare-bundle-size"` before doing anything else.
+
 # currentDate
 Today's date is 2026-06-03.
