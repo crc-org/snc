@@ -49,6 +49,18 @@ VM_IP=$(sudo virsh domifaddr ${VM_NAME} | tail -2 | head -1 | awk '{print $4}' |
 
 wait_for_ssh ${VM_NAME} ${VM_IP}
 
+# Configure proxy when at least one URL is set
+if [[ -n "${SNC_HTTP_PROXY}" || -n "${SNC_HTTPS_PROXY}" ]]; then
+    ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+     tee /etc/environment <<TEE
+$( [[ -n "${SNC_HTTP_PROXY}" ]] && echo "http_proxy=${SNC_HTTP_PROXY}" )
+$( [[ -n "${SNC_HTTPS_PROXY}" ]] && echo "https_proxy=${SNC_HTTPS_PROXY}" )
+no_proxy=localhost,127.0.0.1
+TEE
+EOF
+
+fi
+
 if [ ${BUNDLE_TYPE} != "microshift" ]; then
     # Disable kubelet service
     ${SSH} core@${VM_IP} -- sudo systemctl disable kubelet
@@ -242,6 +254,13 @@ ${SSH} core@${VM_IP} -- 'sudo sed -i "s/^preserve_hostname: false$/preserve_host
 
 # Cleanup cloud-init config
 ${SSH} core@${VM_IP} -- "sudo cloud-init clean --logs"
+
+# Clean the environment file when proxy was configured
+if [[ -n "${SNC_HTTP_PROXY}" || -n "${SNC_HTTPS_PROXY}" ]]; then
+    ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+    rm -f /etc/environment
+EOF
+fi
 
 # Shutdown the VM
 shutdown_vm ${VM_NAME}

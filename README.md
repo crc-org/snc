@@ -83,4 +83,16 @@ SNC_GENERATE_MACOS_BUNDLE : if set to 0, bundle generation for MacOS is disabled
 SNC_GENERATE_WINDOWS_BUNDLE : if set to 0, bundle generation for Windows is disabled, any other value will enable it.
 SNC_GENERATE_LINUX_BUNDLE : if set to 0, bundle generation for Linux is disabled, any other value will enable it.
 
+SNC_HTTP_PROXY : HTTP proxy URL; when set, configures `proxy.httpProxy` in install-config.
+SNC_HTTPS_PROXY : HTTPS proxy URL; when set, configures `proxy.httpsProxy` in install-config.
+Either or both may be set; `noProxy` is applied when at least one is set.
+
+Example:
+
+```bash
+export SNC_HTTP_PROXY=http://proxy.example.com:8080
+export SNC_HTTPS_PROXY=http://proxy.example.com:8080
+./snc.sh
+```
+
 Please note the SNC project is “as-is” on this Github repository. At this time, it is not an offically supported Red Hat solution.

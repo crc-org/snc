@@ -134,6 +134,7 @@ ${YQ} eval --inplace ".baseDomain = \"${BASE_DOMAIN}\"" ${INSTALL_DIR}/install-c
 ${YQ} eval --inplace ".metadata.name = \"${SNC_PRODUCT_NAME}\"" ${INSTALL_DIR}/install-config.yaml
 replace_pull_secret ${INSTALL_DIR}/install-config.yaml
 ${YQ} eval ".sshKey = \"$(cat id_ecdsa_crc.pub)\"" --inplace ${INSTALL_DIR}/install-config.yaml
+configure_install_config_proxy ${INSTALL_DIR}/install-config.yaml
 
 # Create the manifests using the INSTALL_DIR
 OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} create manifests
@@ -290,6 +291,15 @@ while [ "${mc_before_removing_pullsecret}" == "${mc_after_removing_pullsecret}" 
 	echo "Machine config is still not rendered"
 	mc_after_removing_pullsecret=$(retry ${OC} get mc --sort-by=.metadata.creationTimestamp --no-headers -oname)
 done
+
+# Remove the proxy configuration if it is set after cluster is provisioned
+if [[ -n "${SNC_HTTP_PROXY}" || -n "${SNC_HTTPS_PROXY}" ]]; then
+    retry ${OC} patch proxy/cluster --type=json -p='[
+      {"op":"remove","path":"/spec/httpProxy"},
+      {"op":"remove","path":"/spec/httpsProxy"},
+      {"op":"remove","path":"/spec/noProxy"}
+    ]'
+fi
 
 wait_till_cluster_stable openshift-marketplace
 
