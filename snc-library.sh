@@ -113,6 +113,22 @@ function replace_pull_secret() {
         set -x
 }
 
+function configure_install_config_proxy() {
+        local install_config=$1
+        if [[ -z "${SNC_HTTP_PROXY}" && -z "${SNC_HTTPS_PROXY}" ]]; then
+                return 0
+        fi
+        if [[ -n "${SNC_HTTP_PROXY}" ]]; then
+                ${YQ} eval --inplace ".proxy.httpProxy = \"${SNC_HTTP_PROXY}\"" "${install_config}"
+        fi
+        if [[ -n "${SNC_HTTPS_PROXY}" ]]; then
+                ${YQ} eval --inplace ".proxy.httpsProxy = \"${SNC_HTTPS_PROXY}\"" "${install_config}"
+        fi
+        local api_int="api-int.${SNC_PRODUCT_NAME}.${BASE_DOMAIN}"
+        local no_proxy="localhost,.cluster.local,.svc,127.0.0.1,${api_int},.${BASE_DOMAIN}"
+        ${YQ} eval --inplace ".proxy.noProxy = \"${no_proxy}\"" "${install_config}"
+}
+
 function create_json_description {
     local bundle_type=$1
     sncGitHash=$(git describe --abbrev=4 HEAD 2>/dev/null || git rev-parse --short=4 HEAD)
@@ -274,4 +290,3 @@ function wait_till_cluster_stable() {
     # Wait till all the pods are either running or complete state
     retry all_pods_are_running_completed "${ignoreNamespace}"
 }
-
