@@ -147,10 +147,18 @@ EOF
 fi
 
 if [ "${ARCH}" == "aarch64" ] && [ ${BUNDLE_TYPE} != "okd" ]; then
-   # Install qemu-user-static-x86 package from fedora-updates repo to run x86 image on M1
+   # Install qemu-user-static-x86 package from fedora repo to run x86 image on M1
    # Not supported by RHEL https://access.redhat.com/solutions/5654221 and not included
    # in any subscription repo.
-   cat > /tmp/fedora-updates.repo <<'EOF'
+   cat > /tmp/fedora.repo <<'EOF'
+[fedora]
+name=Fedora 44 - $basearch
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-44&arch=$basearch
+enabled=1
+type=rpm
+repo_gpgcheck=0
+gpgcheck=1
+
 [fedora-updates]
 name=Fedora 44 - $basearch - Updates
 metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f44&arch=$basearch
@@ -159,10 +167,10 @@ type=rpm
 repo_gpgcheck=0
 gpgcheck=1
 EOF
-   ${SCP} /tmp/fedora-updates.repo core@${VM_IP}:/tmp
-   ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora-updates.repo /etc/yum.repos.d"
+   ${SCP} /tmp/fedora.repo core@${VM_IP}:/tmp
+   ${SSH} core@${VM_IP} -- "sudo mv /tmp/fedora.repo /etc/yum.repos.d"
    ${SSH} core@${VM_IP} -- "mkdir -p ~/packages && dnf download --downloadonly --downloaddir ~/packages qemu-user-static-x86 --resolve"
-   ${SSH} core@${VM_IP} -- "sudo rm -fr /etc/yum.repos.d/fedora-updates.repo"
+   ${SSH} core@${VM_IP} -- "sudo rm -fr /etc/yum.repos.d/fedora.repo"
    PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" qemu-user-static-x86"
 fi
 
