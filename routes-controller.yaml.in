@@ -20,4 +20,26 @@ spec:
       - image: quay.io/crcont/routes-controller:${TAG}
         name: routes-controller
         imagePullPolicy: IfNotPresent
-
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: routes-controller
+  name: routes-controller
+  namespace: openshift-ingress
+spec:
+  egress:
+  - {}
+  ingress:
+  - ports:
+    - port: http
+      protocol: TCP
+    - port: https
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: routes-controller
+  policyTypes:
+  - Ingress
+  - Egress
