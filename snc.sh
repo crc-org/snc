@@ -26,7 +26,7 @@ INSTALL_DIR=crc-tmp-install-data
 SNC_PRODUCT_NAME=${SNC_PRODUCT_NAME:-crc}
 SNC_CLUSTER_MEMORY=${SNC_CLUSTER_MEMORY:-14336}
 SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-6}
-CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-43}
+CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 CRC_PV_DIR="/mnt/pv-data"
 SSH="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_ecdsa_crc"
@@ -216,6 +216,11 @@ fi
 # Wait for install to complete, this provide another 30 mins to make resources (apis) stable
 ${OPENSHIFT_INSTALL} --dir ${INSTALL_DIR} wait-for install-complete ${OPENSHIFT_INSTALL_EXTRA_ARGS}
 
+# Remove the downloads pods because of https://redhat.atlassian.net/browse/OCPBUGS-88450
+# as workaround
+retry ${OC} delete pod -n openshift-console -l app=console,component=downloads
+retry ${OC} wait --for=condition=Ready pod -n openshift-console -l app=console,component=downloads --timeout=60s
+
 # Remove the bootstrap-cred-manager daemonset and wait till it get deleted
 retry ${OC} delete daemonset.apps/kubelet-bootstrap-cred-manager -n openshift-machine-config-operator
 retry ${OC} wait --for=delete daemonset.apps/kubelet-bootstrap-cred-manager --timeout=60s -n openshift-machine-config-operator
@@ -272,6 +277,11 @@ retry ${OC} patch image.config.openshift.io cluster -p '{"spec": {"additionalTru
 
 # Remove the machine config for chronyd to make it active again
 retry ${OC} delete mc chronyd-mask
+
+# Remove the downloads pods because of https://redhat.atlassian.net/browse/OCPBUGS-88450
+# as workaround
+retry ${OC} delete pod -n openshift-console -l app=console,component=downloads
+retry ${OC} wait --for=condition=Ready pod -n openshift-console -l app=console,component=downloads --timeout=60s
 
 # Wait for the cluster again to become stable because of all the patches/changes
 wait_till_cluster_stable
