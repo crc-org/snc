@@ -41,7 +41,7 @@ spec:
           Type=oneshot
           RemainAfterExit=yes
           ExecStart=/bin/mkdir -p /var/Users
-          ExecStart=-/bin/bash -c 'unshare -m -- /bin/sh -c "mount -o remount,rw / && ln -sf var/Users /Users"'
+          ExecStart=-/bin/bash -c 'unshare -m -- /bin/sh -c "mount --options-source=disable -o remount,rw / && ln -sf var/Users /Users"'
 
           [Install]
           WantedBy=local-fs.target
