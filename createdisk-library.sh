@@ -170,7 +170,7 @@ function create_local_rpm_repo() {
     local vm_ip=$1
     # Create local repo of downloaded RPMs in the VM
     ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
-        podman run --rm -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
+        podman run --rm --net=host -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
         podman rmi quay.io/centos/centos:stream9
 EOF
     ${SSH} core@${vm_ip} "sudo bash -c 'cat > /etc/yum.repos.d/local.repo << EOF
