@@ -167,7 +167,7 @@ function copy_additional_files {
 function install_additional_packages() {
     local vm_ip=$1
     shift
-    if [[ ${BASE_OS} = "fedora-coreos" ]]; then
+    if [[ ${BUNDLE_TYPE} = "okd" ]]; then
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/g /etc/yum.repos.d/centos.repo'
         ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $ADDITIONAL_PACKAGES"
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/g /etc/yum.repos.d/centos.repo'
