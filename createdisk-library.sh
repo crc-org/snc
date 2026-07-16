@@ -164,12 +164,36 @@ function copy_additional_files {
     eventually_add_pull_secret $destDir
 }
 
+# Create a local yum repo from RPMs already present in /home/core/packages on the VM.
+# Must be called after packages are downloaded/copied, and before rpm-ostree install.
+function create_local_rpm_repo() {
+    local vm_ip=$1
+    # Create local repo of downloaded RPMs in the VM
+    ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
+        podman run --rm -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
+        podman rmi quay.io/centos/centos:stream9
+EOF
+    ${SSH} core@${vm_ip} "sudo bash -c 'cat > /etc/yum.repos.d/local.repo << EOF
+[local]
+name=Local repo
+baseurl=file:///home/core/packages/
+enabled=1
+gpgcheck=0
+EOF'"
+}
+
+function remove_local_rpm_repo() {
+    local vm_ip=$1
+    ${SSH} core@${vm_ip} -- 'sudo rm -fr /home/core/packages'
+    ${SSH} core@${vm_ip} -- 'sudo rm -fr /etc/yum.repos.d/local.repo'
+}
+
 function install_additional_packages() {
     local vm_ip=$1
-    shift
     if [[ ${BUNDLE_TYPE} = "okd" ]]; then
+        create_local_rpm_repo ${vm_ip}
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=0/enabled=1/g /etc/yum.repos.d/centos.repo'
-        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $ADDITIONAL_PACKAGES"
+        ${SSH} core@${vm_ip} -- "sudo rpm-ostree install --allow-inactive $ADDITIONAL_PACKAGES $PRE_DOWNLOADED_ADDITIONAL_PACKAGES"
         ${SSH} core@${vm_ip} -- 'sudo sed -i -z s/enabled=1/enabled=0/g /etc/yum.repos.d/centos.repo'
     else
         # Download the hyperV daemons dependency on host
@@ -180,28 +204,15 @@ function install_additional_packages() {
         # SCP the downloaded rpms to VM
         ${SCP} -r ${pkgDir}/packages core@${vm_ip}:/home/core/
 
-        # Create local repo of downloaded RPMs in the VM
-        ${SSH} core@${vm_ip} 'sudo bash -x -s' <<EOF
-            podman run --rm -v /home/core/packages:/packages:Z quay.io/centos/centos:stream9 sh -c "dnf install -y createrepo && createrepo /packages"
-            podman rmi quay.io/centos/centos:stream9
-EOF
-        ${SSH} core@${vm_ip} "sudo bash -c 'cat > /etc/yum.repos.d/local.repo << EOF
-[local]
-name=Local repo
-baseurl=file:///home/core/packages/
-enabled=1
-gpgcheck=0
-EOF'"
+        create_local_rpm_repo ${vm_ip}
+
         # Install these rpms to VM
         ${SSH} core@${vm_ip} -- "sudo rpm-ostree install $ADDITIONAL_PACKAGES $PRE_DOWNLOADED_ADDITIONAL_PACKAGES"
-
-        # Remove the packages and repo from VM
-        ${SSH} core@${vm_ip} -- sudo rm -fr /home/core/packages
-        ${SSH} core@${vm_ip} -- sudo rm -fr /etc/yum.repos.d/local.repo
 
         # Cleanup up packages
         rm -fr ${pkgDir}
     fi
+    remove_local_rpm_repo ${vm_ip}
 }
 
 function prepare_hyperV() {
