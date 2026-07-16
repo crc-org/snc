@@ -22,17 +22,12 @@ PRE_DOWNLOADED_ADDITIONAL_PACKAGES=""
 case ${BUNDLE_TYPE} in
     microshift)
         destDirPrefix="crc_${BUNDLE_TYPE}"
-        BASE_OS=rhel
         ;;
     okd)
         destDirPrefix="crc_${BUNDLE_TYPE}"
-        # Base OS is not changed for scos-okd because `/proc/cmdline` still contain fedora-coreos
-        # https://github.com/okd-project/okd-scos/issues/18
-        BASE_OS=fedora-coreos
         ;;
     snc)
         destDirPrefix="crc"
-        BASE_OS=rhcos
         ;;
     *)
         echo "Unknown bundle type '$BUNDLE_TYPE'"
