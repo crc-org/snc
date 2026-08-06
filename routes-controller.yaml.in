@@ -20,6 +20,12 @@ spec:
       - image: quay.io/crcont/routes-controller:${TAG}
         name: routes-controller
         imagePullPolicy: IfNotPresent
+        env:
+        - name: CRC_HOSTS_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: crc-hosts-api-token
+              key: CRC_HOSTS_API_TOKEN
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
