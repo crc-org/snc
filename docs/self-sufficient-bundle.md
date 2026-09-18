@@ -14,8 +14,11 @@ services to do their work.
 | `crc-routes-controller.service`|               both               |                 none                 |         none         |
 |    `ocp-cluster-ca.service`    |               ocp                |        /opt/crc/custom-ca.crt        |         none         |
 |     `ocp-clusterid.service`    |               ocp                |                 none                 |         none         |
-|   `ocp-custom-domain.service`  |               ocp                |                 none                 |         none         |
+|   `ocp-custom-domain.service`  |               ocp                |    /opt/crc/dns-suffix (optional)    |         none         |
 |   `ocp-userpasswords.service`  |               ocp                | /opt/crc/pass_{kubeadmin, developer} |         none         |
+
+> [!NOTE]
+> `ocp-custom-domain.service`: By default, the service uses `nip.io` as the DNS suffix. If a custom suffix is provided via `/opt/crc/dns-suffix`, make sure the VM can resolve the resulting domain names (e.g. `*.apps.<IP>.<suffix>`, `api.<IP>.<suffix>`).
 
 In addition to the above services we have `ocp-cluster-ca.path`, `crc-pullsecret.path` and `ocp-userpasswords.path` that monitors the filesystem paths
 related to their `*.service` counterparts and starts the service when the paths become available.
