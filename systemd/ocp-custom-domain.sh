@@ -34,10 +34,16 @@ if [[ ! "$EIP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
     exit 1
 fi
 
+CRC_DNS_SUFFIX_FILE="/opt/crc/dns-suffix"
+if [[ -r "$CRC_DNS_SUFFIX_FILE" ]]; then
+    DNS_SUFFIX=$(tr -d '\r\n' < "$CRC_DNS_SUFFIX_FILE")
+fi
+DNS_SUFFIX="${DNS_SUFFIX:-nip.io}"
+
 wait_for_resource_or_die secret
 
-TMP_KEY_FILE=$(mktemp /tmp/nip.key.XXXXX)
-TMP_CRT_FILE=$(mktemp /tmp/nip.crt.XXXXX)
+TMP_KEY_FILE=$(mktemp /tmp/crc-domain.key.XXXXX)
+TMP_CRT_FILE=$(mktemp /tmp/crc-domain.crt.XXXXX)
 
 cleanup() {
     rm -f "$TMP_KEY_FILE" "$TMP_CRT_FILE"
@@ -51,36 +57,36 @@ trap cleanup ERR EXIT
 openssl req -newkey rsa:2048 -new \
         -nodes -x509 -days 3650 \
         -keyout "$TMP_KEY_FILE" -out "$TMP_CRT_FILE" \
-        -subj "/CN=$EIP.nip.io" \
-        -addext "subjectAltName=DNS:apps.$EIP.nip.io,DNS:*.apps.$EIP.nip.io,DNS:api.$EIP.nip.io"
+        -subj "/CN=$EIP.$DNS_SUFFIX" \
+        -addext "subjectAltName=DNS:apps.$EIP.$DNS_SUFFIX,DNS:*.apps.$EIP.$DNS_SUFFIX,DNS:api.$EIP.$DNS_SUFFIX"
 
-oc delete secret nip-secret -n openshift-config --ignore-not-found
-oc create secret tls nip-secret \
+oc delete secret crc-domain-secret -n openshift-config --ignore-not-found
+oc create secret tls crc-domain-secret \
    --cert="$TMP_CRT_FILE" \
    --key="$TMP_KEY_FILE" \
    -n openshift-config
 
 # patch ingress
 wait_for_resource_or_die ingresses.config.openshift.io
-jq -n --arg eip "$EIP" '
+jq -n --arg eip "$EIP" --arg dns_suffix "$DNS_SUFFIX" '
 {
   "spec": {
-    "appsDomain": "apps.\($eip).nip.io",
+    "appsDomain": "apps.\($eip).\($dns_suffix)",
     "componentRoutes": [
       {
-        "hostname": "console-openshift-console.apps.\($eip).nip.io",
+        "hostname": "console-openshift-console.apps.\($eip).\($dns_suffix)",
         "name": "console",
         "namespace": "openshift-console",
         "servingCertKeyPairSecret": {
-          "name": "nip-secret"
+          "name": "crc-domain-secret"
         }
       },
       {
-        "hostname": "oauth-openshift.apps.\($eip).nip.io",
+        "hostname": "oauth-openshift.apps.\($eip).\($dns_suffix)",
         "name": "oauth-openshift",
         "namespace": "openshift-authentication",
         "servingCertKeyPairSecret": {
-          "name": "nip-secret"
+          "name": "crc-domain-secret"
         }
       }
     ]
@@ -89,17 +95,17 @@ jq -n --arg eip "$EIP" '
 
 # patch API server to use new CA secret
 wait_for_resource_or_die apiserver.config.openshift.io
-jq -n --arg eip "$EIP" '
+jq -n --arg eip "$EIP" --arg dns_suffix "$DNS_SUFFIX" '
 {
   "spec": {
     "servingCerts": {
       "namedCertificates": [
         {
           "names": [
-            "api.\($eip).nip.io"
+            "api.\($eip).\($dns_suffix)"
           ],
           "servingCertificate": {
-            "name": "nip-secret"
+            "name": "crc-domain-secret"
           }
         }
       ]
@@ -109,10 +115,10 @@ jq -n --arg eip "$EIP" '
 
 # patch image registry route
 wait_for_resource_or_die route.route.openshift.io
-jq -n --arg eip "$EIP" '
+jq -n --arg eip "$EIP" --arg dns_suffix "$DNS_SUFFIX" '
 {
   "spec": {
-    "host": "default-route-openshift-image-registry.\($eip).nip.io"
+    "host": "default-route-openshift-image-registry.\($eip).\($dns_suffix)"
   }
 }' | oc patch route default-route -n openshift-image-registry --type=merge --patch-file=/dev/stdin
 
