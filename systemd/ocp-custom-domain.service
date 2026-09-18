@@ -1,5 +1,5 @@
 [Unit]
-Description=CRC Unit setting nip.io domain for cluster
+Description=CRC Unit setting DNS domain for cluster
 After=crc-wait-apiserver-up.service
 After=ocp-wait-apiservices-available.service
 StartLimitIntervalSec=450
