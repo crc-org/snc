@@ -19,6 +19,10 @@ case "${virt}" in
     echo "Running with vfkit ($virt) virtualization. Don't need tap0."
     exit "$EXIT_DONT_NEED_TAP"
     ;;
+  kvm)
+    echo "Running with qemu ($virt) virtualization. Don't need tap0."
+    exit "$EXIT_DONT_NEED_TAP"
+    ;;
   none)
     echo "Bare metal detected. Don't need tap0."
     exit "$EXIT_DONT_NEED_TAP"
