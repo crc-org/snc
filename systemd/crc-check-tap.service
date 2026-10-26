@@ -3,6 +3,8 @@ Description=Ensure that tap0 network configuration is disabled when not necessar
 Before=NetworkManager.service
 Before=gv-user-network@tap0.service
 After=local-fs.target
+# cloud-init-local writes /run/cloud-init/cloud-id used by crc-needs-tap.sh
+After=cloud-init-local.service
 RequiresMountsFor=/etc/NetworkManager/system-connections
 
 [Service]
