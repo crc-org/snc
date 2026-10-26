@@ -24,6 +24,15 @@ case "${virt}" in
       echo "Running with qemu ($virt) virtualization and CRC_SELF_SUFFICIENT=1. Don't need tap0."
       exit "$EXIT_DONT_NEED_TAP"
     fi
+    # On first boot /etc/sysconfig/crc-env is only updated by cloud-init's
+    # write_files module, which runs after network-online.target. Check the
+    # datasource detected by cloud-init-local (before NetworkManager starts)
+    # so tap0 is not activated and NetworkManager-wait-online doesn't block
+    # on its DHCP timeout.
+    if [[ "$(cat /run/cloud-init/cloud-id 2>/dev/null || true)" == "nocloud" ]]; then
+      echo "Running with qemu ($virt) virtualization and cloud-init NoCloud datasource. Don't need tap0."
+      exit "$EXIT_DONT_NEED_TAP"
+    fi
     echo "Running with qemu ($virt) virtualization. Need tap0."
     exit "$EXIT_NEED_TAP"
     ;;
