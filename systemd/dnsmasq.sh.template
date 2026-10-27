@@ -45,3 +45,9 @@ EOF
 
 /bin/systemctl enable --now dnsmasq.service
 /bin/nmcli conn modify --temporary ovs-if-br-ex ipv4.dns $hostIp,1.1.1.1
+
+# Only restart when the configuration above changed. In user network mode
+# the script exits early and restarting NetworkManager would only disrupt
+# the network while other units (ovs-configuration) may be using it.
+/bin/systemctl restart NetworkManager.service
+/bin/systemctl restart dnsmasq.service
