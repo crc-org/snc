@@ -16,17 +16,17 @@ if [[ -z "$CRC_PASS_KUBEADMIN_PATH" || -z "$CRC_PASS_DEVELOPER_PATH" ]]; then
     exit 1
 fi
 
-CRC_HTPASSWD_IMAGE=registry.access.redhat.com/ubi10/httpd-24
-
 function gen_htpasswd() {
     if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
         echo "gen_htpasswd needs two arguments: username password" >&2
         return 1
     fi
 
-    # --log-driver=none avoids that the journal captures the stdout
-    # logs of podman and leaks the passwords in the journal ...
-    podman run --log-driver=none --rm "$CRC_HTPASSWD_IMAGE" htpasswd -nb "$1" "$2"
+    # same MD5 (apr1) format as `htpasswd -nb`. The password is passed on
+    # stdin so that it doesn't show up in the process list.
+    local hash
+    hash=$(openssl passwd -apr1 -stdin <<< "$2")
+    echo "$1:$hash"
 }
 
 # enforced by systemd
@@ -40,9 +40,6 @@ if [[ ! -r "$CRC_PASS_KUBEADMIN_PATH" ]]; then
     echo "ERROR: CRC kubeadmin password does not exist ($CRC_PASS_KUBEADMIN_PATH)"
     exit 1
 fi
-
-echo "Pulling $CRC_HTPASSWD_IMAGE ..."
-podman pull --quiet "$CRC_HTPASSWD_IMAGE"
 
 wait_for_resource_or_die secret
 
