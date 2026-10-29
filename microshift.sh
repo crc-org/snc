@@ -19,6 +19,12 @@ MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp
 MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-4.22}
 MIRROR_REPO=${MIRROR_REPO:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/microshift/ocp-dev-preview/latest-${MICROSHIFT_VERSION}/el9/os}
 
+# Export the proxy settings so image-mode/microshift/build.sh can pass them
+# to the container image build and the ISO generation
+if [[ -n "${SNC_HTTP_PROXY}" || -n "${SNC_HTTPS_PROXY}" ]]; then
+    export SNC_HTTP_PROXY SNC_HTTPS_PROXY
+fi
+
 echo "Check if system is registered"
 # Check the subscription status and register if necessary
 if ! sudo subscription-manager status >& /dev/null ; then

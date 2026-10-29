@@ -73,7 +73,19 @@ if [ ${BUNDLE_TYPE} == "microshift" ]; then
     # don't run microshift service which fetch these image but instead service is run
     # as part of crc so user have a fresh cluster instead something already provisioned
     # but images we cache it as part of bundle.
-    ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
+    # The proxy variables are passed explicitly to the root shell because sudo
+    # does not keep the ones set through /etc/environment for the ssh session.
+    proxy_env=""
+    if [[ -n "${SNC_HTTP_PROXY}" ]]; then
+        proxy_env+="http_proxy=${SNC_HTTP_PROXY} HTTP_PROXY=${SNC_HTTP_PROXY} "
+    fi
+    if [[ -n "${SNC_HTTPS_PROXY}" ]]; then
+        proxy_env+="https_proxy=${SNC_HTTPS_PROXY} HTTPS_PROXY=${SNC_HTTPS_PROXY} "
+    fi
+    if [[ -n "${proxy_env}" ]]; then
+        proxy_env+="no_proxy=localhost,127.0.0.1 NO_PROXY=localhost,127.0.0.1"
+    fi
+    ${SSH} core@${VM_IP} "sudo env ${proxy_env} bash -x -s" <<EOF
      jq --raw-output '.images | to_entries | map(.value) | join("\n")' /usr/share/microshift/release/release-$(uname -i).json | xargs -n1 podman pull --authfile /etc/crio/openshift-pull-secret
 EOF
     # Disable firewalld otherwise generated bundle have it running and each podman container

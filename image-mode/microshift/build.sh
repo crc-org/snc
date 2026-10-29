@@ -48,6 +48,11 @@ usage() {
     echo "          Hostname of the machine"
     echo "  -base-domain <base-domain>"
     echo "          Base domain for microshift cluster"
+    echo ""
+    echo "Environment variables:"
+    echo "  SNC_HTTP_PROXY, SNC_HTTPS_PROXY"
+    echo "          When set, passed to the image build and ISO generation so"
+    echo "          package installs and image pulls go through the proxy"
     exit 1
 }
 
@@ -123,6 +128,24 @@ fi
 
 mkdir -p "${BUILDDIR}"
 
+# When a proxy is configured, pass it to the container image build and the
+# ISO generation so package installs and image pulls go through it.
+# https://docs.redhat.com/en/documentation/red_hat_build_of_microshift/4.22/html-single/networking/#microshift-http-proxy_microshift-networking
+PROXY_ENV_ARGS=()
+PROXY_BUILD_ARGS=()
+if [ -n "${SNC_HTTP_PROXY:-}" ]; then
+    PROXY_ENV_ARGS+=("http_proxy=${SNC_HTTP_PROXY}" "HTTP_PROXY=${SNC_HTTP_PROXY}")
+    PROXY_BUILD_ARGS+=(--env "http_proxy=${SNC_HTTP_PROXY}" --env "HTTP_PROXY=${SNC_HTTP_PROXY}")
+fi
+if [ -n "${SNC_HTTPS_PROXY:-}" ]; then
+    PROXY_ENV_ARGS+=("https_proxy=${SNC_HTTPS_PROXY}" "HTTPS_PROXY=${SNC_HTTPS_PROXY}")
+    PROXY_BUILD_ARGS+=(--env "https_proxy=${SNC_HTTPS_PROXY}" --env "HTTPS_PROXY=${SNC_HTTPS_PROXY}")
+fi
+if [ ${#PROXY_ENV_ARGS[@]} -gt 0 ]; then
+    PROXY_ENV_ARGS+=("no_proxy=localhost,127.0.0.1" "NO_PROXY=localhost,127.0.0.1")
+    PROXY_BUILD_ARGS+=(--env "no_proxy=localhost,127.0.0.1" --env "NO_PROXY=localhost,127.0.0.1")
+fi
+
 title "Preparing kickstart config"
 # Create a kickstart file from a template, compacting pull secret contents if necessary
 cat < "${SCRIPTDIR}/config/config.toml.template" \
@@ -134,15 +157,16 @@ cat < "${SCRIPTDIR}/config/config.toml.template" \
     > "${BUILDDIR}"/config.toml
 
 title "Building bootc image for microshift"
-sudo podman build --no-cache --authfile ${OCP_PULL_SECRET_FILE} -t ${IMGNAME}:${MICROSHIFT_VERSION}  \
+sudo env "${PROXY_ENV_ARGS[@]}" podman build --no-cache --authfile ${OCP_PULL_SECRET_FILE} -t ${IMGNAME}:${MICROSHIFT_VERSION}  \
   --build-arg MICROSHIFT_VER=${MICROSHIFT_VERSION} \
   --env UNRELEASED_MIRROR_REPO=${USE_UNRELEASED_MIRROR_REPO} \
+  "${PROXY_BUILD_ARGS[@]}" \
   -f "${SCRIPTDIR}/config/Containerfile.bootc-rhel9"
 
 # As of now we are generating the ISO to have same previous behavior
 # TODO: Try to use qcow2 directly for vm creation
 title "Creating ISO image"
-sudo podman run --authfile ${OCP_PULL_SECRET_FILE} --rm -it \
+sudo env "${PROXY_ENV_ARGS[@]}" podman run --authfile ${OCP_PULL_SECRET_FILE} --rm -it \
     --privileged \
     --security-opt label=type:unconfined_t \
     -v /var/lib/containers/storage:/var/lib/containers/storage \

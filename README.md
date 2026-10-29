@@ -95,4 +95,10 @@ export SNC_HTTPS_PROXY=http://proxy.example.com:8080
 ./snc.sh
 ```
 
+For the `microshift` bundle type (`./microshift.sh`), the same variables are
+passed to the bootc image build and the ISO generation, and to the release
+image pulls inside the VM, so the whole bundle creation works behind the
+proxy. As with the other bundle types, the proxy configuration is removed
+before the bundle is packaged, so the generated bundle itself is proxy-free.
+
 Please note the SNC project is “as-is” on this Github repository. At this time, it is not an offically supported Red Hat solution.
