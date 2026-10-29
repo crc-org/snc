@@ -120,6 +120,8 @@ EOF
 # Reload the NetworkManager to make DNS overlay effective
 sudo systemctl reload NetworkManager
 
+check_dns_resolution ${BUNDLE_TYPE}
+
 if [[ ${CERT_ROTATION} == "enabled" ]]
 then
     # Disable the network time sync and set the clock to past (for a day) on host

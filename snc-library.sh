@@ -92,7 +92,14 @@ function run_preflight_checks() {
                 preflight_failure "Your ${ARCH} platform does not provide a hardware-accelerated hypervisor, it's strongly recommended to enable it before running SNC. Check virt-host-validate for more detailed diagnostics"
                 return
         fi
-	if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
+        echo "libvirt configuration successfully checked"
+}
+
+function check_dns_resolution() {
+    local bundle_type=$1
+    # Must run after NetworkManager dnsmasq overlay is configured,
+    # otherwise corporate DNS may sinkhole *.${BASE_DOMAIN} to localhost.
+    if [ ${bundle_type} == "snc" ] || [ ${bundle_type} == "okd" ]; then
         # check that api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} either can't be resolved, or resolves to 192.168.126.11
         local ping_status
         ping_status="$(ping -c1 api.${SNC_PRODUCT_NAME}.${BASE_DOMAIN} | head -1 || true >/dev/null)"
@@ -101,7 +108,7 @@ function run_preflight_checks() {
                 return
         fi
 	fi
-        echo "libvirt and DNS configuration successfully checked"
+    echo "DNS configuration successfully checked"
 }
 
 function replace_pull_secret() {
