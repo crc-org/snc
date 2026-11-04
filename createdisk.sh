@@ -74,7 +74,7 @@ if [ ${BUNDLE_TYPE} == "microshift" ]; then
     # as part of crc so user have a fresh cluster instead something already provisioned
     # but images we cache it as part of bundle.
     ${SSH} core@${VM_IP} 'sudo bash -x -s' <<EOF
-     jq --raw-output '.images | to_entries | map(.value) | join("\n")' /usr/share/microshift/release/release-$(uname -i).json | xargs -n1 podman pull --authfile /etc/crio/openshift-pull-secret
+     jq --raw-output '.images | to_entries | map(.value) | join("\n")' /usr/share/microshift/release/release-$(uname -m).json | xargs -n1 podman pull --authfile /etc/crio/openshift-pull-secret
 EOF
     # Disable firewalld otherwise generated bundle have it running and each podman container
     # which try to expose a port need to added to firewalld rule manually
