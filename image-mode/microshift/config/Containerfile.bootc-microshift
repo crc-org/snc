@@ -1,0 +1,18 @@
+# MicroShift bootc image published by Red Hat, which already contains the
+# microshift, microshift-release-info, firewalld and cloud-utils-growpart packages.
+# - released:   registry.redhat.io/openshift5/microshift-bootc-rhel10:v<version>
+# - unreleased: pullspec from https://mirror.openshift.com/pub/openshift-v4/<arch>/microshift/ocp-dev-preview/latest-<version>/el10/bootc-pullspec.txt
+ARG MICROSHIFT_BOOTC_IMAGE
+FROM ${MICROSHIFT_BOOTC_IMAGE}
+
+# Additional packages required by CRC which are not part of the microshift bootc image
+RUN dnf install -y qemu-guest-agent dnsmasq && \
+    dnf clean all && rm -fr /etc/yum.repos.d/*
+
+# https://github.com/containers/bootc/discussions/1036
+# /Users is created to make sure share directory works on
+# mac because on linux it is /home and for windows it is /mnt
+# and both are symlink to `var` already
+RUN rm -fr /opt && ln -sf var/opt /opt && mkdir /var/opt
+RUN ln -sf var/Users /Users && mkdir /var/Users
+RUN rm -fr /usr/local && ln -sf ../var/usrlocal /usr/local && mkdir /var/usrlocal
