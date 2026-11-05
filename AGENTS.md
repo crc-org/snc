@@ -48,7 +48,7 @@ The build pipeline has two phases, each with a library of shared functions:
 - Shuts down VM, sparsifies the qcow2 image, generates per-platform bundles (libvirt qcow2, vfkit raw, Hyper-V vhdx)
 - Compresses each bundle as `.crcbundle` using zstd
 
-**Bundle types** are determined by the entry script: `snc` (OpenShift), `okd` (OKD/SCOS), `microshift`. MicroShift uses `image-mode/microshift/build.sh` to create a bootc-based ISO instead of the openshift-installer flow.
+**Bundle types** are determined by the entry script: `snc` (OpenShift), `okd` (OKD/SCOS), `microshift`. MicroShift uses `image-mode/microshift/build.sh` to layer CRC packages on the published MicroShift bootc image (`microshift-bootc-rhel10`) and create an ISO from it instead of the openshift-installer flow.
 
 **Shared function libraries:**
 - `tools.sh` -- host tool detection/installation, architecture mapping (`ARCH` -> `yq_ARCH`), `retry` with exponential backoff, libvirt VM lifecycle (`create_vm`, `shutdown_vm`, `start_vm`, `destroy_libvirt_resources`)
@@ -68,7 +68,9 @@ The build pipeline has two phases, each with a library of shared functions:
 | `SNC_PRODUCT_NAME` | VM/cluster name (default: `crc`) |
 | `SNC_GENERATE_LINUX_BUNDLE` / `_MACOS_` / `_WINDOWS_` | Set to `0` to skip platform bundle |
 | `CRC_ZSTD_EXTRA_FLAGS` | Zstd compression flags (default: `--ultra -22`) |
-| `MICROSHIFT_VERSION` | MicroShift version to build (default: `4.22`) |
+| `MICROSHIFT_VERSION` | MicroShift version to build (default: `5.0`) |
+| `MICROSHIFT_PRERELEASE` | Set to use the unreleased (ocp-dev-preview) MicroShift bootc image from the mirror's `bootc-pullspec.txt` |
+| `MICROSHIFT_BOOTC_IMAGE` | Override the MicroShift bootc base image (default: `registry.redhat.io/openshift<major>/microshift-bootc-rhel10:v<version>`) |
 
 ## Conventions
 

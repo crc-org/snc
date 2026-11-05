@@ -4,7 +4,7 @@ set -eo pipefail
 ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../" && pwd )"
 SCRIPTDIR=${ROOTDIR}/image-mode/microshift
 IMGNAME=microshift
-MICROSHIFT_VERSION=4.18
+MICROSHIFT_VERSION=5.1
 BUILD_ARCH=$(uname -m)
 OSVERSION=$(awk -F: '{print $5}' /etc/system-release-cpe)
 LVM_SYSROOT_SIZE_MIN=10240
@@ -12,7 +12,7 @@ LVM_SYSROOT_SIZE=${LVM_SYSROOT_SIZE_MIN}
 OCP_PULL_SECRET_FILE=
 AUTHORIZED_KEYS_FILE=
 AUTHORIZED_KEYS=
-USE_MIRROR_REPO=
+MICROSHIFT_BOOTC_IMAGE=
 
 # shellcheck disable=SC2034
 STARTTIME="$(date +%s)"
@@ -39,9 +39,11 @@ usage() {
     echo "  -authorized_keys_file path_to_file"
     echo "          Path to an SSH authorized_keys file to allow SSH access"
     echo "          into the default 'redhat' account"
-    echo "  -use-unreleased-mirror-repo <unreleased_mirror_repo>"
-    echo "          Use unreleased mirror repo to get release candidate and engineering preview rpms"
-    echo "          like (https://mirror.openshift.com/pub/openshift-v4/x86_64/microshift/ocp-dev-preview/latest-4.18/el9/os/)"
+    echo "  -microshift-bootc-image <image>"
+    echo "          MicroShift bootc image used as base image"
+    echo "          (default: registry.redhat.io/openshift<major>/microshift-bootc-rhel10:v<microshift-version>)"
+    echo "          For unreleased versions use the pullspec from the mirror, like"
+    echo "          https://mirror.openshift.com/pub/openshift-v4/x86_64/microshift/ocp-dev-preview/latest-5.1/el10/bootc-pullspec.txt"
     echo "  -microshift-version <microshift-version>"
     echo "          Version of microshift for image generation (default: ${MICROSHIFT_VERSION}"
     echo "  -hostname <hostname>"
@@ -78,10 +80,10 @@ while [ $# -gt 0 ] ; do
         [ -z "${AUTHORIZED_KEYS_FILE}" ] && usage "Authorized keys file not specified"
         shift
         ;;
-    -use-unreleased-mirror-repo)
+    -microshift-bootc-image)
         shift
-        USE_UNRELEASED_MIRROR_REPO="$1"
-        [ -z "${USE_UNRELEASED_MIRROR_REPO}" ] && usage "Mirror repo not specified"
+        MICROSHIFT_BOOTC_IMAGE="$1"
+        [ -z "${MICROSHIFT_BOOTC_IMAGE}" ] && usage "MicroShift bootc image not specified"
         shift
         ;;
     -microshift-version)
@@ -121,6 +123,10 @@ if [ -n "${AUTHORIZED_KEYS_FILE}" ]; then
     fi
 fi
 
+if [ -z "${MICROSHIFT_BOOTC_IMAGE}" ]; then
+    MICROSHIFT_BOOTC_IMAGE="registry.redhat.io/openshift${MICROSHIFT_VERSION%%.*}/microshift-bootc-rhel10:v${MICROSHIFT_VERSION}"
+fi
+
 mkdir -p "${BUILDDIR}"
 
 title "Preparing kickstart config"
@@ -133,11 +139,10 @@ cat < "${SCRIPTDIR}/config/config.toml.template" \
     | sed "s^REPLACE_CORE_AUTHORIZED_KEYS_CONTENTS^${AUTHORIZED_KEYS}^g" \
     > "${BUILDDIR}"/config.toml
 
-title "Building bootc image for microshift"
-sudo podman build --no-cache --authfile ${OCP_PULL_SECRET_FILE} -t ${IMGNAME}:${MICROSHIFT_VERSION}  \
-  --build-arg MICROSHIFT_VER=${MICROSHIFT_VERSION} \
-  --env UNRELEASED_MIRROR_REPO=${USE_UNRELEASED_MIRROR_REPO} \
-  -f "${SCRIPTDIR}/config/Containerfile.bootc-rhel9"
+title "Building bootc image for microshift using ${MICROSHIFT_BOOTC_IMAGE}"
+sudo podman build --no-cache --pull=always --authfile ${OCP_PULL_SECRET_FILE} -t ${IMGNAME}:${MICROSHIFT_VERSION}  \
+  --build-arg MICROSHIFT_BOOTC_IMAGE=${MICROSHIFT_BOOTC_IMAGE} \
+  -f "${SCRIPTDIR}/config/Containerfile.bootc-microshift"
 
 # As of now we are generating the ISO to have same previous behavior
 # TODO: Try to use qcow2 directly for vm creation
@@ -148,7 +153,7 @@ sudo podman run --authfile ${OCP_PULL_SECRET_FILE} --rm -it \
     -v /var/lib/containers/storage:/var/lib/containers/storage \
     -v "${BUILDDIR}"/config.toml:/config.toml \
     -v "${BUILDDIR}":/output \
-    registry.redhat.io/rhel9/bootc-image-builder:latest \
+    registry.redhat.io/rhel10/bootc-image-builder:latest \
     --local \
     --type iso \
     --config /config.toml \

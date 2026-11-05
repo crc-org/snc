@@ -16,8 +16,8 @@ SNC_CLUSTER_CPUS=${SNC_CLUSTER_CPUS:-2}
 CRC_VM_DISK_SIZE=${CRC_VM_DISK_SIZE:-31}
 BASE_DOMAIN=${CRC_BASE_DOMAIN:-testing}
 MIRROR=${MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/clients/ocp-dev-preview}
-MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-4.22}
-MIRROR_REPO=${MIRROR_REPO:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/microshift/ocp-dev-preview/latest-${MICROSHIFT_VERSION}/el9/os}
+MICROSHIFT_VERSION=${MICROSHIFT_VERSION:-5.1}
+MICROSHIFT_DEV_PREVIEW_MIRROR=${MICROSHIFT_DEV_PREVIEW_MIRROR:-https://mirror.openshift.com/pub/openshift-v4/$ARCH/microshift/ocp-dev-preview/latest-${MICROSHIFT_VERSION}/el10}
 
 echo "Check if system is registered"
 # Check the subscription status and register if necessary
@@ -40,8 +40,14 @@ ssh-keygen -t ecdsa -b 521 -N "" -f id_ecdsa_crc -C "core"
 function create_iso {
   local buildDir=$1
   local extra_args=""
-  if [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
-    extra_args="-use-unreleased-mirror-repo ${MIRROR_REPO}"
+  local bootc_image="${MICROSHIFT_BOOTC_IMAGE-}"
+  # For unreleased versions, use the bootc image pullspec published on the mirror,
+  # otherwise build.sh defaults to registry.redhat.io/openshift<major>/microshift-bootc-rhel10:v<version>
+  if [ -z "${bootc_image}" ] && [ -n "${MICROSHIFT_PRERELEASE-}" ]; then
+    bootc_image=$(curl --fail -sSL "${MICROSHIFT_DEV_PREVIEW_MIRROR}/bootc-pullspec.txt")
+  fi
+  if [ -n "${bootc_image}" ]; then
+    extra_args="-microshift-bootc-image ${bootc_image}"
   fi
   BUILDDIR=${buildDir} image-mode/microshift/build.sh -pull_secret_file ${OPENSHIFT_PULL_SECRET_PATH} \
        -lvm_sysroot_size 15360 \
