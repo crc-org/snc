@@ -190,8 +190,17 @@ if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
     PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" 9pfs"
 fi
 
+# install 9p kernel module from COPR repo so that it can be used to
+# set up 9p file sharing on Windows
+if [ "${SNC_GENERATE_WINDOWS_BUNDLE}" != "0" ]; then
+    ${SSH} core@${VM_IP} -- "sudo dnf -y copr enable mskvarla/v9fs rhel-10-${ARCH}"
+    ${SSH} core@${VM_IP} -- "mkdir -p ~/packages && dnf download --downloadonly --downloaddir ~/packages kmod-9p --resolve"
+    ${SSH} core@${VM_IP} -- "sudo dnf -y copr disable mskvarla/v9fs"
+    PRE_DOWNLOADED_ADDITIONAL_PACKAGES+=" kmod-9p"
+fi
+
 # Beyond this point, packages added to the ADDITIONAL_PACKAGES and PRE_DOWNLOADED_ADDITIONAL_PACKAGES
-# variables won’t be installed in the guest
+# variables won't be installed in the guest
 install_additional_packages ${VM_IP}
 copy_systemd_units
 
